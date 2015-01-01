@@ -1,3 +1,57 @@
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        We often misspell identifier as "identifer"
+        https://bugs.webkit.org/show_bug.cgi?id=140025
+
+        Reviewed by Michael Saboff.
+
+        * LayoutTestRelay/LayoutTestRelay/LTRelayController.m:
+        * Scripts/webkitdirs.pm:
+        (appIdentifierFromBundle):
+        (installAndLaunchIOSWebKitAppInSimulator):
+        Fix misspellings
+
+2015-01-01  Zalan Bujtas  <zalan@apple.com>
+
+        Saturated arithmetics: Incorrect float/double clamping.
+        https://bugs.webkit.org/show_bug.cgi?id=139888
+        rdar://problem/19330885
+
+        Reviewed by Simon Fraser.
+
+        Clamp float and double values correctly when applying saturated arithmetics.
+
+        * TestWebKitAPI/Tests/WebCore/LayoutUnit.cpp:
+        (TestWebKitAPI::TEST):
+
+2014-12-30  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] Bump version of ATK used by jhbuild to 2.15.2
+        https://bugs.webkit.org/show_bug.cgi?id=139816
+
+        Reviewed by Gyuyoung Kim.
+
+        Bump version of ATK used by jhbuild to 2.15.2
+
+        * efl/jhbuild.modules:
+
+2014-12-29  Fabien Vallée  <fvallee@connected-labs.com>
+
+        [jhBuild] cairo build error (-flto)
+        https://bugs.webkit.org/show_bug.cgi?id=139056
+
+        Reviewed by Philippe Normand.
+
+        cairo fails to link  with gcc 4.9 due to lto
+        related issue. This problem has been partially
+        addressed by cairo:
+        http://cgit.freedesktop.org/cairo/commit/?id=c3645d97ebd24c6f7ad850785d585aebc706a11c
+        use the cairo --disable-lto option and remove jhbuild
+        makeargs fixes the issue.
+
+        * gtk/jhbuild.modules:
+        * gtk/patches/cairo-1.12.8-add_disable-lto.patch: Added.
+
 2014-12-27  Myles C. Maxfield  <mmaxfield@apple.com>
         [Mac] Enable kerning, ligatures, and printer fonts 
         https://bugs.webkit.org/show_bug.cgi?id=139970

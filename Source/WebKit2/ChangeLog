@@ -1,3 +1,540 @@
+<<<<<<< HEAD
+=======
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        We often misspell identifier as "identifer"
+        https://bugs.webkit.org/show_bug.cgi?id=140025
+
+        Reviewed by Michael Saboff.
+
+        * Shared/WebPageGroupData.cpp:
+        (WebKit::WebPageGroupData::encode):
+        (WebKit::WebPageGroupData::decode):
+        * Shared/WebPageGroupData.h:
+        * UIProcess/WebPageGroup.cpp:
+        (WebKit::pageGroupData):
+        (WebKit::WebPageGroup::WebPageGroup):
+        * UIProcess/WebPageGroup.h:
+        (WebKit::WebPageGroup::identifier):
+        * WebProcess/WebPage/WebInspector.cpp:
+        (WebKit::WebInspector::createInspectorPage):
+        * WebProcess/WebPage/WebPageGroupProxy.cpp:
+        (WebKit::WebPageGroupProxy::WebPageGroupProxy):
+        * WebProcess/WebPage/WebPageGroupProxy.h:
+        (WebKit::WebPageGroupProxy::identifier):
+        Fix misspellings.
+
+2014-12-31  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [GTK] Suppress unused parameter warnings in ui clients
+        https://bugs.webkit.org/show_bug.cgi?id=140012
+
+        Drop the parameter name of WebKitUIClient::isPlayingAudioDidChange
+        to suppress warnings.
+
+        Reviewed by Benjamin Poulain.
+
+        * UIProcess/API/gtk/WebKitUIClient.cpp:
+
+2014-12-31  Sam Weinig  <sam@webkit.org>
+
+        Remove the remaining uses of OwnPtr from WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=140017
+
+        Reviewed by Dan Bernstein.
+
+        * Shared/Scrolling/RemoteScrollingCoordinatorTransaction.cpp:
+        (WebKit::RemoteScrollingCoordinatorTransaction::decode):
+        * Shared/Scrolling/RemoteScrollingCoordinatorTransaction.h:
+        (WebKit::RemoteScrollingCoordinatorTransaction::setStateTreeToEncode):
+        (WebKit::RemoteScrollingCoordinatorTransaction::scrollingStateTree):
+        * UIProcess/Launcher/mac/DynamicLinkerEnvironmentExtractor.mm:
+        * UIProcess/Scrolling/RemoteScrollingCoordinatorProxy.cpp:
+        (WebKit::RemoteScrollingCoordinatorProxy::updateScrollingTree):
+        * UIProcess/mac/PageClientImpl.h:
+        * UIProcess/mac/PageClientImpl.mm:
+        (WebKit::PageClientImpl::PageClientImpl):
+        * UIProcess/mac/WKFullScreenWindowController.h:
+        * UIProcess/mac/WKPrintingView.mm:
+        (-[WKPrintingView _preparePDFDataForPrintingOnSecondaryThread]):
+        (-[WKPrintingView _askPageToComputePageRects]):
+        (-[WKPrintingView _drawPreview:]):
+        * WebProcess/InjectedBundle/API/c/mac/WKBundlePageBannerMac.mm:
+
+2014-12-31  Bartlomiej Gajda  <b.gajda@samsung.com>
+
+        Fix build warnings after r177792.
+        https://bugs.webkit.org/show_bug.cgi?id=140005.
+
+        Reviewed by Anders Carlsson.
+
+        Add UNUSED_PARAM(connection) for async messages.
+
+        * Scripts/webkit/messages.py:
+        (generate_message_handler):
+
+2014-12-31  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed build fix for the GTK port.
+
+        Move the ArgumentCodersGtk.h inclusion from WebPageProxy.cpp to
+        WebPageProxy.h. This makes GTK-specific IPC coders available to
+        WebPageProxyMessageReceiver, fixing a build error due to missing
+        ArgumentCoder template specializations for WebCore::DragData type
+        that is used in the GTK-specific StartDrag message.
+
+        * UIProcess/WebPageProxy.cpp:
+        * UIProcess/WebPageProxy.h:
+
+2014-12-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177824 and r177826.
+        https://bugs.webkit.org/show_bug.cgi?id=140011
+
+        The new test crashes (Requested by ap on #webkit).
+
+        Reverted changesets:
+
+        "Too large plugins are crashing."
+        https://bugs.webkit.org/show_bug.cgi?id=139856
+        http://trac.webkit.org/changeset/177824
+
+        "Fix bug number typo in the previous commit."
+        http://trac.webkit.org/changeset/177826
+
+2014-12-30  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        Too large plugins are crashing.
+        https://bugs.webkit.org/show_bug.cgi?id=139868
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/Plugins/PluginProxy.cpp:
+        (WebKit::PluginProxy::updateBackingStore): Return false if backingStore cannot be allocated.
+
+2014-12-30  Anders Carlsson  <andersca@apple.com>
+
+        Transient local storage namespaces need to ref their storage areas
+        https://bugs.webkit.org/show_bug.cgi?id=140006
+        <rdar://problem/19225389>
+
+        Reviewed by Sam Weinig.
+
+        We need to keep transient storage areas around even if they have no active connections,
+        so use a RefPtr instead of a raw pointer. This matches what we do for session storage namespaces.
+
+        * UIProcess/Storage/StorageManager.cpp:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove unneeded StorageNamespace functions
+        https://bugs.webkit.org/show_bug.cgi?id=139997
+
+        Reviewed by Sam Weinig.
+
+        * WebProcess/Storage/StorageNamespaceImpl.cpp:
+        (WebKit::StorageNamespaceImpl::close): Deleted.
+        (WebKit::StorageNamespaceImpl::clearOriginForDeletion): Deleted.
+        (WebKit::StorageNamespaceImpl::clearAllOriginsForDeletion): Deleted.
+        (WebKit::StorageNamespaceImpl::sync): Deleted.
+        (WebKit::StorageNamespaceImpl::closeIdleLocalStorageDatabases): Deleted.
+        * WebProcess/Storage/StorageNamespaceImpl.h:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Move storage code from WebCore to WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=139558
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebProcess.cpp:
+
+2014-12-29  Dan Bernstein  <mitz@apple.com>
+
+        Fixed the iOS build.
+
+        * WebProcess/WebPage/ios/WebPageIOS.mm:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Another iOS build fix.
+
+        * WebProcess/WebPage/ios/WebPageIOS.mm:
+        (WebKit::WebPage::elementDidFocus):
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Turn on transient local storage support again
+        https://bugs.webkit.org/show_bug.cgi?id=139995
+
+        Reviewed by Sam Weinig.
+
+        Using transient local storage caused weird crashes in the UI process so that change had to
+        be backed out - let's turn it on and see if it still happens.
+
+        * WebProcess/Storage/WebStorageNamespaceProvider.cpp:
+        (WebKit::WebStorageNamespaceProvider::createTransientLocalStorageNamespace):
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove more old coder code gunk.
+
+        Rubber-stamped by Sam Weinig.
+
+        * Scripts/webkit/messages.py:
+        (argument_coder_headers_for_type):
+        (handler_function): Deleted.
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the iOS build.
+
+        * UIProcess/ios/WebPageProxyIOS.mm:
+        (WebKit::WebPageProxy::startAssistingNode):
+        * WebProcess/WebPage/ios/WebPageIOS.mm:
+        (WebKit::WebPage::elementDidFocus):
+
+2014-12-29  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r177805.
+
+        * CMakeLists.txt:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove the old user message coder code
+        https://bugs.webkit.org/show_bug.cgi?id=139994
+
+        Reviewed by Sam Weinig.
+
+        * Platform/IPC/HandleMessage.h:
+        (IPC::callMemberFunctionImpl): Deleted.
+        (IPC::callMemberFunction): Deleted.
+        (IPC::handleMessageVariadic): Deleted.
+        * Scripts/webkit/messages.py:
+        (decode_type):
+        (async_message_statement):
+        (sync_message_statement):
+        * Shared/UserMessageCoders.h: Removed.
+        * Shared/mac/ObjCObjectGraphCoders.h: Removed.
+        * Shared/mac/ObjCObjectGraphCoders.mm: Removed.
+        * UIProcess/WebConnectionToWebProcess.cpp:
+        * UIProcess/WebContextUserMessageCoders.h: Removed.
+        * UIProcess/WebPageProxy.cpp:
+        * UIProcess/WebProcessPool.cpp:
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        * WebProcess/InjectedBundle/InjectedBundleUserMessageCoders.h: Removed.
+        * WebProcess/WebConnectionToUIProcess.cpp:
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        * WebProcess/WebPage/WebContextMenu.cpp:
+        * WebProcess/WebPage/WebPage.cpp:
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        * WebProcess/WebProcess.cpp:
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Move WebPasteboardProxy from Shared to UIProcess, where it should have been all along
+        Rubber-stamped by Anders Carlsson.
+
+        * Shared/WebPasteboardProxy.cpp: Removed.
+        * Shared/WebPasteboardProxy.h: Removed.
+        * Shared/WebPasteboardProxy.messages.in: Removed.
+        * UIProcess/WebPasteboardProxy.cpp: Copied from Shared/WebPasteboardProxy.cpp.
+        * UIProcess/WebPasteboardProxy.h: Copied from Shared/WebPasteboardProxy.h.
+        * UIProcess/WebPasteboardProxy.messages.in: Copied from Shared/WebPasteboardProxy.messages.in.
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Try to fix the iOS build.
+
+        * Shared/WebPasteboardProxy.h:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Convert injected bundle message posting to UserData
+        https://bugs.webkit.org/show_bug.cgi?id=139993
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/WebProcessPool.cpp:
+        (WebKit::WebProcessPool::createNewWebProcess):
+        (WebKit::WebProcessPool::postMessageToInjectedBundle):
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::handleInjectedBundleMessage):
+        (WebKit::WebProcess::postInjectedBundleMessage): Deleted.
+        * WebProcess/WebProcess.h:
+        * WebProcess/WebProcess.messages.in:
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Try to fix the iOS build.
+
+        * Shared/WebPasteboardProxy.h:
+
+2014-12-29  Csaba Osztrogonác  <ossy@webkit.org>
+
+        One more speculative buildfix after r177794.
+
+        * CMakeLists.txt:
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Try to fix the iOS build.
+
+        * Shared/WebPasteboardProxy.h:
+
+2014-12-29  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Speculative buildfix after r177793.
+
+        * WebProcess/soup/WebProcessSoup.cpp:
+        (WebKit::WebProcess::platformInitializeWebProcess):
+
+2014-12-29  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Speculative buildfix after r177794.
+
+        * CMakeLists.txt:
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Removes some unnecessary use of LegacyReceiver
+        https://bugs.webkit.org/show_bug.cgi?id=139992
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/WebConnection.cpp:
+        (WebKit::WebConnection::didReceiveMessage): Deleted.
+        * Shared/WebConnection.h:
+        * Shared/WebConnection.messages.in:
+        * UIProcess/WebProcessPool.cpp:
+        (WebKit::WebProcessPool::didReceiveMessage): Deleted.
+        (WebKit::WebProcessPool::didReceiveSyncMessage): Deleted.
+        * UIProcess/WebProcessPool.h:
+        * UIProcess/WebProcessPool.messages.in:
+        Remove unnecessary use of LegacyReceiver.
+
+        * UIProcess/WebPageProxy.h:
+        Remove declarations for functions that don't exist.
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Convert all variadic web process messages to UserData
+        https://bugs.webkit.org/show_bug.cgi?id=139991
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::loadRequest):
+        (WebKit::WebPageProxy::loadFile):
+        (WebKit::WebPageProxy::loadData):
+        (WebKit::WebPageProxy::loadHTMLString):
+        (WebKit::WebPageProxy::loadAlternateHTMLString):
+        (WebKit::WebPageProxy::loadPlainTextString):
+        (WebKit::WebPageProxy::loadWebArchiveData):
+        (WebKit::WebPageProxy::postMessageToInjectedBundle):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::loadRequest):
+        (WebKit::WebPage::loadDataImpl):
+        (WebKit::WebPage::loadString):
+        (WebKit::WebPage::loadData):
+        (WebKit::WebPage::loadHTMLString):
+        (WebKit::WebPage::loadAlternateHTMLString):
+        (WebKit::WebPage::loadPlainTextString):
+        (WebKit::WebPage::loadWebArchiveData):
+        (WebKit::WebPage::postInjectedBundleMessage):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/WebPage.messages.in:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Convert all variadic WebProcessProxy message over to UserData
+        https://bugs.webkit.org/show_bug.cgi?id=139990
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::willGoToBackForwardListItem):
+        (WebKit::WebPageProxy::didStartProvisionalLoadForFrame):
+        (WebKit::WebPageProxy::didReceiveServerRedirectForProvisionalLoadForFrame):
+        (WebKit::WebPageProxy::didFailProvisionalLoadForFrame):
+        (WebKit::WebPageProxy::didCommitLoadForFrame):
+        (WebKit::WebPageProxy::didFinishDocumentLoadForFrame):
+        (WebKit::WebPageProxy::didFinishLoadForFrame):
+        (WebKit::WebPageProxy::didFailLoadForFrame):
+        (WebKit::WebPageProxy::didSameDocumentNavigationForFrame):
+        (WebKit::WebPageProxy::didReceiveTitleForFrame):
+        (WebKit::WebPageProxy::didFirstLayoutForFrame):
+        (WebKit::WebPageProxy::didFirstVisuallyNonEmptyLayoutForFrame):
+        (WebKit::WebPageProxy::didLayout):
+        (WebKit::WebPageProxy::didRemoveFrameFromHierarchy):
+        (WebKit::WebPageProxy::didDisplayInsecureContentForFrame):
+        (WebKit::WebPageProxy::didRunInsecureContentForFrame):
+        (WebKit::WebPageProxy::didDetectXSSForFrame):
+        (WebKit::WebPageProxy::decidePolicyForNavigationAction):
+        (WebKit::WebPageProxy::decidePolicyForNewWindowAction):
+        (WebKit::WebPageProxy::decidePolicyForResponse):
+        (WebKit::WebPageProxy::decidePolicyForResponseSync):
+        (WebKit::WebPageProxy::unableToImplementPolicy):
+        (WebKit::WebPageProxy::willSubmitForm):
+        (WebKit::WebPageProxy::mouseDidMoveOverElement):
+        (WebKit::WebPageProxy::didBeginTrackingPotentialLongMousePress):
+        (WebKit::WebPageProxy::didRecognizeLongMousePress):
+        (WebKit::WebPageProxy::didCancelTrackingPotentialLongMousePress):
+        (WebKit::WebPageProxy::showContextMenu):
+        (WebKit::WebPageProxy::internalShowContextMenu):
+        (WebKit::WebPageProxy::didPerformActionMenuHitTest):
+        * UIProcess/WebPageProxy.h:
+        * UIProcess/WebPageProxy.messages.in:
+        * UIProcess/mac/WebPageProxyMac.mm:
+        (WebKit::WebPageProxy::showSelectionServiceMenu):
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::mouseDidMoveOverElement):
+        (WebKit::WebChromeClient::didBeginTrackingPotentialLongMousePress):
+        (WebKit::WebChromeClient::didRecognizeLongMousePress):
+        (WebKit::WebChromeClient::didCancelTrackingPotentialLongMousePress):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::detachedFromParent2):
+        (WebKit::WebFrameLoaderClient::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidChangeLocationWithinPage):
+        (WebKit::WebFrameLoaderClient::dispatchDidPushStateWithinPage):
+        (WebKit::WebFrameLoaderClient::dispatchDidReplaceStateWithinPage):
+        (WebKit::WebFrameLoaderClient::dispatchDidPopStateWithinPage):
+        (WebKit::WebFrameLoaderClient::dispatchDidStartProvisionalLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidReceiveTitle):
+        (WebKit::WebFrameLoaderClient::dispatchDidCommitLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidFailProvisionalLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidFailLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidFinishDocumentLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidFinishLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidLayout):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForResponse):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNewWindowAction):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction):
+        (WebKit::WebFrameLoaderClient::dispatchUnableToImplementPolicy):
+        (WebKit::WebFrameLoaderClient::dispatchWillSubmitForm):
+        (WebKit::WebFrameLoaderClient::shouldGoToHistoryItem):
+        (WebKit::WebFrameLoaderClient::didDisplayInsecureContent):
+        (WebKit::WebFrameLoaderClient::didRunInsecureContent):
+        (WebKit::WebFrameLoaderClient::didDetectXSS):
+        * WebProcess/WebPage/WebContextMenu.cpp:
+        (WebKit::WebContextMenu::show):
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::performActionMenuHitTestAtLocation):
+
+2014-12-29  Sam Weinig  <sam@webkit.org>
+
+        Move Pasteboard code out of WebProcessPool and into its own singleton class
+        https://bugs.webkit.org/show_bug.cgi?id=139987
+
+        Reviewed by Anders Carlsson.
+
+        * DerivedSources.make:
+        * Shared/WebPasteboardProxy.cpp: Added.
+        (WebKit::WebPasteboardProxy::shared):
+        (WebKit::WebPasteboardProxy::WebPasteboardProxy):
+        (WebKit::WebPasteboardProxy::addWebProcessProxy):
+        * Shared/WebPasteboardProxy.h: Added.
+        * Shared/WebPasteboardProxy.messages.in: Added.
+        * UIProcess/Cocoa/WebPasteboardProxyCocoa.mm: Added.
+        * UIProcess/Cocoa/WebProcessPoolCocoa.mm:
+        * UIProcess/WebProcessPool.cpp:
+        (WebKit::WebProcessPool::didReceiveSyncMessage):
+        (WebKit::WebProcessPool::dummy): Deleted.
+        * UIProcess/WebProcessPool.h:
+        * UIProcess/WebProcessPool.messages.in:
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::WebProcessProxy):
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/Plugins/PDF/PDFPlugin.mm:
+        (WebKit::PDFPlugin::writeItemsToPasteboard):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+
+2014-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Use UserData for bundle initialization data
+        https://bugs.webkit.org/show_bug.cgi?id=139989
+
+        Reviewed by Sam Weinig.
+
+        * Shared/WebProcessCreationParameters.cpp:
+        (WebKit::WebProcessCreationParameters::~WebProcessCreationParameters):
+        (WebKit::WebProcessCreationParameters::encode):
+        (WebKit::WebProcessCreationParameters::decode):
+        * Shared/WebProcessCreationParameters.h:
+        * UIProcess/WebProcessPool.cpp:
+        (WebKit::WebProcessPool::createNewWebProcess):
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::initializeWebProcess):
+        * WebProcess/WebProcess.h:
+        * WebProcess/WebProcess.messages.in:
+        * WebProcess/cocoa/WebProcessCocoa.mm:
+        (WebKit::WebProcess::platformInitializeWebProcess):
+
+2014-12-28  Anders Carlsson  <andersca@apple.com>
+
+        Use UserData when sending messages to the process pool
+        https://bugs.webkit.org/show_bug.cgi?id=139978
+
+        Reviewed by Sam Weinig.
+
+        * Scripts/webkit/messages.py:
+        (generate_message_handler):
+        Include the connection parameter for legacy receivers as well.
+
+        * Shared/CoreIPCSupport/WebContextMessageKinds.h:
+        Remove this, it's no longer needed.
+
+        * UIProcess/WebProcessPool.cpp:
+        (WebKit::WebProcessPool::didReceiveMessage):
+        No need to special case the postMessage message.
+
+        (WebKit::WebProcessPool::didReceiveSyncMessage):
+        No need to special case the postSynchronousMessageMessage message.
+
+        (WebKit::WebProcessPool::handleMessage):
+        Convert handles to objects and call didReceiveMessageFromInjectedBundle.
+
+        (WebKit::WebProcessPool::handleSynchronousMessage):
+        Convert handles to objects, call didReceiveSynchronousMessageFromInjectedBundle, and then
+        convert objects back to handles in the reply.
+
+        (WebKit::WebProcessPool::didReceiveMessageFromInjectedBundle): Deleted.
+        (WebKit::WebProcessPool::didReceiveSynchronousMessageFromInjectedBundle): Deleted.
+        (WebKit::WebProcessPool::dummy): Deleted.
+        * UIProcess/WebProcessPool.h:
+        Add handleMessage and handleSynchronousMessage message handlers.
+
+        * UIProcess/WebProcessPool.messages.in:
+        Add new messages.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Remove a now unused file.
+
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::postMessage):
+        Convert objects to handles in the message body and then send the HandleMessage to the UI process.
+
+        (WebKit::InjectedBundle::postSynchronousMessage):
+        Convert objects to handles in the message body, send the HandleSynchronousMessage message to the UI process,
+        and then convert handles back to objects in the reply.
+
+2014-12-28  Anders Carlsson  <andersca@apple.com>
+
+        Transform nested objects inside arrays
+        https://bugs.webkit.org/show_bug.cgi?id=139976
+
+        Reviewed by Oliver Hunt.
+
+        Call transformGraph on each element so that we'll transform other nested objects correctly.
+
+        * Shared/UserData.cpp:
+        (WebKit::transformGraph):
+
+>>>>>>> b56098f... We often misspell identifier as "identifer"
 2014-12-27  Dan Bernstein  <mitz@apple.com>
 
         iOS build fix after r177765.
