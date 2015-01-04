@@ -1,3 +1,240 @@
+2015-01-03  Michael Saboff  <msaboff@apple.com>
+
+        Crash in operationNewFunction when scrolling on Google+
+        https://bugs.webkit.org/show_bug.cgi?id=140033
+
+        Reviewed by Oliver Hunt.
+
+        New regerssion test.
+
+        * js/regress-140033-expected.txt: Added.
+        * js/regress-140033.html: Added.
+        * js/script-tests/regress-140033.js: Added.
+        (.unused):
+        (defineADeadFunction):
+
+2015-01-02  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of storage tracker layout tests
+        https://bugs.webkit.org/show_bug.cgi?id=140044
+
+        Reviewed by Darin Adler.
+
+        These tests are very flaky since they expect to be run in order. Furthermore, they were testing a WebKit Mac SPI
+        that is pretty hard to test reliably, due to its "design". It's not worth trying to make these tests work
+        or to rewrite them in Objective-C (which would be the right thing to do), so just get rid of them.
+
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/ios-simulator-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+        * platform/wk2/TestExpectations:
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-1-prepare-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-1-prepare.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-2-create-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-2-create.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-3-delete-all-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-3-delete-all.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-4-create-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-4-create.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-5-delete-one-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-5-delete-one.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-6-create-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-6-create.html: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-7-usage-expected.txt: Removed.
+        * storage/domstorage/localstorage/storagetracker/storage-tracker-7-usage.html: Removed.
+
+2015-01-02  Alexey Proskuryakov  <ap@apple.com>
+
+        js/dom/Promise.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=140043
+
+        * TestExpectations: Mark it as such.
+
+2015-01-02  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Grid Layout] Remove stack from grid-auto-flow syntax
+        https://bugs.webkit.org/show_bug.cgi?id=134842
+
+        Reviewed by Sergio Villar Senin.
+
+        Update layout tests in order to adapt the results to the new behavior.
+
+        * fast/css-grid-layout/grid-auto-flow-get-set-expected.txt:
+        * fast/css-grid-layout/grid-auto-flow-get-set.html:
+        * fast/css-grid-layout/grid-auto-flow-update.html:
+        * fast/css-grid-layout/grid-item-named-grid-area-resolution.html:
+        * fast/css-grid-layout/grid-item-z-index-change-repaint.html:
+        * fast/css-grid-layout/grid-item-z-index-stacking-context.html:
+        * fast/css-grid-layout/grid-shorthand-get-set-expected.txt:
+        * fast/css-grid-layout/grid-shorthand-get-set.html:
+        * fast/css-grid-layout/named-grid-lines-with-named-grid-areas-dynamic-get-set.html:
+        * fast/css-grid-layout/named-grid-lines-with-named-grid-areas-resolution.html:
+        * ietestcenter/css3/grid/grid-column-001.htm:
+        * ietestcenter/css3/grid/grid-column-002.htm:
+        * ietestcenter/css3/grid/grid-column-003.htm:
+
+2015-01-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        String includes methods perform toString on searchString before toInteger on a offset
+        https://bugs.webkit.org/show_bug.cgi?id=140031
+
+        Reviewed by Darin Adler.
+
+        As per the latest ES6 draft, String.prototype.{startsWith, endsWith, includes}
+        perform toString on searchString (argument 0) before performing toInteger on offset (argument 1).
+
+        * js/script-tests/string-includes.js:
+        (searchString.toString):
+        (startOffset.valueOf):
+        (endOffset.valueOf):
+        (matchString.toString): Deleted.
+        * js/string-includes-expected.txt:
+
+2015-01-01  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/xmlhttprequest/send-on-abort.html is flaky in debug builds
+        https://bugs.webkit.org/show_bug.cgi?id=140020
+
+        Reviewed by Darin Adler.
+
+        1. XHR loads are aborted when a page load starts, not when it's committed (which
+        is a known bug in WebKit). This gave the failure timer an opportunity to fire between
+        these events. Fixed by extending the delay.
+
+        2. Starting the test while parsing had a potential for a race with loading - we
+        could run it before all data was loaded. While this probably didn't happen in
+        practice here, it's better to run navigation tests under 100% reproducible conditions,
+        like during onload.
+
+        * http/tests/xmlhttprequest/send-on-abort.html:
+
+2014-12-31  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/notifications/legacy/show.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=140023
+
+        http/tests/notifications/window-show-on-click.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112499
+
+        Reviewed by Darin Adler.
+
+        Remove 100 ms timeouts from notification tests. If they become broken, it will
+        be detected as timeout.
+
+        * http/tests/notifications/events-in-dictionary.html:
+        * http/tests/notifications/events.html:
+        * http/tests/notifications/legacy/double-show.html:
+        * http/tests/notifications/legacy/events.html:
+        * http/tests/notifications/legacy/request-no-callback.html:
+        * http/tests/notifications/legacy/request.html:
+        * http/tests/notifications/legacy/show.html:
+        * http/tests/notifications/legacy/window-show-on-click.html:
+        * http/tests/notifications/request.html:
+        * http/tests/notifications/window-show-on-click.html:
+
+        * platform/mac/TestExpectations: window-show-on-click.html should pass now.
+
+2014-12-31  Alexey Proskuryakov  <ap@apple.com>
+
+        fast/ruby/ruby-svg-crash.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=135610
+
+        Reviewed by Darin Adler.
+
+        * fast/ruby/ruby-svg-crash.html: Streamline the test to avoid timer races. I
+        verified that it still crashes without the original fix (it gets an
+        ASSERT_WITH_SECURITY_IMPILICATIONS).
+        * platform/mac/TestExpectations: Removed the expectation.
+
+2014-12-31  Alexey Proskuryakov  <ap@apple.com>
+
+        execDeleteCommand() does not update spellchecker sometimes
+        https://bugs.webkit.org/show_bug.cgi?id=139862
+
+        Updated test expectation for a test that always crashes on WK1 (it was already
+        skipped on mac-wk2, efl and gtk).
+
+        * TestExpectations:
+        * platform/mac-wk1/TestExpectations:
+
+2014-12-31  Alexey Proskuryakov  <ap@apple.com>
+
+        Test expectation gardening.
+
+        Add expectations for test that became flaky after enabling kerning and ligatures,
+        plus a few more that were mis-characterized.
+
+        * platform/efl/TestExpectations:
+        * platform/mac/TestExpectations:
+
+2014-12-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r177824 and r177826.
+        https://bugs.webkit.org/show_bug.cgi?id=140011
+
+        The new test crashes (Requested by ap on #webkit).
+
+        Reverted changesets:
+
+        "Too large plugins are crashing."
+        https://bugs.webkit.org/show_bug.cgi?id=139856
+        http://trac.webkit.org/changeset/177824
+
+        "Fix bug number typo in the previous commit."
+        http://trac.webkit.org/changeset/177826
+
+2014-12-31  Alexey Proskuryakov  <ap@apple.com>
+
+        Update storage tracker test expectations after r177814.
+
+        * platform/mac/TestExpectations:
+
+2014-12-31  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Win] Unreviewed gardening, mark more timeouting tests.
+
+        * platform/win/TestExpectations:
+
+2014-12-30  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        Fix bug number typo in the previous commit.
+
+        * plugins/large-plugin-crash-expected.txt:
+        * plugins/large-plugin-crash.html:
+
+2014-12-30  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        Too large plugins are crashing.
+        https://bugs.webkit.org/show_bug.cgi?id=139868
+
+        Reviewed by Darin Adler.
+
+        Add layout test to cover this crash.
+
+        * plugins/large-plugin-crash-expected.txt: Added.
+        * plugins/large-plugin-crash.html: Added.
+
+2014-12-29  Sebastian Dröge  <sebastian@centricular.com>
+
+        Enable MediaSource tests for the GTK port
+        https://bugs.webkit.org/show_bug.cgi?id=139441
+
+        Reviewed by Philippe Normand.
+
+        * platform/gtk/TestExpectations:
+        Enable MediaSource tests that are actually succeeding for
+        the GTK port.
+
+2014-12-28  Alexey Proskuryakov  <ap@apple.com>
+
+        fast/regions/layers/region-removed-during-animation.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=139979
+
+        * platform/mac-wk2/TestExpectations: Marking as such.
+
 2014-12-28  Alexey Proskuryakov  <ap@apple.com>
 
         Update Mac test results after r177770.
