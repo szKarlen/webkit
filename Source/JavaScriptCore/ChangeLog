@@ -1,3 +1,69 @@
+2015-01-03  Michael Saboff  <msaboff@apple.com>
+
+        Crash in operationNewFunction when scrolling on Google+
+        https://bugs.webkit.org/show_bug.cgi?id=140033
+
+        Reviewed by Oliver Hunt.
+
+        In DFG code, the scope register can be eliminated because all uses have been
+        dead code eliminated.  In the case where one of the uses was creating a function
+        that is never used, the baseline code will still create the function.  If we OSR
+        exit to a path where that function gets created, check the scope register value
+        and set the new, but dead, function to undefined instead of creating a new function.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_new_func_exp):
+
+2015-01-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        String includes methods perform toString on searchString before toInt32 on a offset
+        https://bugs.webkit.org/show_bug.cgi?id=140031
+
+        Reviewed by Darin Adler.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncStartsWith):
+        (JSC::stringProtoFuncEndsWith):
+        (JSC::stringProtoFuncIncludes):
+
+2015-01-01  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Change to return std::unique_ptr<> in fooCreate()
+        https://bugs.webkit.org/show_bug.cgi?id=139983
+
+        Reviewed by Darin Adler.
+
+        To avoid unnecessary std::unique_ptr<> casting, fooCreate() returns std::unique_ptr<> directly.
+
+        * create_regex_tables:
+        * yarr/YarrPattern.h:
+        (JSC::Yarr::YarrPattern::reset):
+        (JSC::Yarr::YarrPattern::newlineCharacterClass):
+        (JSC::Yarr::YarrPattern::digitsCharacterClass):
+        (JSC::Yarr::YarrPattern::spacesCharacterClass):
+        (JSC::Yarr::YarrPattern::wordcharCharacterClass):
+        (JSC::Yarr::YarrPattern::nondigitsCharacterClass):
+        (JSC::Yarr::YarrPattern::nonspacesCharacterClass):
+        (JSC::Yarr::YarrPattern::nonwordcharCharacterClass):
+
+2015-01-01  Jeff Miller  <jeffm@apple.com>
+
+        Update user-visible copyright strings to include 2015
+        https://bugs.webkit.org/show_bug.cgi?id=139880
+
+        Reviewed by Darin Adler.
+
+        * Info.plist:
+
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        We often misspell identifier as "identifer"
+        https://bugs.webkit.org/show_bug.cgi?id=140025
+
+        Reviewed by Michael Saboff.
+
+        * runtime/ArrayConventions.h: Fix it.
+
 2014-12-29  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
 
         Move JavaScriptCore/yarr to std::unique_ptr
