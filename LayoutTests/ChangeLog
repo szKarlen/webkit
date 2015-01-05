@@ -14878,7 +14878,6 @@
         * fast/ruby/crash-with-before-after-on-ruby-expected.txt: Added.
         * fast/ruby/crash-with-before-after-on-ruby.html: Added.
 
->>>>>>> c4dc171... [JSC] Make StringRecursionChecker faster in the simple cases without any recursion
 2015-02-13  Michael Saboff  <msaboff@apple.com>
 
         Google doc spreadsheet reproducibly crashes when sorting
