@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2015-03-30  Per Arne Vollan  <peavo@outlook.com>
 
         [WinCairo] Crash when closing window while video is loading
@@ -34092,6 +34093,8 @@
         (WebCore::TextureMapperLayer::setChildren):
         * platform/graphics/texmap/TextureMapperLayer.h:
 
+=======
+>>>>>>> 73ea976... [TexMap] m_layer member in GraphicsLayerTextureMapper is always non-null
 2015-01-07  Zan Dobersek  <zdobersek@igalia.com>
 
         [TexMap] m_layer member in GraphicsLayerTextureMapper is always non-null

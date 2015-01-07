@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2015-05-08  Andreas Kling  <akling@apple.com>
 
         Optimize serialization of quoted JSON strings.
@@ -20299,6 +20300,8 @@
         The library is linked in using @rpath, so the only reliable way to find its location
         is by examining binary images loaded into the current process.
 
+=======
+>>>>>>> 73ea976... [TexMap] m_layer member in GraphicsLayerTextureMapper is always non-null
 2015-01-07  Zan Dobersek  <zdobersek@igalia.com>
 
         [TexMap] m_layer member in GraphicsLayerTextureMapper is always non-null
