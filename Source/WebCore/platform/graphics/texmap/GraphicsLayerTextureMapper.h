@@ -86,7 +86,9 @@ public:
     virtual void flushCompositingState(const FloatRect&) override;
     virtual void flushCompositingStateForThisLayerOnly() override;
 
-    TextureMapperLayer* layer() const { return m_layer.get(); }
+    void updateBackingStoreIncludingSubLayers();
+
+    TextureMapperLayer& layer() { return m_layer; }
 
     void didCommitScrollOffset(const IntSize&);
     void setIsScrollable(bool);
