@@ -174,6 +174,7 @@ library WebKit
     [uuid(a062ecc3-bb1b-4694-a569-f59e0ad6be0c)]
     coclass WebMutableURLRequest {
         [default] interface IWebMutableURLRequest;
+        interface IWebMutableURLRequestPrivate;
     }
 
     [uuid(ba590766-0a6f-46c7-b96e-743490d94cb7)]
@@ -184,6 +185,7 @@ library WebKit
     [uuid(a4b9b45d-949f-4c8c-9b92-6fbfcc1caaa2)]
     coclass WebHistory {
         [default] interface IWebHistory;
+        interface IWebHistoryPrivate;
     }
 
     [uuid(dd653964-4d37-4fb2-9cb6-6a9a97719332)]
@@ -194,6 +196,7 @@ library WebKit
     [uuid(6be190e9-1725-4e4a-88db-6a9fe242c9e5)]
     coclass WebHistoryItem {
         [default] interface IWebHistoryItem;
+        interface IWebHistoryItemPrivate;
     }
 
     [uuid(1119E970-4b13-4b9a-a049-41096104b689)]
@@ -214,6 +217,7 @@ library WebKit
     [uuid(67B89F90-F778-438b-ABBF-34D1ACBF8651)]
     coclass WebPreferences {
         [default] interface IWebPreferences;
+        interface IWebPreferencesPrivate;
     }
 
     [uuid(E93AA8D7-F362-4a4a-A95D-325906BEB5F0)]
@@ -249,6 +253,7 @@ library WebKit
     [uuid(AB201196-8DD2-4d45-AEBD-029B6A37AA27)]
     coclass WebURLResponse {
         [default] interface IWebURLResponse;
+        interface IWebURLResponsePrivate;
     }
 
     [uuid(24040cd6-aff4-4a51-9c8b-71539580ee76)]
