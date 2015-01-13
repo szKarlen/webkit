@@ -1,3 +1,64 @@
+<<<<<<< HEAD
+=======
+2015-01-13  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        DFG can call PutByValDirect for generic arrays
+        https://bugs.webkit.org/show_bug.cgi?id=140389
+
+        Reviewed by Geoffrey Garen.
+
+        Computed properties in object initializers (ES6) use the put_by_val_direct operation.
+        However, current DFG asserts that put_by_val_direct is not used for the generic array,
+        the assertion failure is raised.
+        This patch allow DFG to use put_by_val_direct to generic arrays.
+
+        And fix the DFG put_by_val_direct implementation for string properties.
+        At first, put_by_val_direct is inteded to be used for spread elements.
+        So the property keys were limited to numbers (indexes).
+        But now, it's also used for computed properties in object initializers.
+
+        * dfg/DFGOperations.cpp:
+        (JSC::DFG::operationPutByValInternal):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2015-01-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Out of bounds access in BytecodeGenerator::emitGetById under DotAccessorNode::emitBytecode
+        https://bugs.webkit.org/show_bug.cgi?id=140397
+
+        Reviewed by Geoffrey Garen.
+
+        Patch by Alexey Proskuryakov.
+
+        Reviewed, performance tested, and ChangeLogged by Geoffrey Garen.
+
+        No performance change.
+
+        No test, since this is a small past-the-end read, which is very
+        difficult to turn into a reproducible failing test -- and existing tests
+        crash reliably using ASan.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BracketAccessorNode::emitBytecode):
+        (JSC::DotAccessorNode::emitBytecode):
+        (JSC::FunctionCallBracketNode::emitBytecode):
+        (JSC::PostfixNode::emitResolve):
+        (JSC::DeleteBracketNode::emitBytecode):
+        (JSC::DeleteDotNode::emitBytecode):
+        (JSC::PrefixNode::emitResolve):
+        (JSC::UnaryOpNode::emitBytecode):
+        (JSC::BitwiseNotNode::emitBytecode):
+        (JSC::BinaryOpNode::emitBytecode):
+        (JSC::EqualNode::emitBytecode):
+        (JSC::StrictEqualNode::emitBytecode):
+        (JSC::ThrowableBinaryOpNode::emitBytecode):
+        (JSC::AssignDotNode::emitBytecode):
+        (JSC::AssignBracketNode::emitBytecode): Use RefPtr in more places. Any
+        register used across a call to a function that might allocate a new
+        temporary register must be held in a RefPtr.
+
+>>>>>>> 54df1d8... DFG can call PutByValDirect for generic arrays
 2015-01-12  Michael Saboff  <msaboff@apple.com>
 
         Local JSArray* "keys" in objectConstructorKeys() is not marked during garbage collection
