@@ -81,11 +81,7 @@ namespace WebCore {
 
         static PassRefPtr<Inspector::InspectorObject> createResourceSendRequestData(const String& requestId, const ResourceRequest&);
 
-        static PassRefPtr<Inspector::InspectorObject> createScheduleResourceRequestData(const String&);
-
-        static PassRefPtr<Inspector::InspectorObject> createResourceReceiveResponseData(const String& requestId, const ResourceResponse&);
-
-        static PassRefPtr<Inspector::InspectorObject> createReceiveResourceData(const String& requestId, int length);
+        static Ref<Inspector::InspectorObject> createMarkData(bool isMainFrame);
 
         static PassRefPtr<Inspector::InspectorObject> createResourceFinishData(const String& requestId, bool didFail, double finishTime);
 

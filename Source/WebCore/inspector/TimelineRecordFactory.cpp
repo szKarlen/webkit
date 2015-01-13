@@ -207,22 +207,8 @@ PassRefPtr<InspectorObject> TimelineRecordFactory::createLayoutData(unsigned dir
     data->setBoolean("partialLayout", partialLayout);
     return data.release();
 }
-    
-PassRefPtr<InspectorObject> TimelineRecordFactory::createDecodeImageData(const String& imageType)
-{
-    RefPtr<InspectorObject> data = InspectorObject::create();
-    data->setString("imageType", imageType);
-    return data.release();
-}
 
-PassRefPtr<InspectorObject> TimelineRecordFactory::createResizeImageData(bool shouldCache)
-{
-    RefPtr<InspectorObject> data = InspectorObject::create();
-    data->setBoolean("cached", shouldCache);
-    return data.release();
-}
-
-PassRefPtr<InspectorObject> TimelineRecordFactory::createMarkData(bool isMainFrame)
+Ref<InspectorObject> TimelineRecordFactory::createMarkData(bool isMainFrame)
 {
     RefPtr<InspectorObject> data = InspectorObject::create();
     data->setBoolean("isMainFrame", isMainFrame);

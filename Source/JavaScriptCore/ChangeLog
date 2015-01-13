@@ -1,5 +1,12 @@
-<<<<<<< HEAD
-=======
+2015-01-13  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove unused ResizeImage and DecodeImageData timeline events
+        https://bugs.webkit.org/show_bug.cgi?id=140404
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/Timeline.json:
+
 2015-01-13  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         DFG can call PutByValDirect for generic arrays
@@ -58,7 +65,6 @@
         register used across a call to a function that might allocate a new
         temporary register must be held in a RefPtr.
 
->>>>>>> 54df1d8... DFG can call PutByValDirect for generic arrays
 2015-01-12  Michael Saboff  <msaboff@apple.com>
 
         Local JSArray* "keys" in objectConstructorKeys() is not marked during garbage collection
