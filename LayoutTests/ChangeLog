@@ -1,5 +1,137 @@
-<<<<<<< HEAD
-=======
+2015-01-14  Michael Saboff  <msaboff@apple.com>
+
+        JavaScript identifier incorrectly parsed if the prefix before an escape sequence is a keyword
+        https://bugs.webkit.org/show_bug.cgi?id=140420
+
+        Reviewed by Oliver Hunt.
+
+        New regression test.
+
+        * js/regress-140420-expected.txt: Added.
+        * js/regress-140420.html: Added.
+        * js/script-tests/regress-140420.js: Added.
+        (with):
+        (this):
+
+2015-01-14  Jer Noble  <jer.noble@apple.com>
+
+        Null-deref crash when seeking immediately before looping.
+        https://bugs.webkit.org/show_bug.cgi?id=140394
+
+        Reviewed by Eric Carlson.
+
+        * media/video-ended-seek-crash-expected.txt: Added.
+        * media/video-ended-seek-crash.html: Added.
+
+2015-01-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        * platform/win/TestExpectations: Add a Crash expectation now that
+        https://bugs.webkit.org/show_bug.cgi?id=140444 has been filed.
+
+2015-01-13  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178390, r178392, r178398, r178400,
+        r178402, and r178410.
+        https://bugs.webkit.org/show_bug.cgi?id=140431
+
+        Way too many failures to skip (Requested by ap_ on #webkit).
+
+        Reverted changesets:
+
+        "WebGL2: Support webgl2 context creation."
+        https://bugs.webkit.org/show_bug.cgi?id=126408
+        http://trac.webkit.org/changeset/178390
+
+        "Unreviewed iOS build fix after r178390."
+        http://trac.webkit.org/changeset/178392
+
+        "[Unreviewed] Windows build fix after r178390."
+        http://trac.webkit.org/changeset/178398
+
+        "[Unreviewed] Speculative test fix after r178390."
+        http://trac.webkit.org/changeset/178400
+
+        "[Unreviewed] Skip webgl tests for temporarily."
+        https://bugs.webkit.org/show_bug.cgi?id=140423
+        http://trac.webkit.org/changeset/178402
+
+        "[EFL] Fix build after r178390"
+        https://bugs.webkit.org/show_bug.cgi?id=140424
+        http://trac.webkit.org/changeset/178410
+
+2015-01-13  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed test gardening.
+
+        * platform/win/TestExpectations: Add Debug Crash documentation now that Bug 140425 has been filed.
+
+2015-01-13  Chris Dumez  <cdumez@apple.com>
+
+        Only throttle DOM timers if they change CSS properties that cannot cause non-descendant elements to become visible
+        https://bugs.webkit.org/show_bug.cgi?id=140142
+
+        Reviewed by Daniel Bates.
+
+        Fix layout test introduced in r178014. I forgot to remove a
+        setTimeout() call.
+
+        * fast/dom/timer-height-change-no-throttling.html:
+
+2015-01-13  Roger Fong  <roger_fong@apple.com>
+
+        [Unreviewed] Skip webgl tests for temporarily.
+        https://bugs.webkit.org/show_bug.cgi?id=140423
+
+        * platform/mac/TestExpectations:
+
+2015-01-13  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Missed images and missed new lines in the expected results of the imported w3c canvas layout tests.
+        https://bugs.webkit.org/show_bug.cgi?id=140409.
+
+        Reviewed by Dean Jackson.
+        
+        Fix some failures in the imported W3C canvas tests. These failures were happening because
+        of missing images or missing new lines at the end of the expected results.
+
+        * TestExpectations:
+
+2015-01-13  Dean Jackson  <dino@apple.com>
+
+        Filters aren't applied to elements in columns after the first
+        https://bugs.webkit.org/show_bug.cgi?id=140331
+        <rdar://problem/19313858>
+
+        Unreviewed followup after discussion with Simon Fraser.
+
+        Add a new test that exercises nested blocks inside columns. Also
+        use valid properties in my existing tests :)
+
+        * fast/multicol/clip-in-columns-expected.html:
+        * fast/multicol/clip-in-columns.html:
+        * fast/multicol/filter-in-columns-expected.html:
+        * fast/multicol/filter-in-columns.html:
+        * fast/multicol/nested-filter-in-columns-expected.html: Copied from LayoutTests/fast/multicol/filter-in-columns-expected.html.
+        * fast/multicol/nested-filter-in-columns.html: Copied from LayoutTests/fast/multicol/filter-in-columns.html.
+
+2015-01-13  Dean Jackson  <dino@apple.com>
+
+        Filters aren't applied to elements in columns after the first
+        https://bugs.webkit.org/show_bug.cgi?id=140331
+        <rdar://problem/19313858>
+
+        Reviewed by Simon Fraser.
+
+        Tests for filters and clipping on a column other
+        than the first.
+
+        * fast/multicol/clip-in-columns-expected.html: Added.
+        * fast/multicol/clip-in-columns.html: Added.
+        * fast/multicol/filter-in-columns-expected.html: Added.
+        * fast/multicol/filter-in-columns.html: Added.
+
 2015-01-13  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         DFG can call PutByValDirect for generic arrays
@@ -1485,7 +1617,6 @@
         Also, demystified the test by using readyState instead of counting readystatechange
         events.
 
->>>>>>> 54df1d8... DFG can call PutByValDirect for generic arrays
 2015-01-03  Michael Saboff  <msaboff@apple.com>
 
         Crash in operationNewFunction when scrolling on Google+
