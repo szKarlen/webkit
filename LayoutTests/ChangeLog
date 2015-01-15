@@ -1,3 +1,278 @@
+2015-01-15  Mark Lam  <mark.lam@apple.com>
+
+        [Part 2] Argument object created by "Function dot arguments" should use a clone of argument values.
+        <https://webkit.org/b/140093>
+
+        Reviewed by Geoffrey Garen.
+
+        * js/function-dot-arguments-expected.txt:
+        * js/script-tests/function-dot-arguments.js:
+        (arrayify):
+        (indirectCall):
+        (.inner):
+        (tearOffTest3):
+        (tearOffTest3b):
+        (tearOffTest3c):
+        (tearOffTest4External):
+        (tearOffTest4):
+        (tearOffTest4aExternal):
+        (tearOffTest4bExternal):
+        (tearOffTest4b):
+        (tearOffTest4cExternal):
+        (tearOffTest4c):
+        (tearOffTest5):
+        (tearOffTest5b):
+        (tearOffTest5c):
+        (tearOffTest6External):
+        (tearOffTest6):
+        (tearOffTest6aExternal):
+        (tearOffTest6bExternal):
+        (tearOffTest6b):
+        (tearOffTest6cExternal):
+        (tearOffTest6c):
+        (tearOffTest7):
+        (tearOffTest7b):
+        (tearOffTest7c):
+        (tearOffTest8External):
+        (tearOffTest8):
+        (tearOffTest8aExternal):
+        (tearOffTest8bExternal):
+        (tearOffTest8b):
+        (tearOffTest8cExternal):
+        (tearOffTest8c):
+        (tearOffTest9b):
+        (tearOffTest9c):
+        (tearOffTest10External):
+        (tearOffTest10):
+        (tearOffTest10aExternal):
+        (tearOffTest10bExternal):
+        (tearOffTest10b):
+        (tearOffTest10cExternal):
+        (tearOffTest10c):
+
+2015-01-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Mark some debug crashes as being caused by Bug 135514.
+
+        * platform/win/TestExpectations:
+
+2015-01-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Mark fast/dynamic/layer-no-longer-paginated.html as crashing on Windows
+        now that https://bugs.webkit.org/show_bug.cgi?id=140455 has been filed.
+
+        * platform/win/TestExpectations:
+
+2015-01-15  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        http/tests/misc/acid3.html is flakey on Mavericks
+        https://bugs.webkit.org/show_bug.cgi?id=140253
+
+        Reviewed by Alexey Proskuryakov.
+
+        Remove flakey mark.
+
+        * platform/mac/TestExpectations:
+
+2015-01-15  Andrzej Badowski  <a.badowski@samsung.com>
+
+        AX: [ATK] Mark accessibility/render-counter-text.html as a suitable test for EFL and GTK.
+        https://bugs.webkit.org/show_bug.cgi?id=140438
+
+        Reviewed by Chris Fleizach.
+
+        The test shows the text contents of the <li> element with the counter inside <ol> using three childAtIndex().stringValue methods.
+        In the case of ATK childAtIndex(0) returns a non-empty object, but it is not the ATK_OBJECT,
+        so the stringValue produces an empty string.
+        To avoid this, the text content is obtained by direct reading of stringValue of <li> AccessibilityUIElement which is ATK_TEXT.
+
+        * accessibility/render-counter-text.html:
+           This test is also suitable for EFL and GTK port.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2015-01-14  Simon Fraser  <simon.fraser@apple.com>
+
+        Graphics corruption after Find on some pages
+        https://bugs.webkit.org/show_bug.cgi?id=140489
+
+        Reviewed by Zalan Bujtas.
+        
+        Two new tests. The first one just reports that we have an opaque compositing
+        layer. The second one tests the the user-visible symptom of the missing
+        background.
+
+        * compositing/contents-opaque/opaque-with-scrolled-expected.txt: Added.
+        * compositing/contents-opaque/opaque-with-scrolled.html: Added.
+        * fast/backgrounds/opaque-scrolled-paint-background-expected.html: Added.
+        * fast/backgrounds/opaque-scrolled-paint-background.html: Added.
+
+2015-01-14  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/17748495> Multiple compositing tests fail to repaint on WK1
+
+        * platform/mac/TestExpectations: These tests pass now, unmarking.
+
+2015-01-14  Alexey Proskuryakov  <ap@apple.com>
+
+        Update expectations for what we see on upgraded EWS machines.
+
+        * platform/mac/TestExpectations:
+
+2015-01-14  Jer Noble  <jer.noble@apple.com>
+
+        [Mac][MSE] Stalled YouTube playback does not allow display to sleep.
+        https://bugs.webkit.org/show_bug.cgi?id=140468
+        rdar://problem/19171162
+
+        Reviewed by Eric Carlson.
+
+        * media/media-source/content/test-fragmented-manifest.json: Added.
+        * media/media-source/content/test-fragmented.mp4: Added.
+        * media/media-source/media-source-loader.js: Added.
+        (MediaSourceLoader):
+        (MediaSourceLoader.prototype.loadManifest):
+        (MediaSourceLoader.prototype.loadManifestSucceeded):
+        (MediaSourceLoader.prototype.loadManifestFailed):
+        (MediaSourceLoader.prototype.loadMediaData):
+        (MediaSourceLoader.prototype.loadMediaDataSucceeded):
+        (MediaSourceLoader.prototype.loadMediaDataFailed):
+        (MediaSourceLoader.prototype.type):
+        (MediaSourceLoader.prototype.duration):
+        (MediaSourceLoader.prototype.initSegment):
+        (MediaSourceLoader.prototype.mediaSegmentsLength):
+        (MediaSourceLoader.prototype.mediaSegment):
+        * media/media-source/media-source-stalled-holds-sleep-assertion-expected.txt: Added.
+        * media/media-source/media-source-stalled-holds-sleep-assertion.html: Added.
+
+2015-01-14  Andrzej Badowski  <a.badowski@samsung.com>
+
+        [EFL] Change expectations for two layout tests.
+        https://bugs.webkit.org/show_bug.cgi?id=140391
+
+        Reviewed by Chris Fleizach.
+
+        Currently, two layout tests produce positive results for EFL:
+        - accessibility/fieldset-element-expected.html
+        - accessibility/negative-tabindex-does-not-expose-label.html.
+
+        * accessibility/fieldset-element-expected.txt: Renamed from LayoutTests/platform/gtk/accessibility/fieldset-element-expected.txt.
+        * accessibility/negative-tabindex-does-not-expose-label-expected.txt: Renamed from LayoutTests/platform/gtk/accessibility/negative-tabindex-does-not-expose-label-expected.txt.
+        * platform/efl/TestExpectations:
+           Missing markings removed.
+
+2015-01-14  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178438.
+        https://bugs.webkit.org/show_bug.cgi?id=140484
+
+        Broke a few MediaSource tests (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "[MSE] Implement per TrackBuffer buffered."
+        https://bugs.webkit.org/show_bug.cgi?id=139813
+        http://trac.webkit.org/changeset/178438
+
+2015-01-14  Enrica Casucci  <enrica@apple.com>
+
+        REGRESSION (r165385): Crash when applying autocorrection exceeds maximum text area length.
+        https://bugs.webkit.org/show_bug.cgi?id=137902
+        rdar://problem/18568864
+
+        Reviewed by Darin Adler.
+
+        * editing/text-iterator/invalid-subrange-expected.txt: Added.
+        * editing/text-iterator/invalid-subrange.html: Added.
+
+2015-01-14  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        REGRESSION (r154769): Wrong <title> taken as a tooltip for SVG element.
+        https://bugs.webkit.org/show_bug.cgi?id=139690.
+
+        Reviewed by Daniel Bates.
+
+        * svg/hittest/resources: Added.
+        * svg/hittest/resources/svg-tooltip.svg: Added.
+        Shared resources to be used by the tests.
+
+        * svg/hittest/resources/svg-tooltip.js: Added.
+        This code mimics the C++ tooltip calculation and compares its result with what the C++
+        code returns.
+        
+        * svg/hittest/svg-embedded-tooltip-expected.txt: Added.
+        * svg/hittest/svg-embedded-tooltip.html: Added.
+        This test ensures that the tooltip text for SVG elements is calculated correctly when
+        the SVG is embedded in an HTML either through inline <svg> tag or through an <embed>
+        tag. In both cases, the rootmost SVG element should return the SVG document title.
+        
+        * svg/hittest/svg-standalone-tooltip-expected.txt: Added.
+        * svg/hittest/svg-standalone-tooltip.svg: Added.
+        This test ensures that for stand-alone SVG documents, the tooltip text for SVG elements
+        is calculated correctly. In this case, the rootmost SVG element should not return a
+        title since the SVG document title will be displayed in the browser chrome.
+
+2015-01-14  Bartlomiej Gajda  <b.gajda@samsung.com>
+
+        [MSE] Implement per TrackBuffer buffered.
+        https://bugs.webkit.org/show_bug.cgi?id=139813.
+
+        Reviewed by Jer Noble.
+
+        Added tests which checks how buffered behaves for two trackBuffers in single SourceBuffer
+        after appends, and with MediaSource readyState switching to ended and back to open.
+
+        * media/media-source/media-source-multiple-trackBuffers-buffered-expected.txt: Added.
+        * media/media-source/media-source-multiple-trackBuffers-buffered-in-ended-state-expected.txt: Added.
+        * media/media-source/media-source-multiple-trackBuffers-buffered-in-ended-state.html: Added.
+        * media/media-source/media-source-multiple-trackBuffers-buffered.html: Added.
+
+2015-01-14  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178432.
+        https://bugs.webkit.org/show_bug.cgi?id=140460
+
+        Caused 20 JSC Test Failures (Requested by JoePeck on #webkit).
+
+        Reverted changeset:
+
+        "REGRESSION (r174226): Header on huffingtonpost.com is too
+        large"
+        https://bugs.webkit.org/show_bug.cgi?id=140306
+        http://trac.webkit.org/changeset/178432
+
+2015-01-14  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION (r174226): Header on huffingtonpost.com is too large
+        https://bugs.webkit.org/show_bug.cgi?id=140306
+
+        Reviewed by Geoffrey Garen.
+
+        Updated js/arguments-iterator to test changing argument to array values.
+        Removed tests that changed arguments to a string and an object as they were
+        bogus and didn't test what the appeared to test. 
+        for .. of works on iterable objects only.
+
+        Added new regression test, js/regress-140306.
+
+        * js/arguments-iterator-expected.txt:
+        * js/regress-140306-expected.txt: Added.
+        * js/regress-140306.html: Added.
+        * js/script-tests/arguments-iterator.js:
+        (testEmptyArrayArguments):
+        (testArrayArguments):
+        (testOverwrittenArguments): Deleted.
+        (testNullArguments): Deleted.
+        (testNonArrayLikeArguments): Deleted.
+        * js/script-tests/regress-140306.js: Added.
+        (checkArgs):
+        (applyToArgs):
+
 2015-01-14  Michael Saboff  <msaboff@apple.com>
 
         JavaScript identifier incorrectly parsed if the prefix before an escape sequence is a keyword

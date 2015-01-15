@@ -86,6 +86,8 @@ public:
     void copyToArguments(ExecState*, CallFrame*, uint32_t copyLength, int32_t firstArgumentOffset);
     void tearOff(CallFrame*);
     void tearOff(CallFrame*, InlineCallFrame*);
+    void tearOffForCloning(CallFrame*);
+    void tearOffForCloning(CallFrame*, InlineCallFrame*);
     bool isTornOff() const { return m_registers == (&registerArray() - CallFrame::offsetFor(1) - 1); }
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype) 
@@ -309,7 +311,14 @@ inline void Arguments::finishCreation(CallFrame* callFrame, JSLexicalEnvironment
             tearOff(callFrame);
         break;
     }
-        
+
+    case ClonedArgumentsCreationMode: {
+        m_numArguments = callFrame->argumentCount();
+        m_registers = reinterpret_cast<WriteBarrierBase<Unknown>*>(callFrame->registers());
+        tearOffForCloning(callFrame);
+        break;
+    }
+
     case FakeArgumentValuesCreationMode: {
         m_numArguments = 0;
         m_registers = nullptr;
@@ -349,7 +358,21 @@ inline void Arguments::finishCreation(CallFrame* callFrame, InlineCallFrame* inl
             tearOff(callFrame, inlineCallFrame);
         break;
     }
+    
+    case ClonedArgumentsCreationMode: {
+        m_numArguments = inlineCallFrame->arguments.size() - 1;
+        if (m_numArguments) {
+            int offsetForArgumentOne = inlineCallFrame->arguments[1].virtualRegister().offset();
+            m_registers = reinterpret_cast<WriteBarrierBase<Unknown>*>(callFrame->registers()) + offsetForArgumentOne - virtualRegisterForArgument(1).offset();
+        } else
+            m_registers = 0;
         
+        ASSERT(!jsCast<FunctionExecutable*>(inlineCallFrame->executable.get())->symbolTable(inlineCallFrame->specializationKind())->slowArguments());
+        
+        tearOffForCloning(callFrame, inlineCallFrame);
+        break;
+    }
+
     case FakeArgumentValuesCreationMode: {
         m_numArguments = 0;
         m_registers = nullptr;
