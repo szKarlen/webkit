@@ -32,3 +32,7 @@ function Test(maxCount)
 o = new Test(5000);
 
 shouldBeTrue("o.test() == 5000");
+<<<<<<< HEAD
+=======
+ 
+>>>>>>> 7603917... Crash in JSScope::resolve() on tools.ups.com
