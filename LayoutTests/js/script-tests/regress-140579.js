@@ -32,4 +32,3 @@ function Test(maxCount)
 o = new Test(5000);
 
 shouldBeTrue("o.test() == 5000");
- 

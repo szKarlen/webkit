@@ -1,3 +1,170 @@
+2015-01-17  Michael Saboff  <msaboff@apple.com>
+
+        Crash in JSScope::resolve() on tools.ups.com
+        https://bugs.webkit.org/show_bug.cgi?id=140579
+
+        Reviewed by Geoffrey Garen.
+
+        For op_resolve_scope of a global property or variable that needs to check for the var
+        injection check watchpoint, we need to keep the scope around with a Phantom.  The
+        baseline JIT slowpath for op_resolve_scope needs the scope value if the watchpoint
+        fired.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+
+2015-01-16  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: code generator should introduce typedefs for protocol types that are arrays
+        https://bugs.webkit.org/show_bug.cgi?id=140557
+
+        Reviewed by Joseph Pecoraro.
+
+        Currently, there is no generated type name for "array" type declarations such as Console.CallStack.
+        This makes it longwinded and confusing to use the type in C++ code.
+
+        This patch adds a typedef for array type declarations, so types such as Console::CallStack
+        can be referred to directly, rather than using Inspector::Protocol::Array<Console::CallFrame>.
+
+        Some tests were updated to cover array type declarations used as parameters and type members.
+
+        * inspector/ScriptCallStack.cpp: Use the new typedef.
+        (Inspector::ScriptCallStack::buildInspectorArray):
+        * inspector/ScriptCallStack.h:
+        * inspector/scripts/codegen/cpp_generator.py:
+        (CppGenerator.cpp_protocol_type_for_type): If an ArrayType is nominal, use the typedef'd name instead.
+        * inspector/scripts/codegen/generate_cpp_protocol_types_header.py:
+        (_generate_typedefs_for_domain): Also generate typedefs for array type declarations.
+        (_generate_typedefs_for_domain.Inspector):
+        * inspector/scripts/codegen/models.py: Save the name of an ArrayType when it is a type declaration.
+        (ArrayType.__init__):
+        (Protocol.resolve_types):
+        (Protocol.lookup_type_reference):
+        * inspector/scripts/tests/commands-with-async-attribute.json:
+        * inspector/scripts/tests/commands-with-optional-call-return-parameters.json:
+        * inspector/scripts/tests/events-with-optional-parameters.json:
+        * inspector/scripts/tests/expected/commands-with-async-attribute.json-result:
+        * inspector/scripts/tests/expected/commands-with-optional-call-return-parameters.json-result:
+        * inspector/scripts/tests/expected/events-with-optional-parameters.json-result:
+        * inspector/scripts/tests/expected/type-declaration-array-type.json-result:
+        * inspector/scripts/tests/expected/type-declaration-object-type.json-result:
+        * inspector/scripts/tests/expected/type-requiring-runtime-casts.json-result:
+        * inspector/scripts/tests/type-declaration-object-type.json:
+
+2015-01-16  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: purge remaining PassRefPtr uses and minor cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=140456
+
+        Reviewed by Andreas Kling.
+
+        Get rid of PassRefPtr. Introduce default initializers where it makes sense.
+        Remove mistaken uses of AtomicString that were not removed as part of r174113.
+
+        * replay/EmptyInputCursor.h:
+        * replay/InputCursor.h:
+        (JSC::InputCursor::InputCursor):
+
+2015-01-16  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: code generator should fail on duplicate parameter and member names
+        https://bugs.webkit.org/show_bug.cgi?id=140555
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/scripts/codegen/models.py:
+        (find_duplicates): Add a helper function to find duplicates in a list.
+        (Protocol.parse_type_declaration):
+        (Protocol.parse_command):
+        (Protocol.parse_event):
+        * inspector/scripts/tests/expected/fail-on-duplicate-command-call-parameter-names.json-error: Added.
+        * inspector/scripts/tests/expected/fail-on-duplicate-command-return-parameter-names.json-error: Added.
+        * inspector/scripts/tests/expected/fail-on-duplicate-event-parameter-names.json-error: Added.
+        * inspector/scripts/tests/expected/fail-on-duplicate-type-member-names.json-error: Added.
+        * inspector/scripts/tests/fail-on-duplicate-command-call-parameter-names.json: Added.
+        * inspector/scripts/tests/fail-on-duplicate-command-return-parameter-names.json: Added.
+        * inspector/scripts/tests/fail-on-duplicate-event-parameter-names.json: Added.
+        * inspector/scripts/tests/fail-on-duplicate-type-member-names.json: Added.
+
+2015-01-16  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION (r174226): Header on huffingtonpost.com is too large
+        https://bugs.webkit.org/show_bug.cgi?id=140306
+
+        Reviewed by Filip Pizlo.
+
+        BytecodeGenerator::willResolveToArguments() is used to check to see if we can use the
+        arguments register or whether we need to resolve "arguments".  If the arguments have
+        been captured, then they are stored in the lexical environment and the arguments
+        register is not used.
+
+        Changed BytecodeGenerator::willResolveToArguments() to also check to see if the arguments
+        register is captured.  Renamed the function to willResolveToArgumentsRegister() to
+        better indicate what we are checking.
+
+        Aligned 32 and 64 bit paths in ArgumentsRecoveryGenerator::generateFor() for creating
+        an arguments object that was optimized out of an inlined callFrame.  The 32 bit path
+        incorrectly calculated the location of the reified callee frame.  This alignment resulted
+        in the removal of operationCreateInlinedArgumentsDuringOSRExit()
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::willResolveToArgumentsRegister):
+        (JSC::BytecodeGenerator::uncheckedLocalArgumentsRegister):
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitConstruct):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        (JSC::BytecodeGenerator::willResolveToArguments): Deleted.
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BracketAccessorNode::emitBytecode):
+        (JSC::DotAccessorNode::emitBytecode):
+        (JSC::getArgumentByVal):
+        (JSC::ApplyFunctionCallDotNode::emitBytecode):
+        (JSC::ArrayPatternNode::emitDirectBinding):
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::ArgumentsRecoveryGenerator::generateFor):
+        * dfg/DFGOperations.cpp:
+        (JSC::operationCreateInlinedArgumentsDuringOSRExit): Deleted.
+        * dfg/DFGOperations.h:
+        (JSC::operationCreateInlinedArgumentsDuringOSRExit): Deleted.
+
+2015-01-15  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(SQL_DATABASE) guards
+        https://bugs.webkit.org/show_bug.cgi?id=140434
+
+        Reviewed by Darin Adler.
+
+        * CMakeLists.txt:
+        * Configurations/FeatureDefines.xcconfig:
+        * DerivedSources.make:
+        * inspector/protocol/Database.json:
+
+2015-01-14  Alexey Proskuryakov  <ap@apple.com>
+
+        Web Inspector and regular console use different source code locations for messages
+        https://bugs.webkit.org/show_bug.cgi?id=140478
+
+        Reviewed by Brian Burg.
+
+        * inspector/ConsoleMessage.h: Expose computed source location.
+
+        * inspector/agents/InspectorConsoleAgent.cpp:
+        (Inspector::InspectorConsoleAgent::addMessageToConsole):
+        (Inspector::InspectorConsoleAgent::stopTiming):
+        (Inspector::InspectorConsoleAgent::count):
+        * inspector/agents/InspectorConsoleAgent.h:
+        addMessageToConsole() now takes a pre-made ConsoleMessage object.
+
+        * inspector/JSGlobalObjectConsoleClient.cpp:
+        (Inspector::JSGlobalObjectConsoleClient::messageWithTypeAndLevel):
+        (Inspector::JSGlobalObjectConsoleClient::warnUnimplemented):
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::reportAPIException):
+        * inspector/agents/JSGlobalObjectDebuggerAgent.cpp:
+        (Inspector::JSGlobalObjectDebuggerAgent::breakpointActionLog):
+        Updated for the above changes.
+
 2015-01-15  Mark Lam  <mark.lam@apple.com>
 
         [Part 2] Argument object created by "Function dot arguments" should use a clone of argument values.
