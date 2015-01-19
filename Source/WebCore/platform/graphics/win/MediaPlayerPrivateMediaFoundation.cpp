@@ -27,18 +27,42 @@
 #include "config.h"
 #include "MediaPlayerPrivateMediaFoundation.h"
 
+#include "CachedResourceLoader.h"
+#include "FrameView.h"
 #include "GraphicsContext.h"
+#include "HostWindow.h"
 #include "NotImplemented.h"
 
 #if USE(MEDIA_FOUNDATION)
 
-namespace WebCore {
+#include <wtf/MainThread.h>
 
-// TODO: Implement video functionality using Media Foundation
+namespace WebCore {
 
 MediaPlayerPrivateMediaFoundation::MediaPlayerPrivateMediaFoundation(MediaPlayer* player) 
     : m_player(player)
+    , m_visible(false)
+    , m_loadingProgress(false)
+    , m_paused(false)
+    , m_hasAudio(false)
+    , m_hasVideo(false)
+    , m_hwndVideo(nullptr)
+    , m_readyState(MediaPlayer::HaveNothing)
+    , m_mediaSession(nullptr)
+    , m_sourceResolver(nullptr)
+    , m_mediaSource(nullptr)
+    , m_topology(nullptr)
+    , m_sourcePD(nullptr)
+    , m_videoDisplay(nullptr)
 {
+    createSession();
+    createVideoWindow();
+}
+
+MediaPlayerPrivateMediaFoundation::~MediaPlayerPrivateMediaFoundation()
+{
+    destroyVideoWindow();
+    endSession();
 }
 
 PassOwnPtr<MediaPlayerPrivateInterface> MediaPlayerPrivateMediaFoundation::create(MediaPlayer* player)
@@ -60,19 +84,23 @@ bool MediaPlayerPrivateMediaFoundation::isAvailable()
 
 void MediaPlayerPrivateMediaFoundation::getSupportedTypes(HashSet<String>& types)
 {
-    notImplemented();
-    types = HashSet<String>();
+    types.add(String("video/mp4"));
 }
 
 MediaPlayer::SupportsType MediaPlayerPrivateMediaFoundation::supportsType(const MediaEngineSupportParameters& parameters)
 {
-    notImplemented();
+    if (parameters.type.isNull() || parameters.type.isEmpty())
+        return MediaPlayer::IsNotSupported;
+
+    if (parameters.type == "video/mp4")
+        return MediaPlayer::IsSupported;
+
     return MediaPlayer::IsNotSupported;
 }
 
-void MediaPlayerPrivateMediaFoundation::load(const String&)
+void MediaPlayerPrivateMediaFoundation::load(const String& url)
 {
-    notImplemented();
+    startCreateMediaSource(url);
 }
 
 void MediaPlayerPrivateMediaFoundation::cancelLoad()
@@ -82,35 +110,47 @@ void MediaPlayerPrivateMediaFoundation::cancelLoad()
 
 void MediaPlayerPrivateMediaFoundation::play()
 {
-    notImplemented();
+    if (!m_mediaSession)
+        return;
+
+    PROPVARIANT varStart;
+    PropVariantInit(&varStart);
+    varStart.vt = VT_EMPTY;
+
+    HRESULT hr = m_mediaSession->Start(nullptr, &varStart);
+    ASSERT(SUCCEEDED(hr));
+
+    PropVariantClear(&varStart);
+
+    m_paused = !SUCCEEDED(hr);
 }
 
 void MediaPlayerPrivateMediaFoundation::pause()
 {
-    notImplemented();
+    if (!m_mediaSession)
+        return;
+
+    m_paused = SUCCEEDED(m_mediaSession->Pause());
 }
 
 IntSize MediaPlayerPrivateMediaFoundation::naturalSize() const 
 {
-    notImplemented();
-    return IntSize(0, 0);
+    return m_size;
 }
 
 bool MediaPlayerPrivateMediaFoundation::hasVideo() const
 {
-    notImplemented();
-    return false;
+    return m_hasVideo;
 }
 
 bool MediaPlayerPrivateMediaFoundation::hasAudio() const
 {
-    notImplemented();
-    return false;
+    return m_hasAudio;
 }
 
-void MediaPlayerPrivateMediaFoundation::setVisible(bool)
+void MediaPlayerPrivateMediaFoundation::setVisible(bool visible)
 {
-    notImplemented();
+    m_visible = visible;
 }
 
 bool MediaPlayerPrivateMediaFoundation::seeking() const
@@ -121,8 +161,7 @@ bool MediaPlayerPrivateMediaFoundation::seeking() const
 
 bool MediaPlayerPrivateMediaFoundation::paused() const
 {
-    notImplemented();
-    return false;
+    return m_paused;
 }
 
 MediaPlayer::NetworkState MediaPlayerPrivateMediaFoundation::networkState() const
@@ -133,8 +172,7 @@ MediaPlayer::NetworkState MediaPlayerPrivateMediaFoundation::networkState() cons
 
 MediaPlayer::ReadyState MediaPlayerPrivateMediaFoundation::readyState() const
 {
-    notImplemented();
-    return MediaPlayer::HaveNothing;
+    return m_readyState;
 }
 
 std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateMediaFoundation::buffered() const
@@ -145,11 +183,10 @@ std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateMediaFoundation::buffered(
 
 bool MediaPlayerPrivateMediaFoundation::didLoadingProgress() const
 {
-    notImplemented();
-    return false;
+    return m_loadingProgress;
 }
 
-void MediaPlayerPrivateMediaFoundation::setSize(const IntSize&)
+void MediaPlayerPrivateMediaFoundation::setSize(const IntSize& size)
 {
     m_size = size;
 
@@ -180,7 +217,11 @@ void MediaPlayerPrivateMediaFoundation::paint(GraphicsContext* context, const In
         || !m_player->visible())
         return;
 
-    // TODO: Paint the contents of the video to the context
+    m_lastPaintRect = rect;
+
+    // We currently let Media Foundation handle the drawing, by providing a handle to the window to draw in.
+    // We should instead read individual frames from the stream, and paint them into the graphics context here.
+
     notImplemented();
 }
 
