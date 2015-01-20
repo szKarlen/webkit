@@ -1,3 +1,435 @@
+2015-01-19  Michael Saboff  <msaboff@apple.com>
+
+        A "cached" null setter should throw a TypeException when called in strict mode and doesn't
+        https://bugs.webkit.org/show_bug.cgi?id=139418
+
+        Reviewed by Filip Pizlo.
+
+        New regression test.
+
+        * js/regress-139418-expected.txt: Added.
+        * js/regress-139418.html: Added.
+        * js/script-tests/regress-139418.js: Added.
+        (InnerObjectNoSetter):
+        (InnerObjectNoSetter.prototype.get enabled):
+        (StrictOuterObject):
+        (StrictOuterObject.prototype.get enabled):
+        (StrictOuterObject.prototype.set enabled):
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Updating test expected results.
+
+        svg/W3C-SVG-1.1/fonts-glyph-04-t.svg tests something which isn't spec'ed
+        and is impossible to perform with the converter, so I have deleted that
+        test.
+
+        svg/custom/skip-underline-missing-glyph-expected.html was testing
+        incorrect behavior, so I have updated the test.
+
+        The getStartPositionOfChar() calls in svg/text/kerning.svg and
+        svg/text/multichar-glyph.svg are currently impossible to be implemented
+        correctly with the converter, so I have updated the expected results to
+        test for the updated results of those calls.
+
+        Reviewed by Antti Koivisto.
+
+        * platform/mac/TestExpectations:
+        * platform/mac/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-units-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/styling-css-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-intro-02-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-intro-09-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-05-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/filters-light-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-elem-05-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-elem-06-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.png: Removed.
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt: Removed.
+        * platform/mac/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/masking-mask-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-06-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-07-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-08-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-03-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/text-align-08-b-expected.txt:
+        * platform/mac/svg/custom/glyph-setting-d-attribute-expected.txt:
+        * platform/mac/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.txt:
+        * platform/mac/svg/custom/svg-fonts-fallback-expected.txt:
+        * platform/mac/svg/foreignObject/text-tref-02-b-expected.txt:
+        * platform/mac/svg/text/kerning-expected.txt:
+        * platform/mac/svg/text/multichar-glyph-expected.txt:
+        * platform/mac/svg/transforms/text-with-mask-with-svg-transform-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1-SE/coords-units-03-b-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1-SE/styling-css-04-f-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1-SE/text-intro-02-b-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1-SE/text-intro-05-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1-SE/text-intro-09-b-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/filters-light-04-f-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/fonts-elem-05-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/fonts-elem-06-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/masking-mask-01-b-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/render-elems-06-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/render-elems-07-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/render-elems-08-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/render-groups-01-b-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/render-groups-03-t-expected.txt:
+        * platform/mac-mountainlion/svg/W3C-SVG-1.1/text-align-08-b-expected.txt:
+        * platform/mac-mountainlion/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.txt:
+        * platform/mac-mountainlion/svg/custom/svg-fonts-fallback-expected.txt:
+        * platform/mac-mountainlion/svg/text/kerning-expected.txt:
+        * platform/mac-mountainlion/svg/text/multichar-glyph-expected.txt:
+        * platform/mac-mountainlion/svg/transforms/text-with-mask-with-svg-transform-expected.txt:
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt: Removed.
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t-w3c.png: Removed.
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t.svg: Removed.
+        * svg/custom/skip-underline-missing-glyph-expected.html: Removed.
+        * svg/custom/skip-underline-missing-glyph-expected.txt: Added.
+        * svg/custom/skip-underline-missing-glyph.html:
+
+2015-01-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed Windows gardening.
+
+        Rebaseline a few tests based on current bot output.
+
+        * platform/win/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.txt:
+        * platform/win/fast/regions/region-dynamic-after-before-expected.txt:
+        * platform/win/fast/regions/region-generated-content-before-after-expected.txt:
+        * platform/win/fast/regions/text-region-split-small-pagination-expected.txt:
+        * platform/win/fast/text/international/thai-baht-space-expected.txt:
+
+2015-01-19  Roger Fong  <roger_fong@apple.com>
+
+        [Mac] Test fix after r178674.
+
+        * platform/mac-mavericks/js/dom/global-constructors-attributes-expected.txt:
+        * platform/mac-mountainlion/js/dom/global-constructors-attributes-expected.txt:
+
+2015-01-19  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Canonicalization of :lang() should preserve the :lang()'s arguments representations
+        https://bugs.webkit.org/show_bug.cgi?id=139928
+
+        Reviewed by Benjamin Poulain.
+
+        * fast/css/css-lang-selector-with-string-arguments-text-expected.txt:
+        * fast/css/css-lang-selector-with-string-arguments-text.html:
+
+2015-01-16  Roger Fong  <roger_fong@apple.com>
+
+        WebGL2: Support webgl2 context creation.
+        https://bugs.webkit.org/show_bug.cgi?id=126408
+        <rdar://problem/15002170>
+
+        Reviewed by Dean Jackson.
+
+        * fast/canvas/webgl/bad-arguments-test-expected.txt:
+        * fast/canvas/webgl/null-object-behaviour-expected.txt:
+        * platform/mac/js/dom/global-constructors-attributes-expected.txt:
+
+2015-01-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Update expectations for media/track/track-forced-subtitles-in-band.html.
+
+        This test was marked as flaky on Yosemite, but the bug that tracked that was already
+        fixed. The test is flaky on Mavericks and above for some other reason.
+
+        * platform/mac/TestExpectations:
+
+2015-01-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178653.
+        https://bugs.webkit.org/show_bug.cgi?id=140634
+
+        Broke multiple SVG tests on Mountain Lion (Requested by ap on
+        #webkit).
+
+        Reverted changeset:
+
+        "[SVG -> OTF Converter] Flip the switch on"
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+        http://trac.webkit.org/changeset/178653
+
+2015-01-18  Dean Jackson  <dino@apple.com>
+
+        ES6: Support Array.of construction
+        https://bugs.webkit.org/show_bug.cgi?id=140605
+        <rdar://problem/19513655>
+
+        Reviewed by Geoffrey Garen.
+
+        Add 'of' to the Array properties, and a
+        test for Array.of().
+
+        * js/Object-getOwnPropertyNames-expected.txt:
+        * js/array-of-expected.txt: Added.
+        * js/array-of.html: Added.
+        * js/script-tests/Object-getOwnPropertyNames.js:
+        * js/script-tests/array-of.js: Added.
+
+2015-01-16  Ada Chan  <adachan@apple.com>
+
+        HTMLMediaElement::isPlayingAudio() should return false if the element is explicitly muted by script.
+        https://bugs.webkit.org/show_bug.cgi?id=140524
+
+        Reviewed by Andreas Kling.
+
+        The test contains a looping video. It makes sure initially Page::isPlayingAudio() returns true.
+        It should return false after the video is muted, and true again after the video is unmuted.
+
+        * media/muted-video-is-playing-audio-expected.txt: Added.
+        * media/muted-video-is-playing-audio.html: Added.
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Updating test expected results.
+
+        svg/W3C-SVG-1.1/fonts-glyph-04-t.svg tests something which isn't spec'ed
+        and is impossible to perform with the converter, so I have deleted that
+        test.
+
+        svg/custom/skip-underline-missing-glyph-expected.html was testing
+        incorrect behavior, so I have updated the test.
+
+        The getStartPositionOfChar() calls in svg/text/kerning.svg and
+        svg/text/multichar-glyph.svg are currently impossible to be implemented
+        correctly with the converter, so I have updated the expected results to
+        test for the updated results of those calls.
+
+        Reviewed by Antti Koivisto.
+
+        * platform/mac/TestExpectations:
+        * platform/mac/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-units-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/styling-css-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-intro-02-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-intro-09-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-05-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/filters-light-04-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-elem-05-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-elem-06-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.png: Removed.
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt: Removed.
+        * platform/mac/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/masking-mask-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-06-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-07-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-elems-08-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-03-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/text-align-08-b-expected.txt:
+        * platform/mac/svg/custom/glyph-setting-d-attribute-expected.txt:
+        * platform/mac/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.txt:
+        * platform/mac/svg/custom/svg-fonts-fallback-expected.txt:
+        * platform/mac/svg/foreignObject/text-tref-02-b-expected.txt:
+        * platform/mac/svg/text/kerning-expected.txt:
+        * platform/mac/svg/text/multichar-glyph-expected.txt:
+        * platform/mac/svg/transforms/text-with-mask-with-svg-transform-expected.txt:
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt: Removed.
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t-w3c.png: Removed.
+        * svg/W3C-SVG-1.1/fonts-glyph-04-t.svg: Removed.
+        * svg/custom/skip-underline-missing-glyph-expected.html: Removed.
+        * svg/custom/skip-underline-missing-glyph-expected.txt: Added.
+        * svg/custom/skip-underline-missing-glyph.html:
+
+2015-01-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Mark a couple slow tests as such.
+
+        * TestExpectations:
+
+2015-01-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening: Remove unneeded win-specific result.
+
+        At one point, Windows error messages did not include line numbers and needed its own results.
+        This is no longer the case, and any such results should be removed
+
+        * platform/win/fast/xmlhttprequest/xmlhttprequest-no-file-access-expected.txt: Removed.
+
+2015-01-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening: Mark some passing tests appropriately.
+
+        * platform/win/TestExpectations:
+
+2015-01-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Console log sometimes prefixed with line number
+        https://bugs.webkit.org/show_bug.cgi?id=105280
+
+        Reviewed by Darin Adler.
+
+        Some messages lost line numbers now. Some of these were definitely wrong, others
+        were roughly right. Unfortunately, it is not currently possible to figure out whether
+        ScriptController actually executes a script after passing control to it. So the cases
+        where it refuses to execute the script and logs a message are handled like those
+        where it does.
+
+        I think that it shouldn't be a big obstacle in practice, it is easy enough to find
+        a script in a page when Web Inspector tells you that scripts were not allowed.
+
+        * fast/frames/sandboxed-iframe-attribute-parsing-06-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-07-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-08-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-09-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-10-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-11-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-12-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-13-expected.txt:
+        * fast/frames/sandboxed-iframe-attribute-parsing-14-expected.txt:
+        * fast/frames/sandboxed-iframe-parsing-space-characters-expected.txt:
+        * fast/frames/sandboxed-iframe-scripting-04-expected.txt:
+        * http/tests/security/contentSecurityPolicy/sandbox-empty-expected.txt:
+        * http/tests/security/contentSecurityPolicy/sandbox-empty-subframe-expected.txt:
+        * http/tests/security/contentSecurityPolicy/sandbox-in-http-header-control-expected.txt:
+        * http/tests/security/contentSecurityPolicy/sandbox-in-http-header-expected.txt:
+        * http/tests/security/contentSecurityPolicy/sandbox-invalid-header-expected.txt:
+        * http/tests/security/isolatedWorld/sandboxed-iframe-expected.txt:
+        * http/tests/security/mixedContent/insecure-script-in-iframe-expected.txt:
+        * http/tests/security/mixedContent/redirect-http-to-https-script-in-iframe-expected.txt:
+        * http/tests/security/no-javascript-refresh-expected.txt:
+        * http/tests/security/no-javascript-refresh-spaces-expected.txt:
+
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        Unmark tests that were broken by this.
+
+2015-01-19  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Win] REGRESSION(r177542 or r177613): svg/W3C tests are broken
+        https://bugs.webkit.org/show_bug.cgi?id=139972
+
+        Unreviewed gardening, unskip now passing tests after r178139.
+
+        * platform/win/TestExpectations:
+
+2015-01-19  Sergio Villar Senin  <svillar@igalia.com>
+
+        Unreviewed, when committing r178642 I forgot to add the
+        TestExpectations change.
+
+        * TestExpectations: Added
+        fast/css-grid-layout/flex-and-minmax-content-resolution-rows.html.
+
+2015-01-19  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Tracks shrink sometimes with indefinite remaining space
+        https://bugs.webkit.org/show_bug.cgi?id=139059
+
+        Reviewed by David Hyatt.
+
+        The third step of the grid track sizing algorithm (method
+        ComputeUsedBreadthOfGridTracks in the old specs version of the
+        algorithm) tries to grow all grid tracks until the remaining space
+        is exhausted. Should the remaining space is undefined we should fill
+        the tracks up to their limits. This is specified in pseudocode like
+        this:
+
+            For each Grid track t in GridTracks
+                t.UsedBreadth = t.MaxBreadth
+
+        That's correct for most of the cases, but it becomes
+        wrong whenever t.UsedBreadth > t.MaxBreadth something that is not
+        incorrect. What we actually want to do is to grow the track to its
+        maximum if and only if the used breadth is smaller than the maximum.
+
+        * TestExpectations: Added a test which is correct but starts to fail
+        due to another bug (wkb.ug/139058).
+        * fast/css-grid-layout/grid-auto-columns-rows-update.html:
+        * fast/css-grid-layout/grid-grow-tracks-to-their-max-expected.txt: Added.
+        * fast/css-grid-layout/grid-grow-tracks-to-their-max.html: Added.
+        * fast/css-grid-layout/grid-item-removal-track-breadth-update.html:
+        * fast/css-grid-layout/minmax-max-content-resolution-rows.html:
+        * fast/css-grid-layout/minmax-min-content-column-resolution-rows.html:
+        * fast/css-grid-layout/percent-of-indefinite-track-size-in-auto.html:
+        * fast/css-grid-layout/percent-of-indefinite-track-size.html:
+
+2015-01-18  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/navigation/navigation-interrupted-by-fragment.html frequently times out
+        https://bugs.webkit.org/show_bug.cgi?id=140607
+
+        * platform/mac-wk2/TestExpectations: Added an expectation.
+
+2015-01-18  Dean Jackson  <dino@apple.com>
+
+        Out of bounds write in canvas.toDataURL
+        https://bugs.webkit.org/show_bug.cgi?id=140594
+        <rdar://problem/19449135>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Creates a WebGL context that does not have
+        premultiplied alpha, fills it with 50% transparent white,
+        and attempts to convert the canvas to a JPEG data URL. This
+        exercises the code path that was not accurately
+        allocating data (to flatten the alpha).
+
+        * fast/canvas/webgl/toDataURL-unpremultipliedAlpha-expected.txt: Added.
+        * fast/canvas/webgl/toDataURL-unpremultipliedAlpha.html: Added.
+
 2015-01-17  Michael Saboff  <msaboff@apple.com>
 
         Crash in JSScope::resolve() on tools.ups.com

@@ -1,3 +1,234 @@
+2015-01-19  Michael Saboff  <msaboff@apple.com>
+
+        A "cached" null setter should throw a TypeException when called in strict mode and doesn't
+        https://bugs.webkit.org/show_bug.cgi?id=139418
+
+        Reviewed by Filip Pizlo.
+
+        Made a new NullSetterFunction class similar to NullGetterFunction.  The difference is that 
+        NullSetterFunction will throw a TypeError per the ECMA262 spec for a strict mode caller.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Added new files NullSetterFunction.cpp and NullSetterFunction.h.
+
+        * runtime/GetterSetter.h:
+        (JSC::GetterSetter::GetterSetter):
+        (JSC::GetterSetter::isSetterNull):
+        (JSC::GetterSetter::setSetter):
+        Change setter instances from using NullGetterFunction to using NullSetterFunction.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::nullSetterFunction):
+        Added m_nullSetterFunction and accessor.
+
+        * runtime/NullSetterFunction.cpp: Added.
+        (JSC::GetCallerStrictnessFunctor::GetCallerStrictnessFunctor):
+        (JSC::GetCallerStrictnessFunctor::operator()):
+        (JSC::GetCallerStrictnessFunctor::callerIsStrict):
+        (JSC::callerIsStrict):
+        Method to determine if the caller is in strict mode.
+
+        (JSC::callReturnUndefined):
+        (JSC::constructReturnUndefined):
+        (JSC::NullSetterFunction::getCallData):
+        (JSC::NullSetterFunction::getConstructData):
+        * runtime/NullSetterFunction.h: Added.
+        (JSC::NullSetterFunction::create):
+        (JSC::NullSetterFunction::createStructure):
+        (JSC::NullSetterFunction::NullSetterFunction):
+        Class with handlers for a null setter.
+
+2015-01-19  Saam Barati  <saambarati1@gmail.com>
+
+        Web Inspector: Provide a front end for JSC's Control Flow Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=138454
+
+        Reviewed by Timothy Hatcher.
+
+        This patch puts the final touches on what JSC needs to provide
+        for the Web Inspector to show a UI for the control flow profiler.
+
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::recompileAllJSFunctionsForTypeProfiling):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::getBasicBlocksForSourceID):
+        * runtime/FunctionHasExecutedCache.cpp:
+        (JSC::FunctionHasExecutedCache::getFunctionRanges):
+        (JSC::FunctionHasExecutedCache::getUnexecutedFunctionRanges): Deleted.
+        * runtime/FunctionHasExecutedCache.h:
+
+2015-01-19  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Only use LLVM static library arguments on 64-bit builds of libllvmForJSC.dylib
+        <http://webkit.org/b/140658>
+
+        Reviewed by Filip Pizlo.
+
+        * Configurations/LLVMForJSC.xcconfig: Set OTHER_LDFLAGS_LLVM
+        only when building for 64-bit architectures.
+
+2015-01-19  Filip Pizlo  <fpizlo@apple.com>
+
+        ClosureCallStubRoutine no longer needs codeOrigin
+        https://bugs.webkit.org/show_bug.cgi?id=140659
+
+        Reviewed by Michael Saboff.
+        
+        Once upon a time, we would look for the CodeOrigin associated with a return PC. This search
+        would start with the CodeBlock according to the caller frame's call frame header. But if the
+        call was a closure call, the return PC would be inside some closure call stub. So if the
+        CodeBlock search failed, we would search *all* closure call stub routines to see which one
+        encompasses the return PC. Then, we would use the CodeOrigin stored in the stub routine
+        object. This was all a bunch of madness, and we actually got rid of it - we now determine
+        the CodeOrigin for a call frame using the encoded code origin bits inside the tag of the
+        argument count.
+        
+        This patch removes the final vestiges of the madness:
+        
+        - Remove the totally unused method declaration for the thing that did the closure call stub
+          search.
+        
+        - Remove the CodeOrigin field from the ClosureCallStubRoutine. Except for that crazy search
+          that we no longer do, everyone else who finds a ClosureCallStubRoutine will find it via
+          the CallLinkInfo. The CallLinkInfo also has the CodeOrigin, so we don't need this field
+          anymore.
+
+        * bytecode/CodeBlock.h:
+        * jit/ClosureCallStubRoutine.cpp:
+        (JSC::ClosureCallStubRoutine::ClosureCallStubRoutine):
+        * jit/ClosureCallStubRoutine.h:
+        (JSC::ClosureCallStubRoutine::executable):
+        (JSC::ClosureCallStubRoutine::codeOrigin): Deleted.
+        * jit/Repatch.cpp:
+        (JSC::linkClosureCall):
+
+2015-01-19  Saam Barati  <saambarati1@gmail.com>
+
+        Basic block start offsets should never be larger than end offsets in the control flow profiler
+        https://bugs.webkit.org/show_bug.cgi?id=140377
+
+        Reviewed by Filip Pizlo.
+
+        The bytecode generator will emit code more than once for some AST nodes. For instance, 
+        the finally block of TryNode will emit two code paths for its finally block: one for 
+        the normal path, and another for the path where an exception is thrown in the catch block. 
+        
+        This repeated code emission of the same AST node previously broke how the control 
+        flow profiler computed text ranges of basic blocks because when the same AST node 
+        is emitted multiple times, there is a good chance that there are ranges that span 
+        from the end offset of one of these duplicated nodes back to the start offset of 
+        the same duplicated node. This caused a basic block range to report a larger start 
+        offset than end offset. This was incorrect. Now, when this situation is encountered 
+        while linking a CodeBlock, the faulty range in question is ignored.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::insertBasicBlockBoundariesForControlFlowProfiler):
+        * bytecode/CodeBlock.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitMultiLoopBytecode):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::TryNode::emitBytecode):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseConditionalExpression):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::ControlFlowProfiler):
+        * runtime/ControlFlowProfiler.h:
+        (JSC::ControlFlowProfiler::dummyBasicBlock):
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Reviewed by Antti Koivisto.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-01-19  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Replay: convert to is<T> and downcast<T> for decoding replay inputs
+        https://bugs.webkit.org/show_bug.cgi?id=140512
+
+        Reviewed by Chris Dumez.
+
+        Generate a SPECIALIZE_TYPE_TRAITS_* chunk of code for each input. This cannot
+        be done using REPLAY_INPUT_NAMES_FOR_EACH macro since that doesn't fully qualify
+        input types, and the type traits macro is defined in namespace WTF.
+
+        * replay/NondeterministicInput.h: Make overridden methods public.
+        * replay/scripts/CodeGeneratorReplayInputs.py:
+        (Generator.generate_header):
+        (Generator.qualified_input_name): Allow forcing qualification. WTF is never a target framework.
+        (Generator.generate_input_type_trait_declaration): Added.
+        * replay/scripts/CodeGeneratorReplayInputsTemplates.py: Add a template.
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers-with-guarded-values.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-encoding-helpers.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enum-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-enums-with-same-base-name.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-guard.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-input-with-vector-members.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-inputs-with-flags.json-TestReplayInputs.h:
+        * replay/scripts/tests/expected/generate-memoized-type-modes.json-TestReplayInputs.h:
+
+2015-01-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178653.
+        https://bugs.webkit.org/show_bug.cgi?id=140634
+
+        Broke multiple SVG tests on Mountain Lion (Requested by ap on
+        #webkit).
+
+        Reverted changeset:
+
+        "[SVG -> OTF Converter] Flip the switch on"
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+        http://trac.webkit.org/changeset/178653
+
+2015-01-18  Dean Jackson  <dino@apple.com>
+
+        ES6: Support Array.of construction
+        https://bugs.webkit.org/show_bug.cgi?id=140605
+        <rdar://problem/19513655>
+
+        Reviewed by Geoffrey Garen.
+
+        Add and implementation of Array.of, described in 22.1.2.3 of the ES6
+        specification (15 Jan 2015). The Array.of() method creates a new Array
+        instance with a variable number of arguments, regardless of number or type
+        of the arguments.
+
+        * runtime/ArrayConstructor.cpp:
+        (JSC::arrayConstructorOf): Create a new empty Array, then iterate
+        over the arguments, setting them to the appropriate index.
+
+2015-01-19  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [SVG -> OTF Converter] Flip the switch on
+        https://bugs.webkit.org/show_bug.cgi?id=140592
+
+        Reviewed by Antti Koivisto.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-01-17  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: highlight data for overlay should use protocol type builders
+        https://bugs.webkit.org/show_bug.cgi?id=129441
+
+        Reviewed by Timothy Hatcher.
+
+        Add a new domain for overlay types.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * inspector/protocol/OverlayTypes.json: Added.
+
 2015-01-17  Michael Saboff  <msaboff@apple.com>
 
         Crash in JSScope::resolve() on tools.ups.com
