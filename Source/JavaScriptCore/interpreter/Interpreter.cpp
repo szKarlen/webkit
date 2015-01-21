@@ -906,7 +906,7 @@ failedJSONP:
     ASSERT(codeBlock->numParameters() == 1); // 1 parameter for 'this'.
 
     ProtoCallFrame protoCallFrame;
-    protoCallFrame.init(codeBlock, scope, JSCallee::create(vm, scope->globalObject(), scope), thisObj, 1);
+    protoCallFrame.init(codeBlock, JSCallee::create(vm, scope->globalObject(), scope), thisObj, 1);
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())
         profiler->willExecute(callFrame, program->sourceURL(), program->lineNo(), program->startColumn());
@@ -969,7 +969,7 @@ JSValue Interpreter::executeCall(CallFrame* callFrame, JSObject* function, CallT
         return throwTerminatedExecutionException(callFrame);
 
     ProtoCallFrame protoCallFrame;
-    protoCallFrame.init(newCodeBlock, scope, function, thisValue, argsCount, args.data());
+    protoCallFrame.init(newCodeBlock, function, thisValue, argsCount, args.data());
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())
         profiler->willExecute(callFrame, function);
@@ -1040,7 +1040,7 @@ JSObject* Interpreter::executeConstruct(CallFrame* callFrame, JSObject* construc
         return throwTerminatedExecutionException(callFrame);
 
     ProtoCallFrame protoCallFrame;
-    protoCallFrame.init(newCodeBlock, scope, constructor, jsUndefined(), argsCount, args.data());
+    protoCallFrame.init(newCodeBlock, constructor, jsUndefined(), argsCount, args.data());
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())
         profiler->willExecute(callFrame, constructor);
@@ -1089,7 +1089,7 @@ CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionE
 
     size_t argsCount = argumentCountIncludingThis;
 
-    protoCallFrame->init(newCodeBlock, scope, function, jsUndefined(), argsCount, args);
+    protoCallFrame->init(newCodeBlock, function, jsUndefined(), argsCount, args);
     // Return the successful closure:
     CallFrameClosure result = { callFrame, protoCallFrame, function, functionExecutable, &vm, scope, newCodeBlock->numParameters(), argumentCountIncludingThis };
     return result;
@@ -1106,7 +1106,6 @@ JSValue Interpreter::execute(CallFrameClosure& closure)
         return jsNull();
 
     StackStats::CheckPoint stackCheckPoint;
-    closure.resetCallFrame();
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())
         profiler->willExecute(closure.oldCallFrame, closure.function);
@@ -1193,7 +1192,7 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
     ASSERT(codeBlock->numParameters() == 1); // 1 parameter for 'this'.
 
     ProtoCallFrame protoCallFrame;
-    protoCallFrame.init(codeBlock, scope, JSCallee::create(vm, scope->globalObject(), scope), thisValue, 1);
+    protoCallFrame.init(codeBlock, JSCallee::create(vm, scope->globalObject(), scope), thisValue, 1);
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())
         profiler->willExecute(callFrame, eval->sourceURL(), eval->lineNo(), eval->startColumn());
