@@ -1536,70 +1536,20 @@ webkit.org/b/88107 plugins/fullscreen-plugins-dont-reload.html [ Skip ]
 webkit.org/b/88107 plugins/netscape-plugin-page-cache-works.html [ Skip ]
 
 # LAYER_TREE_INCLUDES_VISIBLE_RECTS option to layerTreeAsText is only applicable to Mac.
-compositing/visible-rect
 
-# Need rebaselining / checking - skipped en masse to get the bots green again
-css2.1/t0805-c5518-brdr-t-01-e.html
-css2.1/20110323/c543-txt-decor-000.html
-css2.1/t0805-c5519-brdr-r-00-a.html
-css2.1/t0805-c5520-brdr-b-01-e.html
-css2.1/t0805-c5521-brdr-l-00-a.html
-css2.1/t0805-c5521-ibrdr-l-00-a.html
-css2.1/t09-c5526c-display-00-e.html
-css2.1/t0905-c414-flt-02-c.html
-css2.1/t0905-c414-flt-03-c.html
-css2.1/t0905-c414-flt-04-c.html
-css2.1/t0905-c414-flt-fit-01-d-g.html
-css2.1/t0905-c414-flt-wrap-00-e.html
-css2.1/t0905-c5525-fltblck-00-d-ag.html
-css2.1/t0905-c5525-fltblck-01-d.html
-css2.1/t0905-c5525-fltcont-00-d-g.html
-css2.1/t0905-c5525-flthw-00-c-g.html
-css2.1/t0905-c5525-fltwidth-00-c-g.html
-css2.1/t0905-c5525-fltwidth-02-c-g.html
-css2.1/t0905-c5525-fltwidth-03-c-g.html
-css2.1/t0905-c5525-fltwrap-00-b.html
-css2.1/t0905-c5526-flthw-00-c-g.html
-css2.1/t090501-c414-flt-01-b.html
-css2.1/t090501-c414-flt-03-b-g.html
-css2.1/t090501-c414-flt-ln-01-d-g.html
-css2.1/t090501-c5525-flt-l-00-b-g.html
-css2.1/t090501-c5525-flt-r-00-b-g.html
-css2.1/t100304-c43-rpl-bbx-01-d-g.html
-css2.1/t1202-counter-03-b.html
-css2.1/t1202-counter-04-b.html
-css2.1/t1202-counters-03-b.html
-css2.1/t1202-counters-04-b.html
-css2.1/t1205-c566-list-stl-01-c-g.html
-fast/block/float/float-in-float-hit-testing.html
-fast/block/float/overhanging-tall-block.html
-fast/css/text-transform-select.html
-fast/css/zoom-body-scroll.html
-fast/dom/34176.html
-fast/dom/52776.html
-fast/dom/adopt-node-crash-2.html
-fast/dom/title-directionality-removeChild.html
-fast/dom/zoom-scroll-page-test.html
-fast/events/constructors/progress-event-constructor.html
-fast/events/dropzone-005.html
-fast/harness/results.html
-fast/images/support-broken-image-delegate.html
-js/dom/stack-trace.html
-fast/layers/video-layer.html
-fast/loader/javascript-url-iframe-remove-on-navigate.html
-fast/dom/MutationObserver/inline-event-listener.html
-fast/profiler/dead-time.html
-fast/profiler/stop-profiling-after-setTimeout.html
-fast/repaint/canvas-putImageData.html
-fast/repaint/fixed-in-page-scale.html
-fast/repaint/fixed-right-bottom-in-page-scale.html
-fast/repaint/fixed-right-in-page-scale.html
-fast/repaint/moving-shadow-on-container.html
-fast/repaint/moving-shadow-on-path.html
-fast/table/027.html
-fast/table/027-vertical.html
-fast/table/max-width-integer-overflow.html
-fast/writing-mode/fallback-orientation.html
+compositing/visible-rect/  [ Skip ]
+
+
+# TODO Need rebaselining / checking - skipped en masse to get the bots green again
+fast/block/float/overhanging-tall-block.html [ Failure ]
+fast/css/text-transform-select.html [ Failure ]
+fast/dom/MutationObserver/inline-event-listener.html [ Failure Timeout ]
+fast/events/dropzone-005.html [ Failure ]
+fast/harness/results.html [ Failure ]
+fast/images/support-broken-image-delegate.html [ Failure ]
+fast/repaint/canvas-putImageData.html [ Failure ]
+fast/repaint/moving-shadow-on-container.html [ Failure ]
+fast/repaint/moving-shadow-on-path.html [ Failure ]
 # media/controls-after-reload.html [ Failure ]
 # media/controls-strict.html [ Failure ]
 # media/controls-without-preload.html [ Failure ]
@@ -1850,7 +1800,6 @@ compositing/text-on-large-layer.html [ Failure ]
 compositing/iframes/fixed-position-iframe.html [ Failure ]
 compositing/tiling/huge-layer-add-remove-child.html [ Failure ]
 compositing/tiling/huge-layer-resize.html [ Failure ]
-compositing/tiling/tile-cache-zoomed.html [ Failure ]
 
 # Inspector Protocol
 webkit.org/b/128979 inspector-protocol/debugger/pause-on-assert.html [ Crash ]
@@ -2063,7 +2012,6 @@ webkit.org/b/117322 css3/unicode-bidi-isolate-aharon-failing.html [ Pass ImageOn
 webkit.org/b/117322 fast/backgrounds/background-opaque-images-over-color.html [ ImageOnlyFailure ]
 fast/css/font-weight-1.html [ ImageOnlyFailure ]
 fast/css/margin-top-bottom-dynamic.html [ ImageOnlyFailure ]
-webkit.org/b/117322 fast/css/sticky/sticky-top-zoomed.html [ ImageOnlyFailure ]
 webkit.org/b/117322 fast/css/text-indent-first-line-006.html [ ImageOnlyFailure ]
 webkit.org/b/117322 fast/css/word-spacing-characters-complex-text.html [ ImageOnlyFailure ]
 webkit.org/b/117322 fast/selectors/selection-window-inactive.html [ ImageOnlyFailure ]
@@ -3263,3 +3211,46 @@ fast/regions/webkit-flow-renderer-nested.html [ ImageOnlyFailure ]
 fast/regions/webkit-flow-renderer.html [ ImageOnlyFailure ]
 fast/regions/writing-mode/invalid-first-region-with-writing-mode-2.html [ ImageOnlyFailure ]
 fast/regions/writing-mode/invalid-first-region-with-writing-mode.html [ ImageOnlyFailure ]
+webkit.org/b/140249 fast/css/fontloader-svg-select.svg [ Failure ]
+fast/inline/out-of-flow-positioned-render-replaced-box-moves.html [ ImageOnlyFailure ]
+webkit.org/b/140250 fast/loader/stateobjects/document-destroyed-navigate-back-with-fragment-scroll.html [ Failure ]
+webkit.org/b/140250 fast/loader/stateobjects/document-destroyed-navigate-back.html [ Failure ]
+webkit.org/b/140250 fast/loader/stateobjects/replacestate-in-iframe.html [ Failure ]
+
+# SVG Blur is not working on Windows
+webkit.org/b/140254 imported/mozilla/svg/blend-color-burn.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-color-dodge.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-darken.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-difference.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-exclusion.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-lighten.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-multiply.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-overlay.svg [ ImageOnlyFailure ]
+webkit.org/b/140254 imported/mozilla/svg/blend-screen.svg [ ImageOnlyFailure ]
+
+# Missing glyph symbol is not rendered properly
+webkit.org/b/140257 svg/custom/svg-fonts-fallback.xhtml [ Failure ]
+
+# Userscripts stuff is not working
+webkit.org/b/140258 userscripts/document-element-available-at-start.html [ Failure ]
+webkit.org/b/140258 userscripts/mixed-case-stylesheet.html [ Failure ]
+webkit.org/b/140258 userscripts/script-not-run-for-fragments.html [ Failure ]
+webkit.org/b/140258 userscripts/script-run-at-end.html [ Failure ]
+webkit.org/b/140258 userscripts/script-run-at-start.html [ Failure ]
+webkit.org/b/140258 userscripts/simple-stylesheet.html [ Failure ]
+webkit.org/b/140258 userscripts/user-script-all-frames.html [ Failure ]
+webkit.org/b/140258 userscripts/user-script-image-document.html [ Failure ]
+webkit.org/b/140258 userscripts/user-style-all-frames.html [ Failure ]
+webkit.org/b/140258 userscripts/user-stylesheet-invalidate.html [ Failure ]
+
+# <rdar://problem/19526412>
+fast/images/bad-png.html [ Skip ]
+
+webkit.org/b/140703 loader/go-back-cached-main-resource.html [ Failure ]
+webkit.org/b/140705 imported/mozilla/svg/stroke-width-percentage-02a.svg [ ImageOnlyFailure ]
+webkit.org/b/140707 storage/domstorage/localstorage/close-idle-localstorage-databases-immediately.html [ Failure ]
+webkit.org/b/140707 storage/domstorage/storage-close-database-on-idle.html [ Failure ]
+
+webkit.org/b/140724 css2.1/t1202-counter-04-b.html [ Failure ]
+webkit.org/b/140724 css2.1/t1202-counters-04-b.html [ Failure ]
+webkit.org/b/140725 fast/dom/34176.html [ Failure ]

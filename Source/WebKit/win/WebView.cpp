@@ -7052,3 +7052,13 @@ HRESULT WebView::setLoadResourcesSerially(BOOL serialize)
     resourceLoadScheduler()->setSerialLoadingEnabled(serialize);
     return S_OK;
 }
+
+HRESULT WebView::scaleWebView(double scale, POINT origin)
+{
+    if (!m_page)
+        return E_FAIL;
+
+    m_page->setPageScaleFactor(scale, origin);
+
+    return S_OK;
+}

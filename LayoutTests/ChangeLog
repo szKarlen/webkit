@@ -1,3 +1,611 @@
+2015-01-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] eventSender does not support scalePageBy
+        https://bugs.webkit.org/show_bug.cgi?id=140726
+        <rdar://problem/19549865>
+
+        Reviewed by Dean Jackson.
+
+        * platform/win/TestExpectations: Unskip test.
+
+2015-01-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening after reactivating some tests.
+
+        * platform/win/TestExpectations: Add failure entries for a few tests with bug reports.
+
+2015-01-21  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        first-letter pseudo-element from ancestors is not being ignored in grids and flexboxes
+        https://bugs.webkit.org/show_bug.cgi?id=138424
+
+        Reviewed by Benjamin Poulain.
+
+        Modified current tests to check that first-letter from ancestors is
+        ignored too.
+        Added 2 new tests to increase coverage.
+
+        * css3/flexbox/flexbox-ignore-container-firstLetter-expected.txt:
+        * css3/flexbox/flexbox-ignore-container-firstLetter.html:
+        * fast/css-grid-layout/grid-container-ignore-first-letter-expected.txt:
+        * fast/css-grid-layout/grid-container-ignore-first-letter.html:
+        * fast/css/first-letter-from-ancestors-not-apply-inline-elements-expected.html: Added.
+        * fast/css/first-letter-from-ancestors-not-apply-inline-elements.html: Added.
+        * fast/css/first-letter-ignores-display-property-expected.html: Added.
+        * fast/css/first-letter-ignores-display-property.html: Added.
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Rebaseline and clean-up of skipped files.
+
+        * platform/win/TestExpectations:
+        * platform/win/css2.1/20110323: Added.
+        * platform/win/css2.1/20110323/abspos-containing-block-initial-001-expected.png: Added.
+        * platform/win/css2.1/20110323/abspos-containing-block-initial-007-expected.png: Added.
+        * platform/win/css2.1/20110323/border-conflict-style-079-expected.png: Added.
+        * platform/win/css2.1/20110323/border-conflict-style-088-expected.png: Added.
+        * platform/win/css2.1/20110323/border-spacing-applies-to-015-expected.png: Added.
+        * platform/win/css2.1/20110323/dynamic-top-change-001-expected.png: Added.
+        * platform/win/css2.1/20110323/dynamic-top-change-002-expected.png: Added.
+        * platform/win/css2.1/20110323/dynamic-top-change-003-expected.png: Added.
+        * platform/win/css2.1/20110323/dynamic-top-change-004-expected.png: Added.
+        * platform/win/css2.1/20110323/floating-replaced-height-008-expected.png: Added.
+        * platform/win/css2.1/20110323/height-width-inline-table-001-expected.png: Added.
+        * platform/win/css2.1/20110323/height-width-table-001-expected.png: Added.
+        * platform/win/css2.1/20110323/inline-block-replaced-height-008-expected.png: Added.
+        * platform/win/css2.1/20110323/inline-replaced-height-008-expected.png: Added.
+        * platform/win/css2.1/20110323/inline-table-001-expected.png: Added.
+        * platform/win/css2.1/20110323/inline-table-002a-expected.png: Added.
+        * platform/win/css2.1/20110323/inline-table-003-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-001-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-002-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-003-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-004-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-005-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-006-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-007-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-008-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-009-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-010-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-012-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-013-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-014-expected.png: Added.
+        * platform/win/css2.1/20110323/margin-applies-to-015-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-001-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-002-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-horizontal-alignment-001-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-margins-001-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-optional-001-expected.png: Added.
+        * platform/win/css2.1/20110323/table-caption-optional-002-expected.png: Added.
+        * platform/win/css2.1/20110323/table-height-algorithm-023-expected.png: Added.
+        * platform/win/css2.1/20110323/table-height-algorithm-024-expected.png: Added.
+        * platform/win/css2.1/t0805-c5518-brdr-t-01-e-expected.png: Added.
+        * platform/win/css2.1/t0805-c5518-brdr-t-01-e-expected.txt: Added.
+        * platform/win/css2.1/t0805-c5519-brdr-r-00-a-expected.png: Added.
+        * platform/win/css2.1/t0805-c5519-brdr-r-00-a-expected.txt: Added.
+        * platform/win/css2.1/t0805-c5519-brdr-r-01-e-expected.png: Added.
+        * platform/win/css2.1/t0805-c5519-brdr-r-01-e-expected.txt:
+        * platform/win/css2.1/t0805-c5520-brdr-b-01-e-expected.png: Added.
+        * platform/win/css2.1/t0805-c5520-brdr-b-01-e-expected.txt: Added.
+        * platform/win/css2.1/t0805-c5521-brdr-l-00-a-expected.png: Added.
+        * platform/win/css2.1/t0805-c5521-brdr-l-00-a-expected.txt: Added.
+        * platform/win/css2.1/t0805-c5521-brdr-l-01-e-expected.png: Added.
+        * platform/win/css2.1/t0805-c5521-brdr-l-01-e-expected.txt:
+        * platform/win/css2.1/t0805-c5521-ibrdr-l-00-a-expected.png: Added.
+        * platform/win/css2.1/t0805-c5521-ibrdr-l-00-a-expected.txt: Added.
+        * platform/win/css2.1/t09-c5526c-display-00-e-expected.png: Added.
+        * platform/win/css2.1/t09-c5526c-display-00-e-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-01-b-expected.png: Added.
+        * platform/win/css2.1/t0905-c414-flt-01-b-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-02-c-expected.png: Added.
+        * platform/win/css2.1/t0905-c414-flt-02-c-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-03-c-expected.png: Added.
+        * platform/win/css2.1/t0905-c414-flt-03-c-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-04-c-expected.png: Added.
+        * platform/win/css2.1/t0905-c414-flt-04-c-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-fit-01-d-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c414-flt-fit-01-d-g-expected.txt: Added.
+        * platform/win/css2.1/t0905-c414-flt-wrap-00-e-expected.txt:
+        * platform/win/css2.1/t0905-c5525-fltblck-00-d-ag-expected.txt:
+        * platform/win/css2.1/t0905-c5525-fltblck-01-d-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltblck-01-d-expected.txt: Added.
+        * platform/win/css2.1/t0905-c5525-fltcont-00-d-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltcont-00-d-g-expected.txt: Added.
+        * platform/win/css2.1/t0905-c5525-flthw-00-c-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-flthw-00-c-g-expected.txt: Added.
+        * platform/win/css2.1/t0905-c5525-fltwidth-00-c-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltwidth-00-c-g-expected.txt:
+        * platform/win/css2.1/t0905-c5525-fltwidth-02-c-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltwidth-02-c-g-expected.txt: Added.
+        * platform/win/css2.1/t0905-c5525-fltwidth-03-c-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltwidth-03-c-g-expected.txt: Added.
+        * platform/win/css2.1/t0905-c5525-fltwrap-00-b-expected.png: Added.
+        * platform/win/css2.1/t0905-c5525-fltwrap-00-b-expected.txt:
+        * platform/win/css2.1/t0905-c5526-flthw-00-c-g-expected.png: Added.
+        * platform/win/css2.1/t0905-c5526-flthw-00-c-g-expected.txt: Added.
+        * platform/win/css2.1/t090501-c414-flt-01-b-expected.png: Added.
+        * platform/win/css2.1/t090501-c414-flt-01-b-expected.txt: Added.
+        * platform/win/css2.1/t090501-c414-flt-03-b-g-expected.png: Added.
+        * platform/win/css2.1/t090501-c414-flt-03-b-g-expected.txt: Added.
+        * platform/win/css2.1/t090501-c414-flt-ln-01-d-g-expected.txt: Added.
+        * platform/win/css2.1/t090501-c5525-flt-l-00-b-g-expected.png: Added.
+        * platform/win/css2.1/t090501-c5525-flt-l-00-b-g-expected.txt: Added.
+        * platform/win/css2.1/t090501-c5525-flt-r-00-b-g-expected.png: Added.
+        * platform/win/css2.1/t090501-c5525-flt-r-00-b-g-expected.txt: Added.
+        * platform/win/css2.1/t100304-c43-rpl-bbx-01-d-g-expected.png: Added.
+        * platform/win/css2.1/t100304-c43-rpl-bbx-01-d-g-expected.txt: Added.
+        * platform/win/css2.1/t1202-counter-03-b-expected.txt: Added.
+        * platform/win/css2.1/t1202-counter-04-b-expected.png: Added.
+        * platform/win/css2.1/t1202-counter-04-b-expected.txt:
+        * platform/win/css2.1/t1202-counters-03-b-expected.png: Added.
+        * platform/win/css2.1/t1202-counters-03-b-expected.txt: Added.
+        * platform/win/css2.1/t1202-counters-04-b-expected.png: Added.
+        * platform/win/css2.1/t1202-counters-04-b-expected.txt:
+        * platform/win/css2.1/t1205-c566-list-stl-01-c-g-expected.png: Added.
+        * platform/win/css2.1/t1205-c566-list-stl-01-c-g-expected.txt: Added.
+        * platform/win/css3/selectors3: Added.
+        * platform/win/css3/selectors3/html: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-161-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-161-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-19b-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-19b-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-23-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-23-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-24-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-24-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-25-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-25-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-64-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-64-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-68-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-68-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-69-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-69-expected.txt: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-70-expected.png: Added.
+        * platform/win/css3/selectors3/html/css3-modsel-70-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-161-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-161-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-19b-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-19b-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-23-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-23-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-24-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-24-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-25-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-25-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-64-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-64-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-68-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-68-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-69-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-69-expected.txt: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-70-expected.png: Added.
+        * platform/win/css3/selectors3/xhtml/css3-modsel-70-expected.txt: Added.
+        * platform/win/css3/selectors3/xml: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-161-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-161-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-19b-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-19b-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-23-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-23-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-24-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-24-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-25-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-25-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-64-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-64-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-68-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-68-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-69-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-69-expected.txt: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-70-expected.png: Added.
+        * platform/win/css3/selectors3/xml/css3-modsel-70-expected.txt: Added.
+        * platform/win/fast/block/float/016-expected.png: Added.
+        * platform/win/fast/block/float/016-expected.txt: Added.
+        * platform/win/fast/css/non-standard-checkbox-size-expected.txt: Added.
+        * platform/win/fast/dom/HTMLMeterElement/meter-appearances-capacity-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-appearances-rating-relevancy-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-boundary-values-expected.png:
+        * platform/win/fast/dom/HTMLMeterElement/meter-boundary-values-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-element-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-optimums-expected.png:
+        * platform/win/fast/dom/HTMLMeterElement/meter-optimums-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-styles-changing-pseudo-expected.png:
+        * platform/win/fast/dom/HTMLMeterElement/meter-styles-changing-pseudo-expected.txt:
+        * platform/win/fast/dom/HTMLMeterElement/meter-styles-expected.png:
+        * platform/win/fast/dom/HTMLMeterElement/meter-styles-expected.txt:
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        inspector/model/remote-object-get-properties.html asserts
+
+        * TestExpectations: Skip the test for now.
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (Yosemite): HTTP tests time out waiting for subresources
+        https://bugs.webkit.org/show_bug.cgi?id=140715
+
+        Rubber-stamped by Mark Rowe.
+
+        Enable Apache performance logging to better isolate the issue.
+
+        * http/conf/apache2.4-httpd.conf:
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Unreviewed gardening. Remove variable objectId from output.
+
+        * inspector/model/remote-object-get-properties-expected.txt:
+        * inspector/model/remote-object-get-properties.html:
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Rebaseline a test, unskip some working tests.
+
+        * platform/win/TestExpectations:
+        * platform/win/js/dom/global-constructors-attributes-expected.txt:
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] More test gardening.
+
+        * platform/win/TestExpectations: Mark several tests as failing now that bug
+        reports have been filed for them.
+
+2015-01-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed test gardening.
+
+        Now that Mac has switched to new SVG font results, commit the old Mac output for
+        use with Windows tests until they are also cut over.
+
+        * platform/win/TestExpectations:
+        * platform/win/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-units-03-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/coords-units-03-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/styling-css-04-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/styling-css-04-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-05-b-expected.png:
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-05-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/filters-light-04-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/filters-light-04-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/filters-turb-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-elem-05-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-elem-05-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-elem-06-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-elem-06-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/masking-mask-01-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/masking-mask-01-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-06-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-06-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-07-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-07-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-08-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-elems-08-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-groups-01-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-groups-01-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-groups-03-t-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/render-groups-03-t-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/text-align-08-b-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/text-align-08-b-expected.txt: Added.
+        * platform/win/svg/W3C-SVG-1.1/text-tselect-02-f-expected.png: Added.
+        * platform/win/svg/W3C-SVG-1.1/text-tselect-02-f-expected.txt: Added.
+        * platform/win/svg/custom/glyph-setting-d-attribute-expected.png: Added.
+        * platform/win/svg/custom/glyph-setting-d-attribute-expected.txt: Added.
+        * platform/win/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.png: Added.
+        * platform/win/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.txt: Added.
+        * platform/win/svg/foreignObject: Added.
+        * platform/win/svg/foreignObject/text-tref-02-b-expected.png: Added.
+        * platform/win/svg/foreignObject/text-tref-02-b-expected.txt: Added.
+        * platform/win/svg/text/kerning-expected.png: Added.
+        * platform/win/svg/text/kerning-expected.txt: Added.
+        * platform/win/svg/text/multichar-glyph-expected.png: Added.
+        * platform/win/svg/text/multichar-glyph-expected.txt: Added.
+        * platform/win/svg/transforms: Added.
+        * platform/win/svg/transforms/text-with-mask-with-svg-transform-expected.png: Added.
+        * platform/win/svg/transforms/text-with-mask-with-svg-transform-expected.txt: Added.
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Expanding event objects in console shows undefined for most values, it should have real values
+        https://bugs.webkit.org/show_bug.cgi?id=137306
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/model/remote-object-get-properties-expected.txt: Added.
+        * inspector/model/remote-object-get-properties.html: Added.
+
+2015-01-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Should show dynamic specificity values
+        https://bugs.webkit.org/show_bug.cgi?id=140647
+
+        Reviewed by Benjamin Poulain.
+
+        * inspector/css/selector-dynamic-specificity-expected.txt: Added.
+        * inspector/css/selector-dynamic-specificity.html: Added.
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/xmlhttprequest/xmlhttprequest-responseURL.html uses an incorrect resource path
+        https://bugs.webkit.org/show_bug.cgi?id=140689
+
+        Reviewed by Tim Horton.
+
+        * http/tests/xmlhttprequest/xmlhttprequest-responseURL-expected.txt:
+        * http/tests/xmlhttprequest/xmlhttprequest-responseURL.html:
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        Noise about undefined $ENV{"HTTP_ORIGIN"} in Apache logs on several tests
+        https://bugs.webkit.org/show_bug.cgi?id=140690
+
+        Reviewed by Tim Horton.
+
+        * http/tests/xmlhttprequest/resources/access-control-basic-allow-access-control-origin-header.cgi:
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        malformed header from script 'noContentLength.asis': Bad header
+        https://bugs.webkit.org/show_bug.cgi?id=140693
+
+        Reviewed by Tim Horton.
+
+        Changed the resource to actually have no Content-Length, and adjusted incorrect test
+        expectations.
+
+        * http/tests/xmlhttprequest/resources/noContentLength.asis: Removed.
+        * http/tests/xmlhttprequest/resources/noContentLength.cgi: Copied from LayoutTests/http/tests/xmlhttprequest/resources/noContentLength.asis.
+        * http/tests/xmlhttprequest/xmlhttprequest-no-content-length-onProgress.html:
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        Apache logs a warning in http/tests/resources/post-and-verify-hybrid.cgi
+        https://bugs.webkit.org/show_bug.cgi?id=140680
+
+        Reviewed by Tim Horton.
+
+        * http/tests/resources/post-and-verify-hybrid.cgi: Fix a "useless use of a variable
+        in void context".
+
+2015-01-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178751.
+        https://bugs.webkit.org/show_bug.cgi?id=140694
+
+        Caused 32-bit JSC test failures (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "put_by_val_direct need to check the property is index or not
+        for using putDirect / putDirectIndex"
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+        http://trac.webkit.org/changeset/178751
+
+2015-01-20  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        put_by_val_direct need to check the property is index or not for using putDirect / putDirectIndex
+        https://bugs.webkit.org/show_bug.cgi?id=140426
+
+        Reviewed by Geoffrey Garen.
+
+        * js/dfg-put-by-val-direct-with-edge-numbers-expected.txt: Added.
+        * js/dfg-put-by-val-direct-with-edge-numbers.html: Added.
+        * js/script-tests/dfg-put-by-val-direct-with-edge-numbers.js: Added.
+        (lookupWithKey):
+        (lookupWithKey2):
+        (toStringThrowsError.toString):
+        * resources/js-test-pre.js:
+
+2015-01-20  Jeremy Jones  <jeremyj@apple.com>
+
+        [mac] Fix test expectations after r178188
+        https://bugs.webkit.org/show_bug.cgi?id=140641
+
+        Reviewed by Alexey Proskuryakov.
+
+        Remove references to removed tests.
+
+        * platform/mac/TestExpectations:
+        removed reference to fast/workers/storage/use-same-database-in-page-and-workers.html
+
+2015-01-20  Alexey Proskuryakov  <ap@apple.com>
+
+        fast/hidpi/image-srcset-change-dynamically-from-js-2x.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=140649
+
+        fast/dom/HTMLImageElement/sizes/image-sizes-js-change.html is failing on some bots
+        https://bugs.webkit.org/show_bug.cgi?id=134769
+
+        Reviewed by Darin Adler.
+
+        Streamline resources/srcset-helper.js and remove races.
+
+        * TestExpectations: Unskip fast/dom/HTMLImageElement/sizes/image-sizes-js-change.html.
+
+        * fast/hidpi/resources/srcset-helper.js: Deleted. We aleady had a copy in /resources,
+        no need for two copies.
+
+        * resources/srcset-helper.js: This script used to depend on setBackingScaleFactor
+        invoke its callback really fast, which is not guaranteed. Also, it had broken logic
+        that used non-existent window.deviceScaleFactor.
+
+        * fast/dom/HTMLImageElement/sizes/image-sizes-2x.html:
+        * fast/dom/HTMLImageElement/sizes/image-sizes-js-change-expected.txt:
+        * fast/dom/HTMLImageElement/sizes/image-sizes-js-change.html:
+        * fast/dom/HTMLImageElement/sizes/image-sizes-js-innerhtml-expected.txt:
+        * fast/dom/HTMLImageElement/sizes/image-sizes-js-innerhtml.html:
+        Updated to run the tests from runTest() function, not a load event handler.
+        Where appropriate, changed from testRunner.dumpResourceLoadCallbacks() to
+        testRunner.dumpResourceResponseMIMETypes(), because the latter doesn't unnecessarily
+        include reloaded scripts. It feels somewhat hacky, but the hack is already used in
+        fast/hidpi, and it improves output.
+
+        * fast/hidpi/image-srcset-change-dynamically-from-js-1x.html:
+        * fast/hidpi/image-srcset-change-dynamically-from-js-2x.html:
+        * fast/hidpi/image-srcset-fraction-1.5x.html:
+        * fast/hidpi/image-srcset-fraction.html:
+        * fast/hidpi/image-srcset-intrinsic-size.html:
+        * fast/hidpi/image-srcset-invalid-descriptor.html:
+        * fast/hidpi/image-srcset-invalid-inputs-except-one.html:
+        * fast/hidpi/image-srcset-nomodifier.html:
+        * fast/hidpi/image-srcset-only-src-attribute.html:
+        * fast/hidpi/image-srcset-remove-dynamically-from-js.html:
+        * fast/hidpi/image-srcset-same-alternative-for-both-attributes.html:
+        * fast/hidpi/image-srcset-simple-1x.html:
+        * fast/hidpi/image-srcset-simple-2x.html:
+        * fast/hidpi/image-srcset-space-left-nomodifier.html:
+        * fast/hidpi/image-srcset-space-prefix-nomodifier.html:
+        * fast/hidpi/image-srcset-space-suffix-nomodifier.html:
+        * fast/hidpi/image-srcset-space-surrounded-nomodifier.html:
+        * fast/hidpi/image-srcset-src-selection-1x-both.html:
+        * fast/hidpi/image-srcset-src-selection-1x.html:
+        * fast/hidpi/image-srcset-src-selection-2x.html:
+        * fast/hidpi/image-srcset-viewport-modifiers.html:
+        Updated to run the tests from runTest() function, not a load event handler.
+
+        * http/tests/loading/sizes/preload-image-sizes-2x-expected.txt: Updated results
+        for srcset-helper.js now always starting the redirect after the load is fully finished.
+
+        * svg/css/svg-resource-fragment-identifier-img-src.html: Updated for the unified
+        location of the script.
+
+2015-01-20  Darin Adler  <darin@apple.com>
+
+        Remove SVGElementInstanceList, m_instanceUnderMouse, DUMP_INSTANCE_TREE, DUMP_SHADOW_TREE
+        https://bugs.webkit.org/show_bug.cgi?id=140679
+
+        Reviewed by Anders Carlsson.
+
+        * fast/dom/script-tests/non-numeric-values-numeric-parameters.js:
+        * js/dom/global-constructors-attributes-expected.txt:
+        * platform/efl/js/dom/global-constructors-attributes-expected.txt:
+        * platform/gtk/js/dom/global-constructors-attributes-expected.txt:
+        * platform/ios-sim-deprecated/fast/dom/Window/window-property-descriptors-expected.txt:
+        * platform/ios-sim-deprecated/fast/js/global-constructors-expected.txt:
+        * platform/ios-sim-deprecated/js/dom/global-constructors-attributes-expected.txt:
+        * platform/mac-mavericks/js/dom/global-constructors-attributes-expected.txt:
+        * platform/mac-mountainlion/js/dom/global-constructors-attributes-expected.txt:
+        * platform/mac/js/dom/global-constructors-attributes-expected.txt:
+        * platform/win/js/dom/global-constructors-attributes-expected.txt:
+        * svg/custom/global-constructors-expected.txt:
+        * svg/custom/script-tests/global-constructors.js:
+        * svg/dom/svg2-inheritance-expected.txt:
+        * svg/dom/svg2-inheritance.html:
+        Removed all tests and results referencing SVGElementInstanceList.
+
+2015-01-19  Dean Jackson  <dino@apple.com>
+
+        Support "plus-darker" in mix-blend mode
+        https://bugs.webkit.org/show_bug.cgi?id=140646
+        <rdar://problem/19523370>
+
+        Reviewed by Simon Fraser.
+
+        Add tests and new expected results for plus-darker.
+
+        * css3/blending/blend-mode-property-parsing-expected.txt:
+        * css3/blending/blend-mode-simple-composited.html:
+        * css3/blending/blend-mode-simple.html:
+        * css3/blending/script-tests/blend-mode-property-parsing.js:
+        * css3/blending/svg-blend-plus-darker.html: Added.
+        * platform/mac/css3/blending/blend-mode-simple-composited-expected.png:
+        * platform/mac/css3/blending/blend-mode-simple-composited-expected.txt:
+        * platform/mac/css3/blending/blend-mode-simple-expected.png:
+        * platform/mac/css3/blending/blend-mode-simple-expected.txt:
+        * platform/mac/css3/blending/svg-blend-plus-darker-expected.txt: Added.
+
+2015-01-20  Andrzej Badowski  <a.badowski@samsung.com>
+
+        [EFL] [GTK] Change/supplement expectations for two accessibility layout tests.
+        https://bugs.webkit.org/show_bug.cgi?id=140620
+
+        Unreviewed EFL gardening.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/accessibility/media-element-expected.txt:
+          Currently, accessibility/media-element.html is positive for EFL with a new, richer description.
+        * platform/efl/accessibility/render-counter-text-expected.txt: Added.
+          Omitted file by r178508.
+        * platform/gtk/accessibility/render-counter-text-expected.txt: Added.
+          Omitted file by r178508.
+
+2015-01-19  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Wrong arguments passed to computeNormalizedFractionBreadth
+        https://bugs.webkit.org/show_bug.cgi?id=139058
+
+        Reviewed by Andreas Kling.
+
+        * TestExpectations: Removed the test added in r148643 (missing
+        from r148642) as the test works as expected now.
+        * fast/css-grid-layout/flex-and-minmax-content-resolution-rows.html:
+
+2015-01-19  Michael Saboff  <msaboff@apple.com>
+
+        Re-enable js/dom/string-replace-exception-crash.html as root problem is fixed.
+        https://bugs.webkit.org/show_bug.cgi?id=140666
+
+        Rubber Stamped by Filip Pizlo.
+
+        * platform/mac/TestExpectations:
+        Re-enabled js/dom/string-replace-exception-crash.html.
+
 2015-01-19  Michael Saboff  <msaboff@apple.com>
 
         A "cached" null setter should throw a TypeException when called in strict mode and doesn't
