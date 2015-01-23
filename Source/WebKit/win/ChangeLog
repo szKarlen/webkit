@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2015-03-25  Per Arne Vollan  <peavo@outlook.com>
 
         [WinCairo] Crash when plugin window is destroyed.
@@ -473,6 +474,8 @@
         (AccessibleBase::get_locale): Wrap the Webore::AccessibleObject::language
         result in an IA2Locale structure to statisfy the IAccessible2 specification.
 
+=======
+>>>>>>> e76240e... [Win] Unreviewed test fix after r178965.
 2015-01-22  Brent Fulgham  <bfulgham@apple.com>
 
         [Win] Unreviewed test fix after r178965.
