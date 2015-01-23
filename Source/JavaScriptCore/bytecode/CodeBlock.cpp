@@ -1660,7 +1660,8 @@ CodeBlock::CodeBlock(CopyParsedBlockTag, CodeBlock& other)
 #endif
 {
     ASSERT(m_heap->isDeferred());
-    
+    ASSERT(m_scopeRegister.isLocal());
+
     if (SymbolTable* symbolTable = other.symbolTable())
         m_symbolTable.set(*m_vm, m_ownerExecutable.get(), symbolTable);
     
@@ -1716,6 +1717,7 @@ CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlin
 #endif
 {
     ASSERT(m_heap->isDeferred());
+    ASSERT(m_scopeRegister.isLocal());
 
     bool didCloneSymbolTable = false;
     
