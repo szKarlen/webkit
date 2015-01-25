@@ -1,3 +1,282 @@
+<<<<<<< HEAD
+=======
+2015-01-25  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Add WebKit message loop interface.
+        https://bugs.webkit.org/show_bug.cgi?id=140857
+
+        Reviewed by Brent Fulgham.
+
+        Added message loop interface which will run the message loop,
+        and perform required tasks (like calling CFRunLoopRunInMode)
+        on each iteration of the loop.
+
+        * WinLauncher/WinMain.cpp:
+        (wWinMain): Use new message loop interface.
+
+2015-01-24  Dan Bernstein  <mitz@apple.com>
+
+        update-webkit’s --internal option is unused
+        https://bugs.webkit.org/show_bug.cgi?id=140861
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/update-webkit: Removed the option.
+
+2015-01-24  Brent Fulgham  <bfulgham@apple.com>
+
+        DumpRenderTree needs to run with Windows native controls on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=25592
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (resetWebPreferencesToConsistentValues): Tell DRT to use native controls.
+        (prepareConsistentTestingEnvironment): Ditto.
+
+2015-01-23  David Kilzer  <ddkilzer@apple.com>
+
+        test-webkitpy: webkitpy.tool.commands.earlywarningsystem_unittest.EarlyWarningSystemTest.test_ewses fails on EFL, GTK, Win ports
+        <http://webkit.org/b/140787>
+
+        Reviewed by Daniel Bates.
+
+        * Scripts/webkitpy/port/ios.py:
+        (IOSPort.determine_full_port_name): Instead of checking the type
+        of the current host, test if /usr/bin/xcrun exists before trying
+        to use it.
+
+2015-01-23  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix the false positive build failures on the Windows buildbots
+        https://bugs.webkit.org/show_bug.cgi?id=140819
+
+        Reviewed by Brent Fulgham.
+
+        Increase the build timeout (without producing output) to 2 hours for Windows bots,
+        the default 20 minutes is enough for others since they produce output during the build.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (BuildFactory.__init__):
+
+2015-01-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Teach WebKit to provide IAccessible2 'get_language' and access AXLanguage
+        https://bugs.webkit.org/show_bug.cgi?id=140839
+
+        Reviewed by Dean Jackson.
+
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::language): Retrieve the 'language' BSTR
+        from the IA2Locale structure and pass it to DRT.
+
+2015-01-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Update DRT Accessibility implementation to better match Mac.
+        https://bugs.webkit.org/show_bug.cgi?id=140830
+
+        Reviewed by Dean Jackson.
+
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::titleUIElement):
+        (AccessibilityUIElement::parentElement):
+        (convertToDRTLabel):
+        (AccessibilityUIElement::role):
+        (AccessibilityUIElement::title):
+        (AccessibilityUIElement::description):
+        (AccessibilityUIElement::stringValue):
+        (AccessibilityUIElement::helpText):
+        (AccessibilityUIElement::isFocused):
+
+2015-01-23  Sergio Villar Senin  <svillar@igalia.com>
+
+        REGRESSION: run-perf-tests --profiler= seems to have broken
+        https://bugs.webkit.org/show_bug.cgi?id=113528
+
+        Reviewed by Daniel Bates.
+
+        The problem is that "perf --record" (or the equivalent call for
+        other profilers) is never called whenever there is a wrapper
+        option in the port. We should inject the profiler call first
+        (should it exists) and then use the port wrapper.
+
+        * Scripts/webkitpy/port/driver.py:
+        (Driver._command_wrapper):
+        * Scripts/webkitpy/port/driver_unittest.py:
+        (DriverTest.test_profiler_and_wrapper): New unit test.
+
+2015-01-22  David Kilzer  <ddkilzer@apple.com>
+
+        configure-xcode-for-ios-development needs to import webkitdirs.pm
+        <http://webkit.org/b/140704>
+
+        Fixes the following runtime error:
+
+            Undefined subroutine &main::exitStatus called at ./Tools/Scripts/configure-xcode-for-ios-development line 167.
+
+        * Scripts/configure-xcode-for-ios-development: Add back code to
+        import webkitdirs.pm for the exitStatus() method.  Not sure why
+        I removed it before patch review.
+
+2015-01-22  Timothy Horton  <timothy_horton@apple.com>
+
+        REGRESSION (r178847): Yosemite 32-bit bot isn't doing any work
+        https://bugs.webkit.org/show_bug.cgi?id=140795
+
+        Reviewed by Jon Honeycutt.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+        r178847 accidentally remove the scheduler for this bot. Re-add it to the
+        Yosemite scheduler.
+
+2015-01-22  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Expose missing editing features through WebView interface
+        https://bugs.webkit.org/show_bug.cgi?id=140773
+        <rdar://problem/19565421>
+
+        Reviewed by Dean Jackson.
+
+        Connect the various WebView editing delegate methods to our
+        test infrastructure. Also prefer _bstr_t to raw BSTR types
+        to simplify life cycle management.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (resetWebViewToConsistentStateBeforeTesting):
+        * DumpRenderTree/win/EditingDelegate.cpp:
+        (EditingDelegate::QueryInterface):
+        (dumpPath):
+        (dump):
+        (EditingDelegate::shouldBeginEditingInDOMRange):
+        (EditingDelegate::shouldEndEditingInDOMRange):
+        (EditingDelegate::shouldInsertNode):
+        (EditingDelegate::shouldInsertText):
+        (EditingDelegate::shouldDeleteDOMRange):
+        (EditingDelegate::shouldChangeSelectedDOMRange):
+        (EditingDelegate::shouldApplyStyle):
+        (EditingDelegate::shouldChangeTypingStyle):
+        (EditingDelegate::doPlatformCommand):
+        (EditingDelegate::webViewDidBeginEditing):
+        (EditingDelegate::webViewDidChange):
+        (EditingDelegate::webViewDidEndEditing):
+        (EditingDelegate::webViewDidChangeTypingStyle):
+        (EditingDelegate::webViewDidChangeSelection):
+        (EditingDelegate::checkSpellingOfString):
+        (EditingDelegate::onNotify):
+        * DumpRenderTree/win/EditingDelegate.h:
+
+2015-01-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a build flag for ES6 class syntax
+        https://bugs.webkit.org/show_bug.cgi?id=140760
+
+        Reviewed by Michael Saboff.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2015-01-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] run-webkit-tests --ios-sim dies with an error; fails to parse Apple Internal
+        runtime in simctl output
+        https://bugs.webkit.org/show_bug.cgi?id=140751
+
+        Reviewed by David Kilzer.
+
+        Following the fix for <rdar://problem/19444383>, run-webkit-tests --ios-sim dies
+        with an error because it does not know how to parse the output of the simctl tool
+        to identify an Apple Internal runtime.
+
+        * Scripts/webkitpy/xcode/simulator.py:
+        (Runtime.__init__): Add parameter is_internal_runtime (defaults to False).
+        (Runtime.__eq__): Take is_internal_runtime when comparing two Runtime objects for equality.
+        (Runtime.__repr__): Update printable representation of Runtime object to indicate whether
+        the runtime is an internal runtime.
+        (Simulator): Update regular expressions runtime_re and version_re to match an internal runtime.
+        (Simulator._parse_runtimes): Pass is_internal_runtime to the Runtime constructor with the
+        appropriate value.
+        (Simulator._parse_devices): Pass argument is_internal_runtime to Simulator.runtime() so that
+        it updates the appropriate Runtime object.
+        (Simulator.runtime): Added optional parameter, is_internal_runtime. Modified to support
+        looking up a Runtime object for an internal runtime.
+
+2015-01-22  Alexey Proskuryakov  <ap@apple.com>
+
+        LeaksViewer doesn't show recent builds if there are less than 10
+        https://bugs.webkit.org/show_bug.cgi?id=140716
+
+        Reviewed by Tim Horton.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/LeaksViewer/RecentBuildsLoader.js:
+
+2015-01-22  Lucas Forschler  <lforschler@apple.com>
+
+        Add Apple build slaves.
+        Fixed text alignment for slave list.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2015-01-21  Lucas Forschler  <lforschler@apple.com>
+
+        Teach build.webkit.org about bot308 and bot309.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2015-01-21  Lucas Forschler  <lforschler@apple.com>
+
+        Add two Apple Mavericks slaves.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2015-01-21  Daniel Bates  <dabates@apple.com>
+
+        Add iOS WebKit1 TestExpectation file
+        https://bugs.webkit.org/show_bug.cgi?id=140739
+
+        Reviewed by David Kilzer.
+
+        Teach run-webkit-tests to look for iOS WebKit1-specific test results and
+        expectations in directory LayoutTests/platform/ios-simulator-wk1.
+
+        * Scripts/webkitpy/port/ios.py:
+        (IOSSimulatorPort.default_baseline_search_path):
+
+2015-01-21  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Update configure-xcode-for-ios-development to copy missing headers to iphoneos SDK
+        <http://webkit.org/b/140704>
+
+        Reviewed by Daniel Bates.
+
+        * Scripts/configure-xcode-for-ios-development:
+        - Update copyright.
+        - Remove FIXME addressed by r178709.
+        - Call copyMissingHeadersToIPhoneOSSDKIfNeeded().
+        (copyMissingHeadersToIPhoneOSSDKIfNeeded): Add method to copy
+        missing headers from iphonesimulator SDK to iphoneos SDK.
+        (sdkDirectory): Add method that returns SDK directory.
+        (sdkPlatformDirectory): Extract method from
+        xcodeSDKSpecificationsPath() that returns SDK platform
+        directory.
+        (xcodeSDKSpecificationsPath): Update to use
+        sdkPlatformDirectory().
+
+2015-01-21  Alexey Proskuryakov  <ap@apple.com>
+
+        https://build.webkit.org/dashboard/metrics.html fails because of ios-ews
+        https://bugs.webkit.org/show_bug.cgi?id=140731
+
+        Reviewed by Tim Horton.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/MetricsAnalyzer.js:
+        (Analyzer.prototype._analyzeAllBubblesPerformance): Corrected a typo.
+
+>>>>>>> b671894... [Win] Add WebKit message loop interface.
 2015-01-21  Brent Fulgham  <bfulgham@apple.com>
 
         [Win] eventSender does not support scalePageBy

@@ -276,6 +276,42 @@
     <ClCompile Include="..\..\win\WebApplicationCache.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="..\..\win\Plugins\PluginDatabase.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginDatabaseWin.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginDebug.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginMessageThrottlerWin.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginPackage.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginPackageWin.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginStream.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginView.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\PluginViewWin.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\Plugins\npapi.cpp">
+      <Filter>Sources\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\win\WebKitMessageLoop.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+>>>>>>> b671894... [Win] Add WebKit message loop interface.
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\win\WebCoreSupport\EmbeddedWidget.h">
@@ -546,6 +582,15 @@
     <ClInclude Include="..\..\win\WebApplicationCache.h">
       <Filter>Sources</Filter>
     </ClInclude>
+<<<<<<< HEAD
+=======
+    <ClInclude Include="..\..\win\Plugins\PluginStrategy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\win\WebKitMessageLoop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+>>>>>>> b671894... [Win] Add WebKit message loop interface.
   </ItemGroup>
   <ItemGroup>
     <None Include="WebKitPostBuild.cmd" />
