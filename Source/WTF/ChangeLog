@@ -1,3 +1,464 @@
+2015-01-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        New interface for aligned allocation: fastAlignedMalloc / fastAlignedFree.
+        We require a special function call on free because Windows.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastAlignedMalloc):
+        (WTF::fastAlignedFree): Do it.
+
+        (WTF::do_memalign): Un-ifdef this, since we use it now.
+
+        * wtf/FastMalloc.h: Make our new function names visible like the rest
+        of fastMalloc.
+
+2015-01-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] ASSERTION FAILED !m_ptr under AccessibilityController::winAddNotificationListener
+        https://bugs.webkit.org/show_bug.cgi?id=87426
+        <rdar://problem/11527899>
+
+        Reviewed by Darin Adler.
+
+        Revise internal containers to use std::addressof in preference to
+        to using the '&' operator.
+
+        * wtf/Deque.h:
+        (WTF::inlineCapacity>::append):
+        (WTF::inlineCapacity>::prepend):
+        (WTF::inlineCapacity>::removeFirst):
+        (WTF::inlineCapacity>::removeLast):
+        (WTF::inlineCapacity>::remove):
+        (WTF::inlineCapacity>::after):
+        (WTF::inlineCapacity>::before):
+        * wtf/GetPtr.h:
+        * wtf/HashTable.h:
+        (WTF::HashTableBucketInitializer<false>::initialize):
+        * wtf/HashTraits.h:
+        (WTF::SimpleClassHashTraits::constructDeletedValue):
+        (WTF::CustomHashTraits::constructDeletedValue):
+        * wtf/ListHashSet.h:
+        (WTF::ListHashSetConstIterator::get):
+        * wtf/Vector.h:
+        (WTF::Vector::swap):
+        (WTF::OverflowHandler>::append):
+        (WTF::OverflowHandler>::tryAppend):
+        (WTF::OverflowHandler>::insert):
+
+2015-01-24  Chris Dumez  <cdumez@apple.com>
+
+        Provide implementation for WTF::DefaultHash<bool>
+        https://bugs.webkit.org/show_bug.cgi?id=140848
+
+        Reviewed by Anders Carlsson.
+
+        Provide implementation for WTF::DefaultHash<bool> so that we can use
+        HashMap<std::pair<XXX, bool>> in the code base. Right now, we need to
+        use some integer type to work around the issue.
+
+        * wtf/HashFunctions.h:
+
+2015-01-23  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add missing null check in some derefGPtr implementations
+        https://bugs.webkit.org/show_bug.cgi?id=140822
+
+        Reviewed by Sergio Villar Senin.
+
+        It's missing in GHashTable and GVariant implementations.
+
+        * wtf/gobject/GRefPtr.cpp:
+        (WTF::derefGPtr):
+
+2015-01-23  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add initial database process support
+        https://bugs.webkit.org/show_bug.cgi?id=139491
+
+        Reviewed by Sergio Villar Senin.
+
+        Add support for using GRefPtr with GVariantBuilder.
+
+        * wtf/gobject/GRefPtr.cpp:
+        (WTF::refGPtr):
+        (WTF::derefGPtr):
+        * wtf/gobject/GRefPtr.h:
+        * wtf/gobject/GTypedefs.h:
+
+2015-01-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a build flag for ES6 class syntax
+        https://bugs.webkit.org/show_bug.cgi?id=140760
+
+        Reviewed by Michael Saboff.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(INSPECTOR) ifdef guards
+        https://bugs.webkit.org/show_bug.cgi?id=140668
+
+        Reviewed by Darin Adler.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-20  YunQiang Su  <wzssyqa@gmail.com>
+
+        Fix failed to build for Linux/MIPS64EL
+        https://bugs.webkit.org/show_bug.cgi?id=124370
+
+        Reviewed by Darin Adler.
+
+        Add MIPS64EL support.
+
+        * wtf/Platform.h:
+        * wtf/dtoa/utils.h:
+
+2015-01-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Make ASan do bounds checks for WTF::Vector
+        https://bugs.webkit.org/show_bug.cgi?id=140631
+        rdar://problem/19437718
+
+        Reviewed by Darin Adler.
+
+        * wtf/SizeLimits.cpp: Disable Vector object size checks for ASan enabled builds.
+
+        * wtf/Vector.h:
+        (WTF::VectorBuffer::endOfBuffer):
+        (WTF::Vector::Vector):
+        (WTF::Vector::~Vector):
+        (WTF::Vector::swap):
+        (WTF::OverflowHandler>::Vector):
+        (WTF::=):
+        (WTF::OverflowHandler>::fill):
+        (WTF::OverflowHandler>::resize):
+        (WTF::OverflowHandler>::shrink):
+        (WTF::OverflowHandler>::grow):
+        (WTF::OverflowHandler>::asanSetInitialBufferSizeTo):
+        (WTF::OverflowHandler>::asanSetBufferSizeToFullCapacity):
+        (WTF::OverflowHandler>::asanBufferSizeWillChangeTo):
+        (WTF::OverflowHandler>::reserveCapacity):
+        (WTF::OverflowHandler>::tryReserveCapacity):
+        (WTF::OverflowHandler>::shrinkCapacity):
+        (WTF::OverflowHandler>::append):
+        (WTF::OverflowHandler>::tryAppend):
+        (WTF::OverflowHandler>::appendSlowCase):
+        (WTF::OverflowHandler>::uncheckedAppend):
+        (WTF::OverflowHandler>::insert):
+        (WTF::OverflowHandler>::remove):
+        (WTF::OverflowHandler>::releaseBuffer):
+
+        * wtf/Compiler.h: Changed ASAN_ENABLED macro fallback value from false to 0,
+        MSVC was not happy with false.
+
+2015-01-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove non-Windows cruft from WebKit/win/Plugins
+        https://bugs.webkit.org/show_bug.cgi?id=140675
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-16  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        WeakPtr functions crash when created with default constructor
+        https://bugs.webkit.org/show_bug.cgi?id=140479
+
+        Reviewed by Andreas Kling.
+
+        This patch rearranges how WeakPtr works, and has the following ideas behind it:
+
+        1. WeakPtr should use Ref internally. This solves the crash by always having a
+        valid WeakReference.
+        2. Clients should not be able to construct WeakReferences directly. Instead,
+        only WeakPtrFactory (and WeakPtr's default constructor) should be able to
+        construct them. They are considered an implementation detail of WeakPtr.
+        3. Except for the default constructor, clients should not be able to construct
+        WeakPtrs directly. Instead, the WeakPtrFactory must construct them. This
+        guarantees that the WeakPtrs all reference the same WeakReference.
+        4. Clients can construct a WeakPtr using its default constructor, and then
+        use the assignment operator to make it non-null. (Or they could use
+        WeakPtrFactory to make it non-null at creation-time.)
+        5. No one was using WeakReference::bindTo(), and it doesn't seem useful, so I
+        removed it.
+
+        Tests: WTF_WeakPtr API tests
+
+        * wtf/Ref.h:
+        (WTF::Ref::Ref): Added extra ASSERT()s, and explicitly deleted copy
+        constructors with a comment.
+        (WTF::Ref::operator=): Added extra ASSERT()s, and explicitly deleted copy
+        assignment operators with a comment.
+        * wtf/WeakPtr.h:
+        (WTF::WeakReference::clear): Used nullptr.
+        (WTF::WeakReference::create): Moved to private:
+        (WTF::WeakPtr::WeakPtr): For the default constructor, initialized the Ref with
+        a new WeakReference. For the other constructor, moved it to private:. Also added
+        copy constructors and copy assignment operators (since Ref doesn't have them but
+        RefPtr does). These constructors/operators are relied upon in various places
+        throughout WebCore.
+        (WTF::WeakPtr::operator bool): Made non-explicit.
+        (WTF::WeakReference::createUnbound): Deleted.
+        (WTF::WeakReference::bindTo): Deleted.
+        (WTF::WeakReference::WeakReference): Deleted.
+        (WTF::WeakPtrFactory::WeakPtrFactory): Deleted.
+
+2015-01-16  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        std::all_of requires complete C++ iterators in GCC 4.8
+        https://bugs.webkit.org/show_bug.cgi?id=140530
+
+        Reviewed by Darin Adler.
+
+        In the WebKit2/UIProcess/WebProcessLifetimeObserver.cpp, std::all_of
+        is used for HashIterators. However, std::all_of requires the complete
+        C++ iterator interface including iterator_category typedef member and
+        it raises compile error in GCC 4.8 (and libstdc++) environment.
+
+        This patch inherits std::iterator with appropriate type parameters.
+        It automatically defines required typedefs including iterator_category.
+
+        * wtf/HashIterators.h:
+
+2015-01-15  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(SQL_DATABASE) guards
+        https://bugs.webkit.org/show_bug.cgi?id=140434
+
+        Reviewed by Darin Adler.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-14  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed fix after r163330.
+
+        * wtf/Platform.h: Use C style comment.
+
+2015-01-14  Marc Juul  <juul@sudomesh.org>
+
+        C++ style comment was preventing compile if CPU(ARM_NEON)
+        https://bugs.webkit.org/show_bug.cgi?id=133827
+
+        Reviewed by Csaba Osztrogonác.
+
+        * wtf/Platform.h:
+
+2015-01-13  Chris Dumez  <cdumez@apple.com>
+
+        Make WTF::Optional work with msvc 2013
+        https://bugs.webkit.org/show_bug.cgi?id=140401
+
+        Reviewed by Anders Carlsson.
+
+        Update the WTF::Optional implementation to use std::aligned_memory and
+        placement new instead of an unrestricted union because msvc 2013 still
+        doesn't support unrestricted unions.
+
+        This change is a pre-requirement to fix Bug 140347 as this change uses
+        WTF::Optional with types that have non-trivial copy constructors.
+
+        This change is covered by the existing Optional WTF test.
+
+        * wtf/Optional.h:
+
+2015-01-11  Sam Weinig  <sam@webkit.org>
+
+        Remove support for SharedWorkers
+        https://bugs.webkit.org/show_bug.cgi?id=140344
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-12  Darin Adler  <darin@apple.com>
+
+        Modernize and streamline HTMLTokenizer
+        https://bugs.webkit.org/show_bug.cgi?id=140166
+
+        Reviewed by Sam Weinig.
+
+        * wtf/Forward.h: Removed PassRef, added OrdinalNumber and TextPosition.
+
+2015-01-09  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178154, r178163, and r178164.
+        https://bugs.webkit.org/show_bug.cgi?id=140292
+
+        Still multiple assertion failures on tests (Requested by ap on
+        #webkit).
+
+        Reverted changesets:
+
+        "Modernize and streamline HTMLTokenizer"
+        https://bugs.webkit.org/show_bug.cgi?id=140166
+        http://trac.webkit.org/changeset/178154
+
+        "Unreviewed speculative buildfix after r178154."
+        http://trac.webkit.org/changeset/178163
+
+        "One more unreviewed speculative buildfix after r178154."
+        http://trac.webkit.org/changeset/178164
+
+2015-01-08  Darin Adler  <darin@apple.com>
+
+        Modernize and streamline HTMLTokenizer
+        https://bugs.webkit.org/show_bug.cgi?id=140166
+
+        Reviewed by Sam Weinig.
+
+        * wtf/Forward.h: Removed PassRef, added OrdinalNumber and TextPosition.
+
+2015-01-08  Benjamin Poulain  <benjamin@webkit.org>
+
+        [WK2] Start a prototype for declarative site specific extensions
+        https://bugs.webkit.org/show_bug.cgi?id=140160
+
+        Reviewed by Andreas Kling.
+
+        * wtf/FeatureDefines.h:
+
+2015-01-07  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make WebKit2 build with public iOS SDK and more build fixes for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+
+        As pointed out by Tim Horton, use C-style comment instead of C++-style comment as
+        wtf/Compiler.h is included in the sandbox profile and the sandbox profile compiler
+        doesn't understand C++-style comments.
+
+        * wtf/Compiler.h:
+
+2015-01-07  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make WebKit2 build with public iOS SDK and more build fixes for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+
+        Reviewed by David Kilzer.
+
+        Move EXTERN_C_BEGIN and EXTERN_C_END macros from file WebKit2/config.h to here and
+        rename them to WTF_EXTERN_C_BEGIN and WTF_EXTERN_C_END, respectively, so that we
+        can make use of these macros in SPI wrapper headers (e.g. UIKitSPI.h).
+
+        I'll look to transition existing code to WTF_EXTERN_C_BEGIN/WTF_EXTERN_C_END and
+        remove EXTERN_C in a subsequent commit(s).
+
+        * wtf/Compiler.h:
+
+2015-01-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178068.
+        https://bugs.webkit.org/show_bug.cgi?id=140235
+
+        Breaks the iOS build (Requested by enrica on #webkit).
+
+        Reverted changeset:
+
+        "[iOS] Make WebKit2 build with public iOS SDK and more build
+        fixes for DRT"
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+        http://trac.webkit.org/changeset/178068
+
+2015-01-07  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Make WebKit2 build with public iOS SDK and more build fixes for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=137371
+
+        Reviewed by David Kilzer.
+
+        Move EXTERN_C_BEGIN and EXTERN_C_END macros from file WebKit2/config.h to here and
+        rename them to WTF_EXTERN_C_BEGIN and WTF_EXTERN_C_END, respectively, so that we
+        can make use of these macros in SPI wrapper headers (e.g. UIKitSPI.h).
+
+        I'll look to transition existing code to WTF_EXTERN_C_BEGIN/WTF_EXTERN_C_END and
+        remove EXTERN_C in a subsequent commit(s).
+
+        * wtf/Compiler.h:
+
+2015-01-07  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: purge PassRefPtr from Inspector code and use Ref for typed and untyped protocol objects
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Stopwatch.h:
+        (WTF::Stopwatch::create): Return a Ref.
+
+2015-01-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r178039.
+        https://bugs.webkit.org/show_bug.cgi?id=140187
+
+        Breaks ObjC Inspector Protocol (Requested by JoePeck on
+        #webkit).
+
+        Reverted changeset:
+
+        "Web Inspector: purge PassRefPtr from Inspector code and use
+        Ref for typed and untyped protocol objects"
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+        http://trac.webkit.org/changeset/178039
+
+2015-01-06  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: purge PassRefPtr from Inspector code and use Ref for typed and untyped protocol objects
+        https://bugs.webkit.org/show_bug.cgi?id=140053
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Stopwatch.h:
+        (WTF::Stopwatch::create): Return a Ref.
+
+2015-01-06  Alexey Proskuryakov  <ap@apple.com>
+
+        ADDRESS_SANITIZER macro is overloaded
+        https://bugs.webkit.org/show_bug.cgi?id=140130
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Compiler.h: Added an ASAN_ENABLED macro. The abbreviation should become well
+        known - we already use it in tools.
+
+        * wtf/Assertions.h:
+        * wtf/RefCounted.h:
+        * wtf/SizeLimits.cpp:
+        Change the conditional to ENABLE(SECURITY_ASSERTIONS). These checks will be used
+        in debug builds, and also when one explicitly passes -DENABLE_SECURITY_ASSERTIONS.
+
+2015-01-05  Andreas Kling  <akling@apple.com>
+
+        Purge PassRefPtr from Page.
+        <https://webkit.org/b/140089>
+
+        Reviewed by Anders Carlsson.
+
+        Make SchedulePair::create() return Ref since it never fails.
+
+        * wtf/SchedulePair.h:
+        (WTF::SchedulePair::create):
+
+2015-01-01  Darin Adler  <darin@apple.com>
+
+        Rework code that hides characters in password fields to streamline a little
+        https://bugs.webkit.org/show_bug.cgi?id=140035
+
+        Reviewed by Sam Weinig.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::fill): Deleted.
+        * wtf/text/StringImpl.h: Deleted StringImpl::fill.
+        * wtf/text/WTFString.h:
+        (WTF::String::fill): Deleted.
+
 2014-12-26  Dan Bernstein  <mitz@apple.com>
 
         Build fix.
