@@ -93,7 +93,9 @@ namespace WebCore {
         HistoryItem* m_tail;
         
         bool m_shouldClearBackingStores;
-     };
+
+        friend class WTF::NeverDestroyed<PageCache>;
+    };
 
     // Function to obtain the global page cache.
     WEBCORE_EXPORT PageCache* pageCache();
