@@ -66,7 +66,6 @@ set(JavaScriptCore_SOURCES
     bytecode/BytecodeBasicBlock.cpp
     bytecode/BytecodeLivenessAnalysis.cpp
     bytecode/CallEdge.cpp
-    bytecode/CallEdgeProfile.cpp
     bytecode/CallLinkInfo.cpp
     bytecode/CallLinkStatus.cpp
     bytecode/CallVariant.cpp
@@ -325,7 +324,7 @@ set(JavaScriptCore_SOURCES
     jit/AccessorCallJITStubRoutine.cpp
     jit/AssemblyHelpers.cpp
     jit/ArityCheckFailReturnThunks.cpp
-    jit/ClosureCallStubRoutine.cpp
+    jit/BinarySwitch.cpp
     jit/ExecutableAllocator.cpp
     jit/ExecutableAllocatorFixedVMPool.cpp
     jit/GCAwareJITStubRoutine.cpp
@@ -348,6 +347,7 @@ set(JavaScriptCore_SOURCES
     jit/JITStubs.cpp
     jit/JITThunks.cpp
     jit/JITToDFGDeferredCompilationCallback.cpp
+    jit/PolymorphicCallStubRoutine.cpp
     jit/Reg.cpp
     jit/RegisterPreservationWrapperGenerator.cpp
     jit/RegisterSet.cpp
