@@ -26,16 +26,21 @@
 #ifndef GCSegmentedArray_h
 #define GCSegmentedArray_h
 
-#include "HeapBlock.h"
+#include <wtf/DoublyLinkedList.h>
 #include <wtf/Vector.h>
 
 namespace JSC {
 
 template <typename T>
-class GCArraySegment : public HeapBlock<GCArraySegment<T>> {
+class GCArraySegment : public DoublyLinkedListNode<GCArraySegment<T>> {
+    friend class WTF::DoublyLinkedListNode<GCArraySegment<T>>;
 public:
     GCArraySegment()
+<<<<<<< HEAD
         : HeapBlock<GCArraySegment>()
+=======
+        : DoublyLinkedListNode<GCArraySegment<T>>()
+>>>>>>> ccb53a7... Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
 #if !ASSERT_DISABLED
         , m_top(0)
 #endif
@@ -43,6 +48,10 @@ public:
     }
 
     static GCArraySegment* create();
+<<<<<<< HEAD
+=======
+    static void destroy(GCArraySegment*);
+>>>>>>> ccb53a7... Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
 
     T* data()
     {
@@ -51,6 +60,8 @@ public:
 
     static const size_t blockSize = 4 * KB;
 
+    GCArraySegment* m_prev;
+    GCArraySegment* m_next;
 #if !ASSERT_DISABLED
     size_t m_top;
 #endif

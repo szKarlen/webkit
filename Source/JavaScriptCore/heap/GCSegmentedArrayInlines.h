@@ -127,7 +127,14 @@ void GCSegmentedArray<T>::fillVector(Vector<T>& vector)
 template <typename T>
 inline GCArraySegment<T>* GCArraySegment<T>::create()
 {
-    return new (NotNull, fastAlignedMalloc(blockSize, blockSize)) GCArraySegment<T>();
+    return new (NotNull, fastMalloc(blockSize)) GCArraySegment<T>();
+}
+
+template <typename T>
+inline void GCArraySegment<T>::destroy(GCArraySegment* segment)
+{
+    segment->~GCArraySegment();
+    fastFree(segment);
 }
 
 template <typename T>
