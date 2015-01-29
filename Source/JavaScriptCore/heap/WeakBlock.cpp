@@ -36,11 +36,17 @@ namespace JSC {
 
 WeakBlock* WeakBlock::create()
 {
-    return new (NotNull, fastAlignedMalloc(blockSize, blockSize)) WeakBlock();
+    return new (NotNull, fastMalloc(blockSize)) WeakBlock();
+}
+
+void WeakBlock::destroy(WeakBlock* block)
+{
+    block->~WeakBlock();
+    fastFree(block);
 }
 
 WeakBlock::WeakBlock()
-    : HeapBlock<WeakBlock>()
+    : DoublyLinkedListNode<WeakBlock>()
 {
     for (size_t i = 0; i < weakImplCount(); ++i) {
         WeakImpl* weakImpl = &weakImpls()[i];
