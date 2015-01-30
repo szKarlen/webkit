@@ -58,11 +58,18 @@ private:
     uintptr_t m_value;
 };
 
-class CopyWorkListSegment : public HeapBlock<CopyWorkListSegment> {
+class CopyWorkListSegment : public DoublyLinkedListNode<CopyWorkListSegment> {
+    friend class WTF::DoublyLinkedListNode<CopyWorkListSegment>;
 public:
     static CopyWorkListSegment* create()
     {
-        return new (NotNull, fastAlignedMalloc(blockSize, blockSize)) CopyWorkListSegment();
+        return new (NotNull, fastMalloc(blockSize)) CopyWorkListSegment();
+    }
+    
+    static void destroy(CopyWorkListSegment* segment)
+    {
+        segment->~CopyWorkListSegment();
+        fastFree(segment);
     }
 
     size_t size() { return m_size; }
@@ -80,7 +87,7 @@ public:
 
 private:
     CopyWorkListSegment()
-        : HeapBlock<CopyWorkListSegment>()
+        : DoublyLinkedListNode<CopyWorkListSegment>()
         , m_size(0)
     {
     }
@@ -88,6 +95,8 @@ private:
     CopyWorklistItem* data() { return reinterpret_cast<CopyWorklistItem*>(this + 1); }
     char* endOfBlock() { return reinterpret_cast<char*>(this) + blockSize; }
 
+    CopyWorkListSegment* m_prev;
+    CopyWorkListSegment* m_next;
     size_t m_size;
 };
 
@@ -144,6 +153,7 @@ class CopyWorkList {
 public:
     typedef CopyWorkListIterator iterator;
 
+    CopyWorkList();
     ~CopyWorkList();
 
     void append(CopyWorklistItem);
@@ -153,6 +163,10 @@ public:
 private:
     DoublyLinkedList<CopyWorkListSegment> m_segments;
 };
+
+inline CopyWorkList::CopyWorkList()
+{
+}
 
 inline CopyWorkList::~CopyWorkList()
 {
