@@ -1,5 +1,50 @@
 2015-01-30  Geoffrey Garen  <ggaren@apple.com>
 
+        GC marking threads should clear malloc caches
+        https://bugs.webkit.org/show_bug.cgi?id=141097
+
+        Reviewed by Andreas Kling.
+
+        This is an attempt to ameliorate a potential memory use regression
+        caused by https://bugs.webkit.org/show_bug.cgi?id=140900
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages.
+
+        FastMalloc may accumulate a per-thread cache on each of the 8-ish
+        GC marking threads, which can be expensive.
+
+        * heap/GCThread.cpp:
+        (JSC::GCThread::waitForNextPhase): Scavenge the current thread before
+        going to sleep. There's probably not too much value to keeping our
+        per-thread cache between GCs, and it has some memory footprint.
+
+2015-01-30  Chris Dumez  <cdumez@apple.com>
+
+        Rename shared() static member functions to singleton() for singleton classes.
+        https://bugs.webkit.org/show_bug.cgi?id=141088
+
+        Reviewed by Ryosuke Niwa and Benjamin Poulain.
+
+        Rename shared() static member functions to singleton() for singleton
+        classes as per the recent coding style change.
+
+        * inspector/remote/RemoteInspector.h:
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+        (Inspector::RemoteInspector::start):
+        (Inspector::RemoteInspector::shared): Deleted.
+        * inspector/remote/RemoteInspectorDebuggable.cpp:
+        (Inspector::RemoteInspectorDebuggable::~RemoteInspectorDebuggable):
+        (Inspector::RemoteInspectorDebuggable::init):
+        (Inspector::RemoteInspectorDebuggable::update):
+        (Inspector::RemoteInspectorDebuggable::setRemoteDebuggingAllowed):
+        (Inspector::RemoteInspectorDebuggable::pauseWaitingForAutomaticInspection):
+        (Inspector::RemoteInspectorDebuggable::unpauseForInitializedInspector):
+        * inspector/remote/RemoteInspectorDebuggableConnection.mm:
+        (Inspector::RemoteInspectorDebuggableConnection::setup):
+        (Inspector::RemoteInspectorDebuggableConnection::sendMessageToFrontend):
+
+2015-01-30  Geoffrey Garen  <ggaren@apple.com>
+
         Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
         https://bugs.webkit.org/show_bug.cgi?id=140900
 
