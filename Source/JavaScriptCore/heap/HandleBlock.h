@@ -33,9 +33,13 @@ namespace JSC {
 class HandleSet;
 class HandleNode;
 
-class HandleBlock : public HeapBlock<HandleBlock> {
+class HandleBlock : public DoublyLinkedListNode<HandleBlock> {
+    friend class WTF::DoublyLinkedListNode<HandleBlock>;
 public:
     static HandleBlock* create(HandleSet*);
+
+    static void destroy(HandleBlock*);
+
     static HandleBlock* blockFor(HandleNode*);
 
     static const size_t blockSize = 4 * KB;
@@ -54,6 +58,8 @@ private:
 
     static const size_t s_blockMask = ~(blockSize - 1);
 
+    HandleBlock* m_prev;
+    HandleBlock* m_next;
     HandleSet* m_handleSet;
 };
 

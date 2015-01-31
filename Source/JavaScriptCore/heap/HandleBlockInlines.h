@@ -27,6 +27,7 @@
 #define HandleBlockInlines_h
 
 #include "HandleBlock.h"
+#include <wtf/FastMalloc.h>
 
 namespace JSC {
 
@@ -35,8 +36,14 @@ inline HandleBlock* HandleBlock::create(HandleSet* handleSet)
     return new (NotNull, fastAlignedMalloc(blockSize, blockSize)) HandleBlock(handleSet);
 }
 
+inline void HandleBlock::destroy(HandleBlock* block)
+{
+    block->~HandleBlock();
+    fastAlignedFree(block);
+}
+
 inline HandleBlock::HandleBlock(HandleSet* handleSet)
-    : HeapBlock<HandleBlock>()
+    : DoublyLinkedListNode<HandleBlock>()
     , m_handleSet(handleSet)
 {
 }
