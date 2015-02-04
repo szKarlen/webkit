@@ -1,3 +1,362 @@
+2015-02-03  Mark Lam  <mark.lam@apple.com>
+
+        Workaround a thread library bug where thread destructors may not get called.
+        <https://webkit.org/b/141209>
+
+        Reviewed by Michael Saboff.
+
+        There's a bug where thread destructors may not get called.  As far as
+        we know, this only manifests on darwin ports.  We will work around this
+        by checking at GC time if the platform thread is still valid.  If not,
+        we'll purge it from the VM's registeredThreads list before proceeding
+        with thread scanning activity.
+
+        Note: it is important that we do this invalid thread detection during
+        suspension, because the validity (and liveness) of the other thread is
+        only guaranteed while it is suspended.
+
+        * API/tests/testapi.mm:
+        (threadMain):
+        - Added a test to enter the VM from another thread before we GC on
+          the main thread.
+
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::removeThreadWithLockAlreadyAcquired):
+        (JSC::MachineThreads::removeCurrentThread):
+        - refactored removeThreadWithLockAlreadyAcquired() out from
+          removeCurrentThread() so that we can also call it for purging invalid
+          threads.
+        (JSC::suspendThread):
+        - Added a return status to tell if the suspension succeeded or not.
+        (JSC::MachineThreads::tryCopyOtherThreadStacks):
+        - Check if the suspension failed, and purge the thread if we can't
+          suspend it.  Failure to suspend implies that the thread has
+          terminated without calling its destructor.
+        * heap/MachineStackMarker.h:
+
+2015-02-03  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: ASSERT mainThreadPthread launching remote debuggable JSContext app with Debug JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=141189
+
+        Reviewed by Michael Saboff.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+        Ensure we call WTF::initializeMainThread() on the main thread so that
+        we can perform automatic String <-> NSString conversions.
+
+2015-02-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Project file cleanups after r179429.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        arguments[-1] should have well-defined behavior
+        https://bugs.webkit.org/show_bug.cgi?id=141183
+
+        Reviewed by Mark Lam.
+        
+        According to JSC's internal argument numbering, 0 is "this" and 1 is the first argument.
+        In the "arguments[i]" expression, "this" is not accessible and i = 0 refers to the first
+        argument. Previously we handled the bounds check in "arguments[i]" - where "arguments" is
+        statically known to be the current function's arguments object - as follows:
+        
+            add 1, i
+            branchAboveOrEqual i, callFrame.ArgumentCount, slowPath
+        
+        The problem with this is that if i = -1, this passes the test, and we end up accessing
+        what would be the "this" argument slot. That's wrong, since we should really be bottoming
+        out in arguments["-1"], which is usually undefined but could be anything. It's even worse
+        if the function is inlined or if we're in a constructor - in that case the "this" slot
+        could be garbage.
+        
+        It turns out that we had this bug in all of our engines.
+        
+        This fixes the issue by changing the algorithm to:
+        
+            load32 callFrame.ArgumentCount, tmp
+            sub 1, tmp
+            branchAboveOrEqual i, tmp, slowPath
+        
+        In some engines, we would have used the modified "i" (the one that had 1 added to it) for
+        the subsequent argument load; since we don't do this anymore I also had to change some of
+        the offsets on the BaseIndex arguments load.
+        
+        This also includes tests that are written in such a way as to get coverage on LLInt and
+        Baseline JIT (get-my-argument-by-val-wrap-around-no-warm-up), DFG and FTL
+        (get-my-argument-by-val-wrap-around), and DFG when we're being paranoid about the user
+        overwriting the "arguments" variable (get-my-argument-by-val-safe-wrap-around). This also
+        includes off-by-1 out-of-bounds tests for each of these cases, since in the process of
+        writing the patch I broke the arguments[arguments.length] case in the DFG and didn't see
+        any test failures.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileGetMyArgumentByVal):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::offsetOfArguments):
+        (JSC::AssemblyHelpers::offsetOfArgumentsIncludingThis): Deleted.
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * tests/stress/get-my-argument-by-val-out-of-bounds-no-warm-up.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-out-of-bounds.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-safe-out-of-bounds.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-safe-wrap-around.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-wrap-around-no-warm-up.js: Added.
+        (foo):
+        * tests/stress/get-my-argument-by-val-wrap-around.js: Added.
+        (foo):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        MultiGetByOffset should be marked NodeMustGenerate
+        https://bugs.webkit.org/show_bug.cgi?id=140137
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToGetByOffset): We were sloppy - we should also clear NodeMustGenerate once it's a GetByOffset.
+        (JSC::DFG::Node::convertToMultiGetByOffset): Assert that we converted from something that already had NodeMustGenerate.
+        * dfg/DFGNodeType.h: We shouldn't DCE a node that does checks and could be effectful in baseline. Making MultiGetByOffset as NodeMustGenerate prevents DCE. FTL could still DCE the actual loads, but the checks will stay.
+        * tests/stress/multi-get-by-offset-dce.js: Added. This previously failed because the getter wasn't called.
+        (foo):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        [FTL] inlined GetMyArgumentByVal with no arguments passed causes instant crash
+        https://bugs.webkit.org/show_bug.cgi?id=141180
+        rdar://problem/19677552
+
+        Reviewed by Benjamin Poulain.
+        
+        If we do a GetMyArgumentByVal on an inlined call frame that has no arguments, then the
+        bounds check already terminates execution. This means we can skip the part where we
+        previously did an out-of-bound array access on the inlined call frame arguments vector.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::safelyInvalidateAfterTermination):
+        (JSC::FTL::LowerDFGToLLVM::compileGetMyArgumentByVal):
+        (JSC::FTL::LowerDFGToLLVM::terminate):
+        (JSC::FTL::LowerDFGToLLVM::didAlreadyTerminate):
+        (JSC::FTL::LowerDFGToLLVM::crash):
+        * tests/stress/get-my-argument-by-val-inlined-no-formal-parameters.js: Added.
+        (foo):
+        (bar):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(r179477): arguments simplification no longer works
+        https://bugs.webkit.org/show_bug.cgi?id=141169
+
+        Reviewed by Mark Lam.
+        
+        The operations involved in callee/scope access don't exit and shouldn't get in the way
+        of strength-reducing a Flush to a PhantomLocal. Then the PhantomLocal shouldn't get in
+        the way of further such strength-reduction. We also need to canonicalize PhantomLocal
+        before running arguments simplification.
+
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGStrengthReductionPhase.cpp:
+        (JSC::DFG::StrengthReductionPhase::handleNode):
+
+2015-02-02  Filip Pizlo  <fpizlo@apple.com>
+
+        VirtualRegister should really know how to dump itself
+        https://bugs.webkit.org/show_bug.cgi?id=141171
+
+        Reviewed by Geoffrey Garen.
+        
+        Gives VirtualRegister a dump() method that pretty-prints the virtual register. The rest of
+        the patch is all about using this new power.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CodeBlock.cpp:
+        (JSC::constantName):
+        (JSC::CodeBlock::registerName):
+        * bytecode/CodeBlock.h:
+        (JSC::missingThisObjectMarker): Deleted.
+        * bytecode/VirtualRegister.cpp: Added.
+        (JSC::VirtualRegister::dump):
+        * bytecode/VirtualRegister.h:
+        (WTF::printInternal): Deleted.
+        * dfg/DFGArgumentPosition.h:
+        (JSC::DFG::ArgumentPosition::dump):
+        * dfg/DFGFlushedAt.cpp:
+        (JSC::DFG::FlushedAt::dump):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        * dfg/DFGPutLocalSinkingPhase.cpp:
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::reportValidationContext):
+        * dfg/DFGValueSource.cpp:
+        (JSC::DFG::ValueSource::dump):
+        * dfg/DFGVariableEvent.cpp:
+        (JSC::DFG::VariableEvent::dump):
+        (JSC::DFG::VariableEvent::dumpSpillInfo):
+        * ftl/FTLExitArgumentForOperand.cpp:
+        (JSC::FTL::ExitArgumentForOperand::dump):
+        * ftl/FTLExitValue.cpp:
+        (JSC::FTL::ExitValue::dumpInContext):
+        * profiler/ProfilerBytecodeSequence.cpp:
+        (JSC::Profiler::BytecodeSequence::BytecodeSequence):
+
+2015-02-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the HandleBlock piece of this patch.
+
+        * heap/HandleBlock.h:
+        * heap/HandleBlockInlines.h:
+        (JSC::HandleBlock::create):
+        (JSC::HandleBlock::destroy):
+        (JSC::HandleBlock::HandleBlock):
+        (JSC::HandleBlock::payloadEnd):
+        * heap/HandleSet.cpp:
+        (JSC::HandleSet::~HandleSet):
+        (JSC::HandleSet::grow):
+
+2015-02-02  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Support console.table
+        https://bugs.webkit.org/show_bug.cgi?id=141058
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptSource.js:
+        Include the firstLevelKeys filter when generating previews.
+
+        * runtime/ConsoleClient.cpp:
+        (JSC::appendMessagePrefix):
+        Differentiate console.table logs to system log.
+
+2015-01-31  Filip Pizlo  <fpizlo@apple.com>
+
+        BinarySwitch should be faster on average
+        https://bugs.webkit.org/show_bug.cgi?id=141046
+
+        Reviewed by Anders Carlsson.
+        
+        This optimizes our binary switch using math. It's strictly better than what we had before
+        assuming we bottom out in some case (rather than fall through), assuming all cases get
+        hit with equal probability. The difference is particularly large for large switch
+        statements. For example, a switch statement with 1000 cases would previously require on
+        average 13.207 branches to get to some case, while now it just requires 10.464.
+        
+        This is also a progression for the fall-through case, though we could shave off another
+        1/6 branch on average if we wanted to - though it would regress taking a case (not falling
+        through) by 1/6 branch. I believe it's better to bias the BinarySwitch for not falling
+        through.
+        
+        This also adds some randomness to the algorithm to minimize the likelihood of us
+        generating a switch statement that is always particularly bad for some input. Note that
+        the randomness has no effect on average-case performance assuming all cases are equally
+        likely.
+        
+        This ought to have no actual performance change because we don't rely on binary switches
+        that much. The main reason why this change is interesting is that I'm finding myself
+        increasingly relying on BinarySwitch, and I'd like to know that it's optimal.
+
+        * jit/BinarySwitch.cpp:
+        (JSC::BinarySwitch::BinarySwitch):
+        (JSC::BinarySwitch::~BinarySwitch):
+        (JSC::BinarySwitch::build):
+        * jit/BinarySwitch.h:
+
+2015-02-02  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Extend CSS.getSupportedCSSProperties to provide values for properties for CSS Augmented JSContext
+        https://bugs.webkit.org/show_bug.cgi?id=141064
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/protocol/CSS.json:
+
+2015-02-02  Daniel Bates  <dabates@apple.com>
+
+        [iOS] ASSERTION FAILED: m_scriptExecutionContext->isContextThread() in ContextDestructionObserver::observeContext
+        https://bugs.webkit.org/show_bug.cgi?id=141057
+        <rdar://problem/19068790>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::receivedIndicateMessage): Modified to call WTF::callOnWebThreadOrDispatchAsyncOnMainThread().
+        (Inspector::dispatchAsyncOnQueueSafeForAnyDebuggable): Deleted; moved logic to common helper function,
+        WTF::callOnWebThreadOrDispatchAsyncOnMainThread() so that it can be called from both RemoteInspector::receivedIndicateMessage()
+        and CryptoKeyRSA::generatePair().
+
+2015-02-02  Saam Barati  <saambarati1@gmail.com>
+
+        Create tests for JSC's Control Flow Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=141123
+
+        Reviewed by Filip Pizlo.
+
+        This patch creates a control flow profiler testing API in jsc.cpp 
+        that accepts a function and a string as arguments. The string must 
+        be a substring of the text of the function argument. The API returns 
+        a boolean indicating whether or not the basic block that encloses the 
+        substring has executed.
+
+        This patch uses this API to test that the control flow profiler
+        behaves as expected on basic block boundaries. These tests do not
+        provide full coverage for all JavaScript statements that can create
+        basic blocks boundaries. Full coverage will come in a later patch.
+
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (functionHasBasicBlockExecuted):
+        * runtime/ControlFlowProfiler.cpp:
+        (JSC::ControlFlowProfiler::hasBasicBlockAtTextOffsetBeenExecuted):
+        * runtime/ControlFlowProfiler.h:
+        * tests/controlFlowProfiler: Added.
+        * tests/controlFlowProfiler.yaml: Added.
+        * tests/controlFlowProfiler/driver: Added.
+        * tests/controlFlowProfiler/driver/driver.js: Added.
+        (assert):
+        * tests/controlFlowProfiler/if-statement.js: Added.
+        (testIf):
+        (noMatches):
+        * tests/controlFlowProfiler/loop-statements.js: Added.
+        (forRegular):
+        (forIn):
+        (forOf):
+        (whileLoop):
+        * tests/controlFlowProfiler/switch-statements.js: Added.
+        (testSwitch):
+        * tests/controlFlowProfiler/test-jit.js: Added.
+        (tierUpToBaseline):
+        (tierUpToDFG):
+        (baselineTest):
+        (dfgTest):
+
 2015-01-28  Filip Pizlo  <fpizlo@apple.com>
 
         Polymorphic call inlining should be based on polymorphic call inline caching rather than logging

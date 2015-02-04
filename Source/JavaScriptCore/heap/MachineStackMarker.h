@@ -55,7 +55,8 @@ namespace JSC {
         static void removeThread(void*);
         void removeCurrentThread();
 
-        void gatherFromOtherThread(ConservativeRoots&, Thread*, JITStubRoutineSet&, CodeBlockSet&);
+        template<typename PlatformThread>
+        void removeThreadWithLockAlreadyAcquired(PlatformThread);
 
         Mutex m_registeredThreadsMutex;
         Thread* m_registeredThreads;
