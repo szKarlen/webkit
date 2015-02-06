@@ -24,6 +24,7 @@
 
 #include <setjmp.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/ThreadSafeRefCounted.h>
 #include <wtf/ThreadSpecific.h>
 #include <wtf/ThreadingPrimitives.h>
 
@@ -34,7 +35,7 @@ namespace JSC {
     class Heap;
     class JITStubRoutineSet;
 
-    class MachineThreads {
+    class MachineThreads : public ThreadSafeRefCounted<MachineThreads> {
         WTF_MAKE_NONCOPYABLE(MachineThreads);
     public:
         typedef jmp_buf RegisterState;
@@ -47,13 +48,14 @@ namespace JSC {
         JS_EXPORT_PRIVATE void makeUsableFromMultipleThreads();
         JS_EXPORT_PRIVATE void addCurrentThread(); // Only needs to be called by clients that can use the same heap from multiple threads.
 
+        void removeCurrentThread();
+
     private:
         void gatherFromCurrentThread(ConservativeRoots&, JITStubRoutineSet&, CodeBlockSet&, void* stackCurrent, RegisterState& registers);
 
         class Thread;
 
         static void removeThread(void*);
-        void removeCurrentThread();
 
         template<typename PlatformThread>
         void removeThreadWithLockAlreadyAcquired(PlatformThread);
@@ -63,6 +65,7 @@ namespace JSC {
         WTF::ThreadSpecificKey m_threadSpecific;
 #if !ASSERT_DISABLED
         Heap* m_heap;
+        uint64_t m_magicNumber; // Only used for detecting use after free.
 #endif
     };
 
