@@ -1,3 +1,109 @@
+2015-02-09  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix the !ENABLE(DFG_JIT) build
+        https://bugs.webkit.org/show_bug.cgi?id=141387
+
+        Reviewed by Darin Adler.
+
+        * jit/Repatch.cpp:
+
+2015-02-08  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove a few duplicate propagation steps from the DFG's PredictionPropagation phase
+        https://bugs.webkit.org/show_bug.cgi?id=141363
+
+        Reviewed by Darin Adler.
+
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        Some blocks were duplicated, they probably evolved separately
+        to the same state.
+
+2015-02-08  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove useless declarations and a stale comment from DFGByteCodeParser.h
+        https://bugs.webkit.org/show_bug.cgi?id=141361
+
+        Reviewed by Darin Adler.
+
+        The comment refers to the original form of the ByteCodeParser:
+            parse(Graph&, JSGlobalData*, CodeBlock*, unsigned startIndex);
+
+        That form is long dead, the comment is more misleading than anything.
+
+        * dfg/DFGByteCodeParser.cpp:
+        * dfg/DFGByteCodeParser.h:
+
+2015-02-08  Benjamin Poulain  <benjamin@webkit.org>
+
+        Encapsulate DFG::Plan's beforeFTL timestamp
+        https://bugs.webkit.org/show_bug.cgi?id=141360
+
+        Reviewed by Darin Adler.
+
+        Make the attribute private, it is an internal state.
+
+        Rename beforeFTL->timeBeforeFTL for readability.
+
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThread):
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGPlan.h:
+
+2015-02-08  Benjamin Poulain  <bpoulain@apple.com>
+
+        Remove DFGNode::hasArithNodeFlags()
+        https://bugs.webkit.org/show_bug.cgi?id=141319
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasArithNodeFlags): Deleted.
+        Unused code is unused.
+
+2015-02-07  Chris Dumez  <cdumez@apple.com>
+
+        Add Vector::removeFirstMatching() / removeAllMatching() methods taking lambda functions
+        https://bugs.webkit.org/show_bug.cgi?id=141321
+
+        Reviewed by Darin Adler.
+
+        Use new Vector::removeFirstMatching() / removeAllMatching() methods.
+
+2015-02-06  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG SSA shouldn't have SetArgument nodes
+        https://bugs.webkit.org/show_bug.cgi?id=141342
+
+        Reviewed by Mark Lam.
+
+        I was wondering why we kept the SetArgument around for captured
+        variables. It turns out we did so because we thought we had to, even
+        though we didn't have to. The node is meaningless in SSA.
+
+        * dfg/DFGSSAConversionPhase.cpp:
+        (JSC::DFG::SSAConversionPhase::run):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+
+2015-02-06  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be possible to use the DFG SetArgument node to indicate that someone set the value of a local out-of-band
+        https://bugs.webkit.org/show_bug.cgi?id=141337
+
+        Reviewed by Mark Lam.
+
+        This mainly involved ensuring that SetArgument behaves just like SetLocal from a CPS standpoint, but with a special case for those SetArguments that
+        are associated with the prologue.
+
+        * dfg/DFGCPSRethreadingPhase.cpp:
+        (JSC::DFG::CPSRethreadingPhase::run):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSet):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeLocalsInBlock):
+        (JSC::DFG::CPSRethreadingPhase::specialCaseArguments):
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSetLocal): Deleted.
+        (JSC::DFG::CPSRethreadingPhase::canonicalizeSetArgument): Deleted.
+
 2015-02-06  Mark Lam  <mark.lam@apple.com>
 
         MachineThreads should be ref counted.
