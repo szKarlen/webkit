@@ -55,7 +55,6 @@
 namespace JSC {
 
     class Identifier;
-    class Label;
 
     enum ExpectedFunction {
         NoExpectedFunction,
@@ -578,8 +577,6 @@ namespace JSC {
         bool isBuiltinFunction() const { return m_isBuiltinFunction; }
         
     private:
-        friend class Label;
-        
         void emitOpcode(OpcodeID);
         UnlinkedArrayAllocationProfile newArrayAllocationProfile();
         UnlinkedObjectAllocationProfile newObjectAllocationProfile();
