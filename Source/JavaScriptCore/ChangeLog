@@ -1,3 +1,472 @@
+2015-02-13  Michael Saboff  <msaboff@apple.com>
+
+        Google doc spreadsheet reproducibly crashes when sorting
+        https://bugs.webkit.org/show_bug.cgi?id=141098
+
+        Reviewed by Oliver Hunt.
+
+        Moved the stack check to before the callee registers are allocated in the
+        prologue() by movving it from the functionInitialization() macro.  This
+        way we can check the stack before moving the stack pointer, avoiding a
+        crash during a "call" instruction.  Before this change, we weren't even
+        checking the stack for program and eval execution.
+
+        Made a couple of supporting changes.
+
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::llint_stack_check): We can't just go up one frame as we
+        may be processing an exception to an entry frame.
+
+        * llint/LowLevelInterpreter.asm:
+
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        (llint_throw_from_slow_path_trampoline): Changed method to get the vm
+        from the code block to not use the codeBlock, since we may need to
+        continue from an exception in a native function.
+
+2015-02-12  Benjamin Poulain  <benjamin@webkit.org>
+
+        Simplify the initialization of BytecodeGenerator a bit
+        https://bugs.webkit.org/show_bug.cgi?id=141505
+
+        Reviewed by Anders Carlsson.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/BytecodeGenerator.h:
+        Setup the default initialization at the declaration level
+        instead of the constructor.
+
+        Also made m_scopeNode and m_codeType const to make it explicit
+        that they are invariant after construction.
+
+        * parser/Nodes.cpp:
+        * runtime/Executable.cpp:
+        Remove 2 useless #includes.
+
+2015-02-12  Benjamin Poulain  <benjamin@webkit.org>
+
+        Move the generators for GetScope and SkipScope to the common core in DFGSpeculativeJIT
+        https://bugs.webkit.org/show_bug.cgi?id=141506
+
+        Reviewed by Michael Saboff.
+
+        The generators for the nodes GetScope and SkipScope were
+        completely identical between 32 and 64bits.
+
+        This patch moves the duplicated code to DFGSpeculativeJIT.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetScope):
+        (JSC::DFG::SpeculativeJIT::compileSkipScope):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2015-02-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] [64-bit] Work around MSVC2013 Runtime Bug
+        https://bugs.webkit.org/show_bug.cgi?id=141498
+        <rdar://problem/19803642>
+
+        Reviewed by Anders Carlsson.
+
+        Disable FMA3 instruction use in the MSVC math library to
+        work around a VS2013 runtime crash. We can remove this
+        workaround when we switch to VS2015.
+
+        * API/tests/testapi.c: Call _set_FMA3_enable(0) to disable
+        FMA3 support.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj: Add new files.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Ditto.
+        * JavaScriptCore.vcxproj/JavaScriptCoreDLL.cpp: Added.
+        * JavaScriptCore.vcxproj/jsc/DLLLauncherMain.cpp: Call _set_FMA3_enable(0)
+        to disable FMA3 support.
+        * jsc.cpp: Ditto.
+        * testRegExp.cpp: Ditto.
+
+2015-02-11  Filip Pizlo  <fpizlo@apple.com>
+
+        The callee frame helpers in DFG::SpeculativeJIT should be available to other JITs
+        https://bugs.webkit.org/show_bug.cgi?id=141493
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::calleeFrameSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeArgumentSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeFrameTagSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeFramePayloadSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeArgumentTagSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeArgumentPayloadSlot): Deleted.
+        (JSC::DFG::SpeculativeJIT::calleeFrameCallerFrame): Deleted.
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::calleeFrameSlot):
+        (JSC::AssemblyHelpers::calleeArgumentSlot):
+        (JSC::AssemblyHelpers::calleeFrameTagSlot):
+        (JSC::AssemblyHelpers::calleeFramePayloadSlot):
+        (JSC::AssemblyHelpers::calleeArgumentTagSlot):
+        (JSC::AssemblyHelpers::calleeArgumentPayloadSlot):
+        (JSC::AssemblyHelpers::calleeFrameCallerFrame):
+
+2015-02-11  Filip Pizlo  <fpizlo@apple.com>
+
+        SetupVarargsFrame should not assume that an inline stack frame would have identical layout to a normal stack frame
+        https://bugs.webkit.org/show_bug.cgi?id=141485
+
+        Reviewed by Oliver Hunt.
+        
+        The inlineStackOffset argument was meant to make it easy for the DFG to use this helper for
+        vararg calls from inlined code, but that doesn't work since the DFG inline call frame
+        doesn't actually put the argument count at the JSStack::ArgumentCount offset. In fact there
+        is really no such thing as an inlineStackOffset except when we OSR exit; while the code is
+        running the stack layout is compacted so that the stackOffset is not meaningful.
+
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/SetupVarargsFrame.cpp:
+        (JSC::emitSetupVarargsFrameFastCase):
+        * jit/SetupVarargsFrame.h:
+
+2015-02-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Split FTL::JSCall into the part that knows about call inline caching and the part that interacts with LLVM patchpoints
+        https://bugs.webkit.org/show_bug.cgi?id=141455
+
+        Reviewed by Mark Lam.
+        
+        The newly introduced FTL::JSCallBase can be used to build other things, like the FTL portion
+        of https://bugs.webkit.org/show_bug.cgi?id=141332.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CallLinkInfo.h:
+        (JSC::CallLinkInfo::specializationKindFor):
+        (JSC::CallLinkInfo::specializationKind):
+        * ftl/FTLJSCall.cpp:
+        (JSC::FTL::JSCall::JSCall):
+        (JSC::FTL::JSCall::emit): Deleted.
+        (JSC::FTL::JSCall::link): Deleted.
+        * ftl/FTLJSCall.h:
+        * ftl/FTLJSCallBase.cpp: Added.
+        (JSC::FTL::JSCallBase::JSCallBase):
+        (JSC::FTL::JSCallBase::emit):
+        (JSC::FTL::JSCallBase::link):
+        * ftl/FTLJSCallBase.h: Added.
+
+2015-02-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix build.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+
+2015-02-10  Filip Pizlo  <fpizlo@apple.com>
+
+        op_call_varargs should only load the length once
+        https://bugs.webkit.org/show_bug.cgi?id=141440
+        rdar://problem/19761683
+
+        Reviewed by Michael Saboff.
+        
+        Refactors the pair of calls that set up the varargs frame so that the first call returns the
+        length, and the second call uses the length returned by the first one. It turns out that this
+        gave me an opportunity to shorten a lot of the code.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::sizeFrameForVarargs):
+        (JSC::loadVarargs):
+        (JSC::setupVarargsFrame):
+        (JSC::setupVarargsFrameAndSetThis):
+        * interpreter/Interpreter.h:
+        (JSC::calleeFrameForVarargs):
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JIT.h:
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/SetupVarargsFrame.cpp:
+        (JSC::emitSetVarargsFrame):
+        (JSC::emitSetupVarargsFrameFastCase):
+        * jit/SetupVarargsFrame.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::copyToArguments):
+        * runtime/Arguments.h:
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::copyToArguments):
+        * runtime/JSArray.h:
+        * runtime/VM.h:
+        * tests/stress/call-varargs-length-effects.js: Added.
+        (foo):
+        (bar):
+
+2015-02-10  Michael Saboff  <msaboff@apple.com>
+
+        Crash in JSC::FTL::LowerDFGToLLVM::compileCompareStrictEq
+        https://bugs.webkit.org/show_bug.cgi?id=139398
+
+        Reviewed by Filip Pizlo.
+
+        Due to CFA analysis, the CompareStrictEq node was determined to be unreachable, but later
+        was determined to be reachable.  When we go to lower to LLVM, the edges for the CompareStrictEq
+        node are UntypedUse which we can't compile.  Fixed this by checking that the IR before
+        lowering can still be handled by the FTL.
+
+        Had to add GetArgument as a node that the FTL can compile as the SSA conversion phase converts
+        a SetArgument to a GetArgument.  Before this change FTL::canCompile() would never see a GetArgument
+        node.  With the check right before lowering, we see this node.
+
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl): Added a final FTL::canCompile() check before lowering
+        to verify that after all the transformations we still have valid IR for the FTL.
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile): Added GetArgument as a node the FTL can compile.
+
+2015-02-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Remove unused DFG::SpeculativeJIT::calleeFrameOffset().
+
+        Rubber stamped by Michael Saboff.
+        
+        Not only was this not used, I believe that the math was wrong. The callee frame doesn't
+        actually land past m_nextMachineLocal; instead it lands just below wherever we put SP and
+        that decision is made elsewhere. Also, it makes no sense to subtract 1 from
+        m_nextMachineLocal when trying to deduce the number of in-use stack slots.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::calleeFrameOffset): Deleted.
+
+2015-02-10  Saam Barati  <saambarati1@gmail.com>
+
+        Parser::parseVarDeclarationList gets the wrong JSToken for the last identifier
+        https://bugs.webkit.org/show_bug.cgi?id=141272
+
+        Reviewed by Oliver Hunt.
+
+        This patch fixes a bug where the wrong text location would be 
+        assigned to a variable declaration inside a ForIn/ForOf loop. 
+        It also fixes a bug in the type profiler where the type profiler 
+        emits the wrong text offset for a ForIn loop's variable declarator 
+        when it's not a pattern node.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitLoopHeader):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseVarDeclarationList):
+        * tests/typeProfiler/loop.js:
+        (testForIn):
+        (testForOf):
+
+2015-02-09  Saam Barati  <saambarati1@gmail.com>
+
+        JSC's Type Profiler doesn't profile the type of the looping variable in ForOf/ForIn loops
+        https://bugs.webkit.org/show_bug.cgi?id=141241
+
+        Reviewed by Filip Pizlo.
+
+        Type information is now recorded for ForIn and ForOf statements. 
+        It was an oversight to not have these statements profiled before.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitLoopHeader):
+        (JSC::ForOfNode::emitBytecode):
+        * tests/typeProfiler/loop.js: Added.
+        (testForIn):
+        (testForOf):
+
+2015-02-09  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG::StackLayoutPhase should always set the scopeRegister to VirtualRegister() because the DFG doesn't do anything to make its value valid
+        https://bugs.webkit.org/show_bug.cgi?id=141412
+
+        Reviewed by Michael Saboff.
+        
+        StackLayoutPhase was attempting to ensure that the register that
+        CodeBlock::scopeRegister() points to is the right one for the DFG. But the DFG did nothing
+        else to maintain the validity of the scopeRegister(). It wasn't captured as far as I can
+        tell. StackLayoutPhase didn't explicitly mark it live. PreciseLocalClobberize didn't mark
+        it as being live. So, by the time we got here the register referred to by
+        CodeBlock::scopeRegister() would have been junk. Moreover, CodeBlock::scopeRegister() was
+        not used for DFG code blocks, and was hardly ever used outside of bytecode generation.
+        
+        So, this patch just removes the code to manipulate this field and replaces it with an
+        unconditional setScopeRegister(VirtualRegister()). Setting it to the invalid register
+        ensures that any attempst to read the scopeRegister in a DFG or FTL frame immediately
+        punts.
+
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+
+2015-02-09  Filip Pizlo  <fpizlo@apple.com>
+
+        Varargs frame set-up should be factored out for use by other JITs
+        https://bugs.webkit.org/show_bug.cgi?id=141388
+
+        Reviewed by Michael Saboff.
+        
+        Previously the code that dealt with varargs always assumed that we were setting up a varargs call
+        frame by literally following the execution semantics of op_call_varargs. This isn't how it'll
+        happen once the DFG and FTL do varargs calls, or when varargs calls get inlined. The DFG and FTL
+        don't literally execute bytecode; for example their stack frame layout has absolutely nothing in
+        common with what the bytecode says, and that will never change.
+        
+        This patch makes two changes:
+        
+        Setting up the varargs callee frame can be done in smaller steps: particularly in the case of a
+        varargs call that gets inlined, we aren't going to actually want to set up a callee frame in
+        full - we just want to put the arguments somewhere, and that place will not have much (if
+        anything) in common with the call frame format. This patch factors that out into something called
+        a loadVarargs. The thing we used to call loadVarargs is now called setupVarargsFrame. This patch
+        also separates loading varargs from setting this, since the fact that those two things are done
+        together is a detail made explicit in bytecode but it's not at all required in the higher-tier
+        engines. In the process of factoring this code out, I found a bunch of off-by-one errors in the
+        various calculations. I fixed them. The distance from the caller's frame pointer to the callee
+        frame pointer is always:
+        
+            numUsedCallerSlots + argCount + 1 + CallFrameSize
+        
+        where numUsedCallerSlots is toLocal(firstFreeRegister) - 1, which simplifies down to just
+        -firstFreeRegister. The code now speaks of numUsedCallerSlots rather than firstFreeRegister,
+        since the latter is a bytecode peculiarity that doesn't apply in the DFG or FTL. In the DFG, the
+        internally-computed frame size, minus the parameter slots, will be used for numUsedCallerSlots.
+        In the FTL, we will essentially compute numUsedCallerSlots dynamically by subtracting SP from FP.
+        Eventually, LLVM might give us some cleaner way of doing this, but it probably doesn't matter
+        very much.
+        
+        The arguments forwarding optimization is factored out of the Baseline JIT: the DFG and FTL will
+        want to do this optimization as well, but it involves quite a bit of code. So, this code is now
+        factored out into SetupVarargsFrame.h|cpp, so that other JITs can use it. In the process of factoring
+        this code out I noticed that the 32-bit and 64-bit code is nearly identical, so I combined them.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bytecode/CodeBlock.h:
+        (JSC::ExecState::r):
+        (JSC::ExecState::uncheckedR):
+        * bytecode/VirtualRegister.h:
+        (JSC::VirtualRegister::operator+):
+        (JSC::VirtualRegister::operator-):
+        (JSC::VirtualRegister::operator+=):
+        (JSC::VirtualRegister::operator-=):
+        * interpreter/CallFrame.h:
+        * interpreter/Interpreter.cpp:
+        (JSC::sizeFrameForVarargs):
+        (JSC::loadVarargs):
+        (JSC::setupVarargsFrame):
+        (JSC::setupVarargsFrameAndSetThis):
+        * interpreter/Interpreter.h:
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::emitGetFromCallFrameHeaderPtr):
+        (JSC::AssemblyHelpers::emitGetFromCallFrameHeader32):
+        (JSC::AssemblyHelpers::emitGetFromCallFrameHeader64):
+        * jit/JIT.h:
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileSetupVarargsFrame):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        (JSC::JIT::emitGetFromCallFrameHeaderPtr): Deleted.
+        (JSC::JIT::emitGetFromCallFrameHeader32): Deleted.
+        (JSC::JIT::emitGetFromCallFrameHeader64): Deleted.
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/SetupVarargsFrame.cpp: Added.
+        (JSC::emitSetupVarargsFrameFastCase):
+        * jit/SetupVarargsFrame.h: Added.
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::copyToArguments):
+        * runtime/Arguments.h:
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::copyToArguments):
+        * runtime/JSArray.h:
+
+2015-02-09  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG call codegen should resolve the callee operand as late as possible
+        https://bugs.webkit.org/show_bug.cgi?id=141398
+
+        Reviewed by Mark Lam.
+        
+        This is mostly a benign restructuring to help with the implementation of
+        https://bugs.webkit.org/show_bug.cgi?id=141332.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+
+2015-02-08  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should only have two mechanisms for describing effectfulness of nodes; previously there were three
+        https://bugs.webkit.org/show_bug.cgi?id=141369
+
+        Reviewed by Michael Saboff.
+
+        We previously used the NodeMightClobber and NodeClobbersWorld NodeFlags to describe
+        effectfulness.  Starting over a year ago, we introduced a more powerful mechanism - the
+        DFG::clobberize() function.  Now we only have one remaining client of the old NodeFlags,
+        and everyone else uses DFG::clobberize().  We should get rid of those NodeFlags and
+        finally switch everyone over to DFG::clobberize().
+        
+        Unfortunately there is still another place where effectfulness of nodes is described: the
+        AbstractInterpreter. This is because the AbstractInterpreter has special tuning both for
+        compile time performance and there are places where the AI is more precise than
+        clobberize() because of its flow-sensitivity.
+        
+        This means that after this change there will be only two places, rather than three, where
+        the effectfulness of a node has to be described:
+
+        - DFG::clobberize()
+        - DFG::AbstractInterpreter
+
+        * dfg/DFGClobberize.cpp:
+        (JSC::DFG::clobbersWorld):
+        * dfg/DFGClobberize.h:
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        (JSC::DFG::FixupPhase::attemptToMakeGetTypedArrayByteLength):
+        (JSC::DFG::FixupPhase::convertToGetArrayLength):
+        (JSC::DFG::FixupPhase::attemptToMakeGetTypedArrayByteOffset):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::isPredictedNumerical): Deleted.
+        (JSC::DFG::Graph::byValIsPure): Deleted.
+        (JSC::DFG::Graph::clobbersWorld): Deleted.
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::convertToConstant):
+        (JSC::DFG::Node::convertToGetLocalUnlinked):
+        (JSC::DFG::Node::convertToGetByOffset):
+        (JSC::DFG::Node::convertToMultiGetByOffset):
+        (JSC::DFG::Node::convertToPutByOffset):
+        (JSC::DFG::Node::convertToMultiPutByOffset):
+        * dfg/DFGNodeFlags.cpp:
+        (JSC::DFG::dumpNodeFlags):
+        * dfg/DFGNodeFlags.h:
+        * dfg/DFGNodeType.h:
+
 2015-02-09  Csaba Osztrogonác  <ossy@webkit.org>
 
         Fix the !ENABLE(DFG_JIT) build
