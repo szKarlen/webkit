@@ -1,5 +1,32 @@
 2015-02-13  Benjamin Poulain  <bpoulain@apple.com>
 
+        Attempt to fix 32bits build after r180098
+
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        I copied the attribute from the MathObject version of that function when I moved
+        it over. DFG has no version of a function call taking those attributes.
+
+2015-02-13  Joseph Pecoraro  <pecoraro@apple.com>
+
+        JSContext Inspector: Do not stash console messages for non-debuggable JSContext
+        https://bugs.webkit.org/show_bug.cgi?id=141589
+
+        Reviewed by Timothy Hatcher.
+
+        Consider developer extras disabled for JSContext inspection if the
+        RemoteInspector server is not enabled (typically a non-debuggable
+        process rejected by webinspectord) or if remote debugging on the
+        JSContext was explicitly disabled via SPI.
+
+        When developer extras are disabled, console message will not be stashed.
+
+        * inspector/JSGlobalObjectInspectorController.cpp:
+        (Inspector::JSGlobalObjectInspectorController::developerExtrasEnabled):
+        * inspector/JSGlobalObjectInspectorController.h:
+
+2015-02-13  Benjamin Poulain  <bpoulain@apple.com>
+
         Add a DFG node for the Pow Intrinsics
         https://bugs.webkit.org/show_bug.cgi?id=141540
 
