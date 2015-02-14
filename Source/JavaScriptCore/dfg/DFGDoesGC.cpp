@@ -80,6 +80,7 @@ bool doesGC(Graph& graph, Node* node)
     case ArithAbs:
     case ArithMin:
     case ArithMax:
+    case ArithPow:
     case ArithSqrt:
     case ArithFRound:
     case ArithSin:
