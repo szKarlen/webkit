@@ -128,7 +128,9 @@ CallLinkStatus CallLinkStatus::computeFor(
     // We don't really need this, but anytime we have to debug this code, it becomes indispensable.
     UNUSED_PARAM(profiledBlock);
     
-    return computeFromCallLinkInfo(locker, callLinkInfo);
+    CallLinkStatus result = computeFromCallLinkInfo(locker, callLinkInfo);
+    result.m_maxNumArguments = callLinkInfo.maxNumArguments;
+    return result;
 }
 
 CallLinkStatus CallLinkStatus::computeFromCallLinkInfo(
@@ -290,6 +292,13 @@ CallLinkStatus CallLinkStatus::computeFor(
     return computeFor(profiledBlock, codeOrigin.bytecodeIndex, baselineMap);
 }
 
+void CallLinkStatus::setProvenConstantCallee(CallVariant variant)
+{
+    m_variants = CallVariantList{ variant };
+    m_couldTakeSlowPath = false;
+    m_isProved = true;
+}
+
 bool CallLinkStatus::isClosureCall() const
 {
     for (unsigned i = m_variants.size(); i--;) {
@@ -321,6 +330,9 @@ void CallLinkStatus::dump(PrintStream& out) const
     
     if (!m_variants.isEmpty())
         out.print(comma, listDump(m_variants));
+    
+    if (m_maxNumArguments)
+        out.print(comma, "maxNumArguments = ", m_maxNumArguments);
 }
 
 } // namespace JSC

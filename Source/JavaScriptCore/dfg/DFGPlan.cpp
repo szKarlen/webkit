@@ -87,10 +87,10 @@
 
 namespace JSC { namespace DFG {
 
-static void dumpAndVerifyGraph(Graph& graph, const char* text)
+static void dumpAndVerifyGraph(Graph& graph, const char* text, bool forceDump = false)
 {
     GraphDumpMode modeForFinalValidate = DumpGraph;
-    if (verboseCompilationEnabled(graph.m_plan.mode)) {
+    if (verboseCompilationEnabled(graph.m_plan.mode) || forceDump) {
         dataLog(text, "\n");
         graph.dump();
         modeForFinalValidate = DontDumpGraph;
@@ -363,7 +363,12 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         performOSRAvailabilityAnalysis(dfg);
         performWatchpointCollection(dfg);
         
-        dumpAndVerifyGraph(dfg, "Graph just before FTL lowering:");
+        if (FTL::canCompile(dfg) == FTL::CannotCompile) {
+            finalizer = std::make_unique<FailedFinalizer>(*this);
+            return FailPath;
+        }
+
+        dumpAndVerifyGraph(dfg, "Graph just before FTL lowering:", shouldShowDisassembly(mode));
         
         bool haveLLVM;
         Safepoint::Result safepointResult;

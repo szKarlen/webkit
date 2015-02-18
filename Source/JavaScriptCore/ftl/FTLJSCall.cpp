@@ -47,6 +47,7 @@ JSCall::JSCall(unsigned stackmapID, DFG::Node* node)
     , m_callLinkInfo(nullptr)
     , m_instructionOffset(0)
 {
+    ASSERT(node->op() == Call || node->op() == Construct);
 }
 
 void JSCall::emit(CCallHelpers& jit)

@@ -269,6 +269,9 @@ private:
                     case DoubleConstant:
                     case Int52Constant:
                     case GetScope:
+                    case PhantomLocal:
+                    case GetCallee:
+                    case CountExecution:
                         break;
                 
                     default:
