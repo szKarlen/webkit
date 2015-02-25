@@ -1,3 +1,471 @@
+2015-02-25  Benjamin Poulain  <bpoulain@apple.com>
+
+        CodeBlock crashes when dumping op_push_name_scope
+        https://bugs.webkit.org/show_bug.cgi?id=141953
+
+        Reviewed by Filip Pizlo and Csaba Osztrogonác.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * tests/stress/op-push-name-scope-crashes-profiler.js: Added.
+
+2015-02-25  Benjamin Poulain  <benjamin@webkit.org>
+
+        Make ParserError immutable by design
+        https://bugs.webkit.org/show_bug.cgi?id=141955
+
+        Reviewed by Geoffrey Garen.
+
+        This patch enforce that no field of ParserError can
+        be modified after the constructor.
+
+        * parser/ParserError.h:
+        Move the attributes to pack the integer + 2 bytes together.
+        This is irrelevant for memory impact, it is to remve a load-store
+        when copying by value.
+
+        Also move the attributes to be private.
+
+        (JSC::ParserError::isValid):
+        To client of the interface cared about the type of the error,
+        the only information needed was: is there an error.
+
+        (JSC::ParserError::ParserError):
+        (JSC::ParserError::syntaxErrorType):
+        (JSC::ParserError::token):
+        (JSC::ParserError::message):
+        (JSC::ParserError::line):
+        (JSC::ParserError::toErrorObject):
+        * API/JSScriptRef.cpp:
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createBuiltinExecutable):
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock):
+        (JSC::UnlinkedFunctionExecutable::fromGlobalCode):
+        (JSC::UnlinkedFunctionExecutable::codeBlockFor):
+        * bytecode/UnlinkedCodeBlock.h:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::parse):
+        * jsc.cpp:
+        (runInteractive):
+        * parser/Parser.h:
+        (JSC::parse):
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode):
+        * runtime/CodeCache.h:
+        * runtime/Completion.h:
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::checkSyntax):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::createProgramCodeBlock):
+        (JSC::JSGlobalObject::createEvalCodeBlock):
+
+2015-02-25  Filip Pizlo  <fpizlo@apple.com>
+
+        Need to pass RTLD_DEEPBIND to dlopen() to ensure that our LLVMOverrides take effect on Linux
+        https://bugs.webkit.org/show_bug.cgi?id=142006
+
+        Reviewed by Csaba Osztrogonác.
+
+        This fixes hard-to-reproduce concurrency-related crashes when running stress tests with FTL and
+        concurrent JIT enabled.
+
+        * llvm/InitializeLLVMPOSIX.cpp:
+        (JSC::initializeLLVMPOSIX):
+
+2015-02-24  Filip Pizlo  <fpizlo@apple.com>
+
+        CMake build of libllvmForJSC.so should limit its export list like the Xcode build does
+        https://bugs.webkit.org/show_bug.cgi?id=141989
+
+        Reviewed by Gyuyoung Kim.
+
+        * CMakeLists.txt:
+        * llvm/library/libllvmForJSC.version: Added.
+
+2015-02-24  Alexey Proskuryakov  <ap@apple.com>
+
+        More iOS build fix after r180602.
+
+        * heap/Heap.h: Export Heap::machineThreads().
+
+2015-02-24  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed build fix after r180602.
+
+        * heap/MachineStackMarker.h: Add missing 'no return'
+        declaration for Windows.
+
+2015-02-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r180599.
+        https://bugs.webkit.org/show_bug.cgi?id=141998
+
+        Lots of new test failures (Requested by smfr on #webkit).
+
+        Reverted changeset:
+
+        "Parsing support for -webkit-trailing-word"
+        https://bugs.webkit.org/show_bug.cgi?id=141939
+        http://trac.webkit.org/changeset/180599
+
+2015-02-24  Mark Lam  <mark.lam@apple.com>
+
+        MachineThreads::Thread clean up has a use after free race condition.
+        <https://webkit.org/b/141990>
+
+        Reviewed by Michael Saboff.
+
+        MachineThreads::Thread clean up relies on the clean up mechanism
+        implemented in _pthread_tsd_cleanup_key(), which looks like this:
+
+        void _pthread_tsd_cleanup_key(pthread_t self, pthread_key_t key)
+        {
+            void (*destructor)(void *);
+            if (_pthread_key_get_destructor(key, &destructor)) {
+                void **ptr = &self->tsd[key];
+                void *value = *ptr;
+
+                // At this point, this thread has cached "destructor" and "value"
+                // (which is a MachineThreads*).  If the VM gets destructed (along
+                // with its MachineThreads registry) by another thread, then this
+                // thread will have no way of knowing that the MachineThreads* is
+                // now pointing to freed memory.  Calling the destructor below will
+                // therefore result in a use after free scenario when it tries to
+                // access the MachineThreads' data members.
+
+                if (value) {
+                    *ptr = NULL;
+                    if (destructor) {
+                        destructor(value);
+                    }
+                }
+            }
+        }
+
+        The solution is simply to change MachineThreads from a per VM thread
+        registry to a process global singleton thread registry i.e. the
+        MachineThreads registry is now immortal and we cannot have a use after
+        free scenario since we never free it.
+
+        The cost of this change is that all VM instances will have to scan
+        stacks of all threads ever touched by a VM, and not just those that
+        touched a specific VM.  However, stacks tend to be shallow.  Hence,
+        those additional scans will tend to be cheap.
+
+        Secondly, it is not common for there to be multiple JSC VMs in use
+        concurrently on multiple threads.  Hence, this cost should rarely
+        manifest in real world applications.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::machineThreads):
+        (JSC::Heap::gatherStackRoots):
+        * heap/Heap.h:
+        (JSC::Heap::machineThreads): Deleted.
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::addCurrentThread):
+        * heap/MachineStackMarker.h:
+        * runtime/JSLock.cpp:
+        (JSC::JSLock::didAcquireLock):
+
+2015-02-24  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [Mac] [iOS] Parsing support for -apple-trailing-word
+        https://bugs.webkit.org/show_bug.cgi?id=141939
+
+        Reviewed by Andreas Kling.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2015-02-24  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use "this" instead of "callee" to get the constructor
+        https://bugs.webkit.org/show_bug.cgi?id=141019
+
+        Reviewed by Filip Pizlo.
+
+        This patch uses "this" register to pass the constructor (newTarget) to op_create_this from
+        op_construct or op_construct_varargs. This will allow future patches that implement ES6 class
+        to pass in the most derived class' constructor through "this" argument.
+
+        BytecodeGenerator's emitConstruct and emitConstructVarargs now passes thisRegister like
+        regular calls and emitCreateThis passes in this register to op_create_this as constructor.
+
+        The rest of the code change removes the code for special casing "this" register not being used
+        in call to construct.
+
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitCreateThis):
+        (JSC::BytecodeGenerator::emitConstructVarargs):
+        (JSC::BytecodeGenerator::emitConstruct):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::NewExprNode::emitBytecode):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::addCallWithoutSettingResult):
+        (JSC::DFG::ByteCodeParser::handleVarargsCall):
+        (JSC::DFG::ByteCodeParser::emitArgumentPhantoms):
+        (JSC::DFG::ByteCodeParser::attemptToInlineCall):
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        (JSC::DFG::ByteCodeParser::handleConstantInternalFunction):
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGJITCode.cpp:
+        (JSC::DFG::JITCode::reconstruct):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * ftl/FTLJSCallVarargs.cpp:
+        (JSC::FTL::JSCallVarargs::emit):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNativeCallOrConstruct):
+        (JSC::FTL::LowerDFGToLLVM::compileCallOrConstruct):
+        (JSC::FTL::LowerDFGToLLVM::compileCallOrConstructVarargs):
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::executeConstruct):
+        * jit/JITOperations.cpp:
+
+2015-02-24  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Make Getter/Setter RemoteObject property and ObjectPreview handling consistent
+        https://bugs.webkit.org/show_bug.cgi?id=141587
+
+        Reviewed by Timothy Hatcher.
+
+        Convert getProperties(ownAndGetterProperties) to getDisplayableProperties().
+        Mark PropertyDescriptors that are presumed to be native getters / bindings
+        separately so that the frontend may display them differently.
+
+        * inspector/InjectedScript.cpp:
+        (Inspector::InjectedScript::getProperties):
+        (Inspector::InjectedScript::getDisplayableProperties):
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptSource.js:
+        * inspector/agents/InspectorRuntimeAgent.cpp:
+        (Inspector::InspectorRuntimeAgent::getProperties):
+        (Inspector::InspectorRuntimeAgent::getDisplayableProperties):
+        * inspector/agents/InspectorRuntimeAgent.h:
+        * inspector/protocol/Runtime.json:
+
+2015-02-24  Mark Lam  <mark.lam@apple.com>
+
+        Rolling out r179753.  The fix was invalid.
+        <https://webkit.org/b/141990>
+
+        Not reviewed.
+
+        * API/tests/testapi.mm:
+        (threadMain):
+        (useVMFromOtherThread): Deleted.
+        (useVMFromOtherThreadAndOutliveVM): Deleted.
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::~Heap):
+        (JSC::Heap::gatherStackRoots):
+        * heap/Heap.h:
+        (JSC::Heap::machineThreads):
+        * heap/MachineStackMarker.cpp:
+        (JSC::MachineThreads::Thread::Thread):
+        (JSC::MachineThreads::MachineThreads):
+        (JSC::MachineThreads::~MachineThreads):
+        (JSC::MachineThreads::addCurrentThread):
+        (JSC::MachineThreads::removeThread):
+        (JSC::MachineThreads::removeCurrentThread):
+        * heap/MachineStackMarker.h:
+
+2015-02-24  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Constructor returning null should construct an object instead of null
+        https://bugs.webkit.org/show_bug.cgi?id=141640
+
+        Reviewed by Filip Pizlo.
+
+        When constructor code doesn't return object, constructor should return `this` object instead.
+        Since we used `op_is_object` for this check and `op_is_object` is intended to be used for `typeof`,
+        it allows `null` as an object.
+        This patch fixes it by introducing an new bytecode `op_is_object_or_null` for `typeof` use cases.
+        Instead, constructor uses simplified `is_object`.
+
+        As a result, `op_is_object` becomes fairly simple. So we introduce optimization for `op_is_object`.
+
+        1. LLInt and baseline JIT support `op_is_object` as a fast path.
+        2. DFG abstract interpreter support `op_is_object`. And recognize its speculated type and read-write effects.
+        3. DFG introduces inlined asm for `op_is_object` rather than calling a C++ function.
+        4. FTL lowers DFG's IsObject into LLVM IR.
+
+        And at the same time, this patch fixes isString / isObject predicate used for `op_is_object` and others
+        in LLInt, JIT, DFG and FTL.
+        Before introducing ES6 Symbol, JSCell is only used for object and string in user observable area.
+        So in many places, when the cell is not object, we recognize it as a string, and vice versa.
+        However, now ES6 Symbol is implemented as a JSCell, this assumption is broken.
+        So this patch stop using !isString as isObject.
+        To check whether a cell is an object, instead of seeing that structure ID of a cell is not stringStructure,
+        we examine typeInfo in JSCell.
+
+        * JavaScriptCore.order:
+        * bytecode/BytecodeList.json:
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+        (JSC::computeDefsForBytecodeOffset):
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitEqualityOp):
+        (JSC::BytecodeGenerator::emitReturn):
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGCapabilities.cpp:
+        (JSC::DFG::capabilityLevel):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+
+        IsObject operation only touches JSCell typeInfoType.
+        And this value would be changed through structure transition.
+        As a result, IsObject can report that it doesn't read any information.
+
+        * dfg/DFGConstantFoldingPhase.cpp:
+        (JSC::DFG::ConstantFoldingPhase::foldConstants):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+
+        Just like IsString, IsObject is also fixed up.
+
+        * dfg/DFGHeapLocation.cpp:
+        (WTF::printInternal):
+        * dfg/DFGHeapLocation.h:
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileStringToUntypedEquality):
+        (JSC::DFG::SpeculativeJIT::compileStringIdentToNotStringVarEquality):
+        (JSC::DFG::SpeculativeJIT::compileToStringOnCell):
+        (JSC::DFG::SpeculativeJIT::speculateObject):
+        (JSC::DFG::SpeculativeJIT::speculateObjectOrOther):
+        (JSC::DFG::SpeculativeJIT::speculateString):
+        (JSC::DFG::SpeculativeJIT::speculateNotStringVar):
+        (JSC::DFG::SpeculativeJIT::emitSwitchChar):
+        (JSC::DFG::SpeculativeJIT::emitSwitchString):
+        (JSC::DFG::SpeculativeJIT::branchIsObject):
+        (JSC::DFG::SpeculativeJIT::branchNotObject):
+        (JSC::DFG::SpeculativeJIT::branchIsString):
+        (JSC::DFG::SpeculativeJIT::branchNotString):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileToString):
+        (JSC::FTL::LowerDFGToLLVM::compileIsObject):
+        (JSC::FTL::LowerDFGToLLVM::compileIsObjectOrNull):
+        (JSC::FTL::LowerDFGToLLVM::speculateTruthyObject):
+        (JSC::FTL::LowerDFGToLLVM::equalNullOrUndefined):
+        (JSC::FTL::LowerDFGToLLVM::isObject):
+        (JSC::FTL::LowerDFGToLLVM::isNotObject):
+        (JSC::FTL::LowerDFGToLLVM::isNotString):
+        (JSC::FTL::LowerDFGToLLVM::speculateNonNullObject):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::emitJumpIfCellObject):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_is_object):
+        (JSC::JIT::emit_op_to_primitive):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_is_object):
+        (JSC::JIT::emit_op_to_primitive):
+        (JSC::JIT::compileOpStrictEq):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL):
+        * runtime/CommonSlowPaths.h:
+        * runtime/Operations.cpp:
+        (JSC::jsIsObjectTypeOrNull):
+        (JSC::jsIsObjectType): Deleted.
+        * runtime/Operations.h:
+        * tests/stress/constructor-with-return.js: Added.
+        (Test):
+
+        When constructor doesn't return an object, `this` should be returned instead.
+        In this test, we check all primitives. And test object, array and wrappers.
+
+        * tests/stress/dfg-to-primitive-pass-symbol.js: Added.
+        (toPrimitiveTarget):
+        (doToPrimitive):
+
+        op_to_primitive operation passes Symbol in fast path.
+
+2015-02-24  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        REGRESSION(r179429): Can't type comments in Facebook
+        https://bugs.webkit.org/show_bug.cgi?id=141859
+
+        Reviewed by Brent Fulgham.
+
+        When window.Symbol is exposed to user-space pages,
+        Facebook's JavaScript use it (maybe, for immutable-js and React.js's unique key).
+        However, to work with Symbols completely, it also requires
+        1) Object.getOwnPropertySymbols (for mixin including Symbols)
+        2) the latest ES6 Iterator interface that uses Iterator.next and it returns { done: boolean, value: value }.
+        Since they are not landed yet, comments in Facebook don't work.
+
+        This patch introduces RuntimeFlags for JavaScriptCore.
+        Specifying SymbolEnabled flag under test runner and inspector to continue to work with Symbol.
+        And drop JavaScriptExperimentsEnabled flag
+        because it is no longer used and use case of this is duplicated to runtime flags.
+
+        * JavaScriptCore.order:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * jsc.cpp:
+        (GlobalObject::javaScriptRuntimeFlags):
+        (GlobalObject::javaScriptExperimentsEnabled): Deleted.
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::JSGlobalObject):
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::finishCreation):
+        (JSC::JSGlobalObject::javaScriptRuntimeFlags):
+        (JSC::JSGlobalObject::javaScriptExperimentsEnabled): Deleted.
+        * runtime/RuntimeFlags.h: Added.
+        (JSC::RuntimeFlags::RuntimeFlags):
+        (JSC::RuntimeFlags::createAllEnabled):
+
 2015-02-23  Filip Pizlo  <fpizlo@apple.com>
 
         Our bizarre behavior on Arguments::defineOwnProperty should be deliberate rather than a spaghetti incident
