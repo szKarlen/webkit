@@ -37,6 +37,7 @@
 #import "ObjCCallbackFunction.h"
 #import "ObjcRuntimeExtras.h"
 #import "WeakGCMap.h"
+#import "WeakGCMapInlines.h"
 #import <wtf/HashSet.h>
 #import <wtf/TCSpinLock.h>
 #import <wtf/Vector.h>
@@ -552,7 +553,7 @@ static JSValue *allocateConstructorForCustomClass(JSContext *context, const char
 @implementation JSWrapperMap {
     JSContext *m_context;
     NSMutableDictionary *m_classMap;
-    JSC::WeakGCMap<id, JSC::JSObject> m_cachedJSWrappers;
+    std::unique_ptr<JSC::WeakGCMap<id, JSC::JSObject>> m_cachedJSWrappers;
     NSMapTable *m_cachedObjCWrappers;
 }
 
@@ -565,7 +566,9 @@ static JSValue *allocateConstructorForCustomClass(JSContext *context, const char
     NSPointerFunctionsOptions keyOptions = NSPointerFunctionsOpaqueMemory | NSPointerFunctionsOpaquePersonality;
     NSPointerFunctionsOptions valueOptions = NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPersonality;
     m_cachedObjCWrappers = [[NSMapTable alloc] initWithKeyOptions:keyOptions valueOptions:valueOptions capacity:0];
-    
+
+    m_cachedJSWrappers = std::make_unique<JSC::WeakGCMap<id, JSC::JSObject>>(toJS([context JSGlobalContextRef])->vm());
+
     m_context = context;
     m_classMap = [[NSMutableDictionary alloc] init];
     return self;
@@ -596,7 +599,7 @@ static JSValue *allocateConstructorForCustomClass(JSContext *context, const char
 
 - (JSValue *)jsWrapperForObject:(id)object
 {
-    JSC::JSObject* jsWrapper = m_cachedJSWrappers.get(object);
+    JSC::JSObject* jsWrapper = m_cachedJSWrappers->get(object);
     if (jsWrapper)
         return [JSValue valueWithJSValueRef:toRef(jsWrapper) inContext:m_context];
 
@@ -613,10 +616,8 @@ static JSValue *allocateConstructorForCustomClass(JSContext *context, const char
     // (1) For immortal objects JSValues will effectively leak and this results in error output being logged - we should avoid adding associated objects to immortal objects.
     // (2) A long lived object may rack up many JSValues. When the contexts are released these will unprotect the associated JavaScript objects,
     //     but still, would probably nicer if we made it so that only one associated object was required, broadcasting object dealloc.
-    JSC::ExecState* exec = toJS([m_context JSGlobalContextRef]);
-    jsWrapper = toJS(exec, valueInternalValue(wrapper)).toObject(exec);
-    m_cachedJSWrappers.set(object, jsWrapper);
-    return wrapper;
+    m_cachedJSWrappers->set(object, jsWrapper);
+    return [JSValue valueWithJSValueRef:toRef(jsWrapper) inContext:m_context];
 }
 
 - (JSValue *)objcWrapperForJSValueRef:(JSValueRef)value

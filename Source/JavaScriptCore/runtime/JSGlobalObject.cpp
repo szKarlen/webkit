@@ -119,6 +119,7 @@
 #include "StringConstructor.h"
 #include "StringPrototype.h"
 #include "VariableWatchpointSetInlines.h"
+#include "WeakGCMapInlines.h"
 #include "WeakMapConstructor.h"
 #include "WeakMapPrototype.h"
 
