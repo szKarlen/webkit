@@ -816,8 +816,6 @@ private:
         case PhantomLocal:
         case SetArgument:
         case LoopHint:
-        case VariableWatchpoint:
-        case FunctionReentryWatchpoint:
         case TypedArrayWatchpoint:
         case AllocationProfileWatchpoint:
         case MovHint:
@@ -3580,7 +3578,7 @@ private:
     void compileGetClosureVar()
     {
         setJSValue(m_out.load64(
-            addressFor(lowStorage(m_node->child1()), m_node->varNumber())));
+            addressFor(lowStorage(m_node->child2()), m_node->varNumber())));
     }
     
     void compilePutClosureVar()

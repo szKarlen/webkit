@@ -293,7 +293,6 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         write(SideState);
         return;
 
-    case VariableWatchpoint:
     case TypedArrayWatchpoint:
         read(Watchpoint_fire);
         write(SideState);
@@ -317,10 +316,6 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         write(HeapObjectCount);
         write(SideState);
         write(Watchpoint_fire);
-        return;
-
-    case FunctionReentryWatchpoint:
-        read(Watchpoint_fire);
         return;
 
     case ToThis:
@@ -766,7 +761,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         
     case PutClosureVar:
         write(AbstractHeap(Variables, node->varNumber()));
-        def(HeapLocation(ClosureVariableLoc, AbstractHeap(Variables, node->varNumber()), node->child2()), node->child3().node());
+        def(HeapLocation(ClosureVariableLoc, AbstractHeap(Variables, node->varNumber()), node->child1()), node->child3().node());
         return;
         
     case GetGlobalVar:

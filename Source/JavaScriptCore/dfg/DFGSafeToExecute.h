@@ -173,7 +173,6 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case PutClosureVar:
     case GetGlobalVar:
     case PutGlobalVar:
-    case VariableWatchpoint:
     case VarInjectionWatchpoint:
     case CheckCell:
     case CheckBadCell:
@@ -251,7 +250,6 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case StoreBarrierWithNullCheck:
     case InvalidationPoint:
     case NotifyWrite:
-    case FunctionReentryWatchpoint:
     case TypedArrayWatchpoint:
     case CheckInBounds:
     case ConstantStoragePointer:

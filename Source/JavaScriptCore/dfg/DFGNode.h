@@ -1172,7 +1172,7 @@ struct Node {
     
     bool hasVariableWatchpointSet()
     {
-        return op() == NotifyWrite || op() == VariableWatchpoint;
+        return op() == NotifyWrite;
     }
     
     VariableWatchpointSet* variableWatchpointSet()
@@ -1331,17 +1331,6 @@ struct Node {
     {
         ASSERT(hasFunctionExprIndex());
         return m_opInfo;
-    }
-    
-    bool hasSymbolTable()
-    {
-        return op() == FunctionReentryWatchpoint;
-    }
-    
-    SymbolTable* symbolTable()
-    {
-        ASSERT(hasSymbolTable());
-        return reinterpret_cast<SymbolTable*>(m_opInfo);
     }
     
     bool hasArrayMode()

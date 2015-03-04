@@ -3781,7 +3781,9 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
     case GetClosureVar: {
-        StorageOperand registers(this, node->child1());
+        speculate(node, node->child1());
+
+        StorageOperand registers(this, node->child2());
         GPRTemporary result(this);
         GPRReg registersGPR = registers.gpr();
         GPRReg resultGPR = result.gpr();
@@ -3791,13 +3793,13 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
     case PutClosureVar: {
+        speculate(node, node->child1());
+
         StorageOperand registers(this, node->child2());
         JSValueOperand value(this, node->child3());
 
         GPRReg registersGPR = registers.gpr();
         GPRReg valueGPR = value.gpr();
-
-        speculate(node, node->child1());
 
         m_jit.store64(valueGPR, JITCompiler::Address(registersGPR, node->varNumber() * sizeof(Register)));
         noResult(node);
@@ -4157,8 +4159,7 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
 
-    case VarInjectionWatchpoint:
-    case VariableWatchpoint: {
+    case VarInjectionWatchpoint: {
         noResult(node);
         break;
     }
@@ -4416,11 +4417,6 @@ void SpeculativeJIT::compile(Node* node)
         callOperation(operationCreateActivation, resultGPR, scopeGPR, framePointerOffsetToGetActivationRegisters());
 
         cellResult(resultGPR, node);
-        break;
-    }
-        
-    case FunctionReentryWatchpoint: {
-        noResult(node);
         break;
     }
         

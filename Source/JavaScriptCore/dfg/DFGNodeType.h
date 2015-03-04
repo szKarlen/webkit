@@ -185,9 +185,7 @@ namespace JSC { namespace DFG {
     macro(GetGlobalVar, NodeResultJS) \
     macro(PutGlobalVar, NodeMustGenerate) \
     macro(NotifyWrite, NodeMustGenerate) \
-    macro(VariableWatchpoint, NodeMustGenerate) \
     macro(VarInjectionWatchpoint, NodeMustGenerate) \
-    macro(FunctionReentryWatchpoint, NodeMustGenerate) \
     macro(CheckCell, NodeMustGenerate) \
     macro(CheckBadCell, NodeMustGenerate) \
     macro(AllocationProfileWatchpoint, NodeMustGenerate) \
