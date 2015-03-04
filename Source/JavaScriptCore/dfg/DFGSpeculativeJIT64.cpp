@@ -2409,6 +2409,10 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
 
+    case ArithLog:
+        compileArithLog(node);
+        break;
+
     case LogicalNot:
         compileLogicalNot(node);
         break;
