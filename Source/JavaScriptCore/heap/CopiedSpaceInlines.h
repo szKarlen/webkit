@@ -126,7 +126,7 @@ inline void CopiedSpace::recycleBorrowedBlock(CopiedBlock* block)
 inline CopiedBlock* CopiedSpace::allocateBlockForCopyingPhase()
 {
     ASSERT(m_inCopyingPhase);
-    CopiedBlock* block = CopiedBlock::createNoZeroFill(CopiedBlock::blockSize);
+    CopiedBlock* block = CopiedBlock::createNoZeroFill();
 
     {
         MutexLocker locker(m_loanedBlocksLock);
@@ -143,7 +143,7 @@ inline void CopiedSpace::allocateBlock()
 
     m_allocator.resetCurrentBlock();
     
-    CopiedBlock* block = CopiedBlock::create(CopiedBlock::blockSize);
+    CopiedBlock* block = CopiedBlock::create();
         
     m_newGen.toSpace->push(block);
     m_newGen.blockFilter.add(reinterpret_cast<Bits>(block));
