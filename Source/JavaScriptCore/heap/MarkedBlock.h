@@ -112,7 +112,7 @@ namespace JSC {
         };
 
         enum DestructorType { None, ImmortalStructure, Normal };
-
+        
         static MarkedBlock* create(MarkedAllocator*, size_t capacity, size_t cellSize, DestructorType);
         static void destroy(MarkedBlock*);
 
