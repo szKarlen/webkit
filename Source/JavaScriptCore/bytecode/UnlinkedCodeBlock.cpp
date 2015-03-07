@@ -129,19 +129,20 @@ FunctionExecutable* UnlinkedFunctionExecutable::link(VM& vm, const SourceCode& s
     return FunctionExecutable::create(vm, code, this, firstLine, firstLine + m_lineCount, startColumn, endColumn);
 }
 
-UnlinkedFunctionExecutable* UnlinkedFunctionExecutable::fromGlobalCode(const Identifier& name, ExecState* exec, Debugger*, const SourceCode& source, JSObject** exception)
+UnlinkedFunctionExecutable* UnlinkedFunctionExecutable::fromGlobalCode(const Identifier& name, ExecState& exec, const SourceCode& source, JSObject*& exception)
 {
     ParserError error;
-    VM& vm = exec->vm();
+    VM& vm = exec.vm();
     CodeCache* codeCache = vm.codeCache();
     UnlinkedFunctionExecutable* executable = codeCache->getFunctionExecutableFromGlobalCode(vm, name, source, error);
 
-    if (exec->lexicalGlobalObject()->hasDebugger())
-        exec->lexicalGlobalObject()->debugger()->sourceParsed(exec, source.provider(), error.m_line, error.m_message);
+    auto& globalObject = *exec.lexicalGlobalObject();
+    if (globalObject.hasDebugger())
+        globalObject.debugger()->sourceParsed(&exec, source.provider(), error.line(), error.message());
 
-    if (error.m_type != ParserError::ErrorNone) {
-        *exception = error.toErrorObject(exec->lexicalGlobalObject(), source);
-        return 0;
+    if (error.isValid()) {
+        exception = error.toErrorObject(&globalObject, source);
+        return nullptr;
     }
 
     return executable;
