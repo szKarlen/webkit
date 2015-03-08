@@ -57,7 +57,6 @@ EncodedJSValue JSC_HOST_CALL APICallbackFunction::call(ExecState* exec)
     JSValueRef exception = 0;
     JSValueRef result;
     {
-        JSLock::DropAllLocks dropAllLocks(exec);
         result = jsCast<T*>(toJS(functionRef))->functionCallback()(execRef, functionRef, thisObjRef, argumentCount, arguments.data(), &exception);
     }
     if (exception)
