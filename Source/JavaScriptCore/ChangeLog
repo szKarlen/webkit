@@ -1,3 +1,75 @@
+2015-03-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the removal of BlockAllocator, which is now unused.
+
+        * API/JSBase.cpp:
+        * CMakeLists.txt:
+        * JavaScriptCore.order:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/BlockAllocator.cpp: Removed.
+        * heap/BlockAllocator.h: Removed.
+        * heap/GCThreadSharedData.h:
+        * heap/HandleBlockInlines.h:
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        * heap/Heap.h:
+        * heap/HeapInlines.h:
+        (JSC::Heap::blockAllocator): Deleted.
+        * heap/HeapTimer.cpp:
+        * heap/MarkedBlock.h:
+        * heap/MarkedSpace.h:
+        * heap/Region.h: Removed.
+        * heap/SuperRegion.cpp: Removed.
+        * heap/SuperRegion.h: Removed.
+
+2015-03-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181010.
+        https://bugs.webkit.org/show_bug.cgi?id=142442
+
+        Broke media/video-src-invalid-poster.html (Requested by kling
+        on #webkit).
+
+        Reverted changeset:
+
+        "Stale entries in WeakGCMaps are keeping tons of WeakBlocks
+        alive unnecessarily."
+        https://bugs.webkit.org/show_bug.cgi?id=142115
+        http://trac.webkit.org/changeset/181010
+
+2015-03-07  Ryosuke Niwa  <rniwa@webkit.org>
+
+        The code to link FunctionExecutable is duplicated everywhere
+        https://bugs.webkit.org/show_bug.cgi?id=142436
+
+        Reviewed by Darin Adler.
+
+        Reduced code duplication by factoring out linkInsideExecutable and linkGlobalCode.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock): Calls linkInsideExecutable.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedFunctionExecutable::linkInsideExecutable): Renamed from link. Now takes care of startOffset.
+        This change was needed to use this function in CodeBlock::CodeBlock. Also, this function no longer takes
+        lineOffset since this information is already stored in the source code.
+        (JSC::UnlinkedFunctionExecutable::linkGlobalCode): Extracted from FunctionExecutable::fromGlobalCode.
+
+        * bytecode/UnlinkedCodeBlock.h:
+
+        * generate-js-builtins: Calls linkGlobalCode.
+
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::initializeGlobalProperties): Calls linkGlobalCode.
+        (JSC::FunctionExecutable::fromGlobalCode): Calls linkGlobalCode.
+
 2015-03-06  Geoffrey Garen  <ggaren@apple.com>
 
         Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages

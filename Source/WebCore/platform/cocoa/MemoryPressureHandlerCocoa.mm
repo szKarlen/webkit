@@ -119,7 +119,7 @@ void MemoryPressureHandler::install()
         // This gives us a more consistent picture of live objects at the end of testing.
         gcController().garbageCollectNow();
 
-        memoryPressureHandler().respondToMemoryPressure(true);
+        WTF::releaseFastMallocFreeMemory();
 
         malloc_zone_pressure_relief(nullptr, 0);
     });
