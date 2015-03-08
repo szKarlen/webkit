@@ -2,6 +2,7 @@
  *  Copyright (C) 2008, 2013, 2014 Apple Inc. All rights reserved.
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
+ *  Copyright (C) 2015 Swise Corporation. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -743,11 +744,13 @@ void Debugger::willExecuteProgram(CallFrame* callFrame)
     if (m_isPaused)
         return;
 
+	m_pauseOnNextStatement = true;
+
     PauseReasonDeclaration reason(*this, PausedAtStartOfProgram);
     // FIXME: This check for whether we're debugging a worker thread is a workaround
     // for https://bugs.webkit.org/show_bug.cgi?id=102637. Remove it when we rework
     // the debugger implementation to not require callbacks.
-    if (!m_isInWorkerThread)
+    if (m_isInWorkerThread)
         updateCallFrameAndPauseIfNeeded(callFrame);
     else if (isStepping())
         updateCallFrame(callFrame);
@@ -757,6 +760,8 @@ void Debugger::didExecuteProgram(CallFrame* callFrame)
 {
     if (m_isPaused)
         return;
+
+	m_pauseOnNextStatement = true;
 
     PauseReasonDeclaration reason(*this, PausedAtEndOfProgram);
     updateCallFrameAndPauseIfNeeded(callFrame);
