@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2008, 2009, 2010, 2012, 2013, 2014 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
+ * Copyright (C) 2015 Swise Corporation All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -587,6 +588,11 @@ void Interpreter::getStackTrace(Vector<StackFrame>& results, size_t maxStackSize
 
     GetStackTraceFunctor functor(vm, results, maxStackSize);
     callFrame->iterate(functor);
+}
+
+void Interpreter::getStackTraceList(Vector<StackFrame>& results)
+{
+	getStackTrace(results);
 }
 
 JSString* Interpreter::stackTraceAsString(ExecState* exec, Vector<StackFrame> stackTrace)
