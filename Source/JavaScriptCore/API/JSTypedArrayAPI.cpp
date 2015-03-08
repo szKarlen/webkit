@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Swise Corporation All rights reserved.
+ * Copyright (C) 2015 Swise Corporation. All rights reserved.
  * Copyright (C) 2014 Dominic Szablewski <http://www.phoboslab.org>
  *
  * Redistribution and use in source and binary forms, with or without

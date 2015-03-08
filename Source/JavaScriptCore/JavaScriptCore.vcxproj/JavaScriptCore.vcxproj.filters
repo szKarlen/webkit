@@ -1746,6 +1746,28 @@
     <ClCompile Include="..\ftl\FTLOperations.cpp">
       <Filter>ftl</Filter>
     </ClCompile>
+    <ClCompile Include="..\dfg\DFGPutLocalSinkingPhase.cpp" />
+    <ClCompile Include="..\debugger\JSDebugger.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSDebuggerRef.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSObjectRefUnsafe.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSValueRefUnsafe.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSHeapPrivate.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSTypedArrayAPI.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSErrorRef.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\API\APICallbackFunction.h">
@@ -2250,9 +2272,6 @@
       <Filter>inspector</Filter>
     </ClInclude>
     <ClInclude Include="..\inspector\InspectorFrontendChannel.h">
-      <Filter>inspector</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inspector\InspectorProtocolTypes.h">
       <Filter>inspector</Filter>
     </ClInclude>
     <ClInclude Include="..\inspector\InspectorValues.h">
@@ -4188,6 +4207,33 @@
     </ClInclude>
     <ClInclude Include="..\ftl\FTLOperations.h">
       <Filter>ftl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dfg\DFGPreciseLocalClobberize.h" />
+    <ClInclude Include="..\dfg\DFGPutLocalSinkingPhase.h" />
+    <ClInclude Include="..\inspector\InspectorProtocolObjects.h" />
+    <ClInclude Include="..\debugger\JSDebugger.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\debugger\JSDebuggerBase.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSDebuggerRef.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSObjectRefUnsafe.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSValueRefUnsafe.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSHeapPrivate.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSTypedArrayAPI.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSErrorRef.h">
+      <Filter>API</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
