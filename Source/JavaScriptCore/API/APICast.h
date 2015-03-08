@@ -37,6 +37,9 @@ namespace JSC {
     class VM;
     class JSObject;
     class JSValue;
+	class JSDebugger;
+	class DebuggerCallFrame;
+	class StackFrame;
 }
 
 typedef const struct OpaqueJSContextGroup* JSContextGroupRef;
@@ -45,6 +48,9 @@ typedef struct OpaqueJSContext* JSGlobalContextRef;
 typedef struct OpaqueJSPropertyNameAccumulator* JSPropertyNameAccumulatorRef;
 typedef const struct OpaqueJSValue* JSValueRef;
 typedef struct OpaqueJSValue* JSObjectRef;
+typedef struct OpaqueJSDebugger* JSDebuggerRef;
+typedef struct OpaqueJSDebuggerCallFrame* JSDebuggerCallFrameRef;
+typedef struct OpaqueJSDebuggerStackList* JSDebuggerStackListRef;
 
 /* Opaque typing convenience methods */
 
@@ -122,6 +128,21 @@ inline JSC::VM* toJS(JSContextGroupRef g)
     return reinterpret_cast<JSC::VM*>(const_cast<OpaqueJSContextGroup*>(g));
 }
 
+inline JSC::JSDebugger* toJS(JSDebuggerRef debugger)
+{
+	return reinterpret_cast<JSC::JSDebugger*>(const_cast<OpaqueJSDebugger*>(debugger));
+}
+
+inline JSC::DebuggerCallFrame* toJS(JSDebuggerCallFrameRef debuggerCallFrame)
+{
+	return reinterpret_cast<JSC::DebuggerCallFrame*>(const_cast<OpaqueJSDebuggerCallFrame*>(debuggerCallFrame));
+}
+
+inline Vector<JSC::StackFrame>* toJS(JSDebuggerStackListRef stackListRef)
+{
+	return reinterpret_cast<Vector<JSC::StackFrame>*>(const_cast<OpaqueJSDebuggerStackList*>(stackListRef));
+}
+
 inline JSValueRef toRef(JSC::ExecState* exec, JSC::JSValue v)
 {
     ASSERT(exec->vm().currentThreadIsHoldingAPILock());
@@ -166,6 +187,21 @@ inline JSPropertyNameAccumulatorRef toRef(JSC::PropertyNameArray* l)
 inline JSContextGroupRef toRef(JSC::VM* g)
 {
     return reinterpret_cast<JSContextGroupRef>(g);
+}
+
+inline JSDebuggerRef toRef(JSC::JSDebugger* debugger)
+{
+	return reinterpret_cast<JSDebuggerRef>(debugger);
+}
+
+inline JSDebuggerCallFrameRef toRef(JSC::DebuggerCallFrame* debuggerCallFrame)
+{
+	return reinterpret_cast<JSDebuggerCallFrameRef>(debuggerCallFrame);
+}
+
+inline JSDebuggerStackListRef toRef(Vector<JSC::StackFrame>* stackList)
+{
+	return reinterpret_cast<JSDebuggerStackListRef>(stackList);
 }
 
 #endif // APICast_h
