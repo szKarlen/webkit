@@ -40,6 +40,7 @@
 @constant     kJSTypeNull       The unique null value.
 @constant     kJSTypeBoolean    A primitive boolean value, one of true or false.
 @constant     kJSTypeNumber     A primitive number value.
+@constant     kJSTypeNumber     A primitive integer number value.
 @constant     kJSTypeString     A primitive string value.
 @constant     kJSTypeObject     An object value (meaning that this JSValueRef is a JSObjectRef).
 */
@@ -48,6 +49,7 @@ typedef enum {
     kJSTypeNull,
     kJSTypeBoolean,
     kJSTypeNumber,
+	kJSTypeIntNumber,
     kJSTypeString,
     kJSTypeObject
 } JSType;
