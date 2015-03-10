@@ -615,7 +615,19 @@ void CodeBlock::dumpBytecode(PrintStream& out)
         out.printf("\nConstants:\n");
         size_t i = 0;
         do {
-            out.printf("   k%u = %s\n", static_cast<unsigned>(i), toCString(m_constantRegisters[i].get()).data());
+            const char* sourceCodeRepresentationDescription = nullptr;
+            switch (m_constantsSourceCodeRepresentation[i]) {
+            case SourceCodeRepresentation::Double:
+                sourceCodeRepresentationDescription = ": in source as double";
+                break;
+            case SourceCodeRepresentation::Integer:
+                sourceCodeRepresentationDescription = ": in source as integer";
+                break;
+            case SourceCodeRepresentation::Other:
+                sourceCodeRepresentationDescription = "";
+                break;
+            }
+            out.printf("   k%u = %s%s\n", static_cast<unsigned>(i), toCString(m_constantRegisters[i].get()).data(), sourceCodeRepresentationDescription);
             ++i;
         } while (i < m_constantRegisters.size());
     }
