@@ -1,3 +1,406 @@
+2015-03-11  Geoffrey Garen  <ggaren@apple.com>
+
+        Refactored the JSC::Heap extra cost API for clarity and to make some known bugs more obvious
+        https://bugs.webkit.org/show_bug.cgi?id=142589
+
+        Reviewed by Andreas Kling.
+
+        Updated for renames to JSC extra cost APIs.
+
+        Added FIXMEs to our 10 use cases that are currently wrong, including
+        canvas, which is the cause of https://bugs.webkit.org/show_bug.cgi?id=142457.
+
+        * Modules/mediasource/SourceBuffer.cpp:
+        (WebCore::SourceBuffer::appendBufferInternal):
+        (WebCore::SourceBuffer::sourceBufferPrivateAppendComplete):
+        (WebCore::SourceBuffer::reportExtraMemoryAllocated):
+        (WebCore::SourceBuffer::reportExtraMemoryCost): Deleted.
+        * Modules/mediasource/SourceBuffer.h:
+        * bindings/js/JSDocumentCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSImageDataCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSNodeListCustom.cpp:
+        (WebCore::createWrapper):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateImplementation):
+        * dom/CollectionIndexCache.cpp:
+        (WebCore::reportExtraMemoryAllocatedForCollectionIndexCache):
+        (WebCore::reportExtraMemoryCostForCollectionIndexCache): Deleted.
+        * dom/CollectionIndexCache.h:
+        (WebCore::Iterator>::computeNodeCountUpdatingListCache):
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::createImageBuffer):
+        * html/HTMLCollection.h:
+        (WebCore::CollectionNamedElementCache::didPopulate):
+        * html/HTMLImageLoader.cpp:
+        (WebCore::HTMLImageLoader::imageChanged):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::parseAttribute):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::dropProtection):
+
+2015-03-11  Benjamin Poulain  <bpoulain@apple.com>
+
+        Add basic support for BOL and EOL assertions to the URL Filter parser
+        https://bugs.webkit.org/show_bug.cgi?id=142568
+
+        Reviewed by Alex Christensen.
+
+        This patch adds heavily restricted support for BOL and EOL to the URL filter parser.
+
+        Both assertions must be the first/last term of their pattern. Any advanced combination
+        results in a parsing error.
+
+        The BOL assertion is easy to represent: currently, any pattern starts at the beginning
+        of a line and the NFA are generated accordingly.
+
+        I had two options to represent the EOL assertion:
+        1) Add a new special transition on EOL.
+        2) Add a new vector of actions to the states, conditional to the EOL input.
+
+        I picked the first option to avoid growing every state by a vector
+        that would be empty in the vast majority of cases.
+
+
+        On the matching side, the interpreter was modified to support transitions on '\0'.
+        DFABytecodeInstruction::CheckValue now stops when running on a character after
+        the end of the string.
+
+        DFABytecodeInstruction::Jump gets two fixes: First we now account for the index
+        to avoid going past the end of the input. Second, stop on '\0' too... the reason
+        is that the unconditional jump is only used for fallback edges of the DFA, fallback
+        edge are not supposed to accept '\0'.
+
+        * contentextensions/DFA.cpp:
+        (WebCore::ContentExtensions::printTransitions):
+        * contentextensions/DFABytecodeInterpreter.cpp:
+        (WebCore::ContentExtensions::DFABytecodeInterpreter::interpret):
+        * contentextensions/DFANode.h:
+        * contentextensions/NFA.cpp:
+        (WebCore::ContentExtensions::NFA::addTransition):
+        (WebCore::ContentExtensions::NFA::addEpsilonTransition):
+        (WebCore::ContentExtensions::printTransitions):
+        * contentextensions/NFANode.h:
+        * contentextensions/NFAToDFA.cpp:
+        (WebCore::ContentExtensions::populateTransitions):
+        (WebCore::ContentExtensions::NFAToDFA::convert):
+        * contentextensions/URLFilterParser.cpp:
+        (WebCore::ContentExtensions::Term::Term):
+        (WebCore::ContentExtensions::Term::isEndOfLineAssertion):
+        (WebCore::ContentExtensions::GraphBuilder::assertionBOL):
+        (WebCore::ContentExtensions::GraphBuilder::assertionEOL):
+        (WebCore::ContentExtensions::GraphBuilder::sinkFloatingTermIfNecessary):
+
+2015-03-11  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Update fullscreen placeholder UI to use Vibrancy.
+        https://bugs.webkit.org/show_bug.cgi?id=142586
+
+        Reviewed by Eric Carlson.
+
+        Update the fullscreen placeholder with a translucent vibrant appearance
+        using NSVisualEffectView. Since NSVisuaEffectView is only available for
+        OS X 10.10 and above, wrap the new implementation in a version check and
+        retain the old implementation.
+
+        Drive-by: Update the strings for the placeholder view with new HI guidance
+        as well.
+
+        * English.lproj/Localizable.strings:
+        * platform/LocalizedStrings.cpp:
+        (WebCore::clickToExitFullScreenText):
+        * platform/mac/WebCoreFullScreenPlaceholderView.h:
+        * platform/mac/WebCoreFullScreenPlaceholderView.mm:
+        (-[WebCoreFullScreenPlaceholderView setExitWarningVisible:]):
+
+2015-03-11  Timothy Horton  <timothy_horton@apple.com>
+
+        Make it possible to zoom on pages that claim to lay out to device size and then fail to do so
+        https://bugs.webkit.org/show_bug.cgi?id=142549
+
+        Reviewed by Simon Fraser.
+
+        * page/ViewportConfiguration.cpp:
+        (WebCore::ViewportConfiguration::ViewportConfiguration):
+        Rename m_ignoreScalingConstraints to m_canIgnoreScalingConstraints,
+        because it being true does not guarantee that we will ignore scaling constraints,
+        but it being false does guarantee that we won't.
+
+        (WebCore::ViewportConfiguration::shouldIgnoreScalingConstraints):
+        Ignore scaling constraints if the page:
+            a) claimed to want to lay out to device-width and then laid out too wide
+            b) claimed to want to lay out to device-height and then laid out too tall
+            c) claimed to want to lay out with initialScale=1 and then laid out too wide
+
+        (WebCore::ViewportConfiguration::initialScale):
+        (WebCore::ViewportConfiguration::minimumScale):
+        (WebCore::ViewportConfiguration::allowsUserScaling):
+        Call shouldIgnoreScalingConstraints() instead of looking at the local, so we can
+        have some more logic here (as above).
+
+        (WebCore::ViewportConfiguration::description):
+        Dump whether we're ignoring scaling constraints.
+
+        (WebCore::ViewportConfiguration::dump):
+        Use WTFLogAlways so that the output goes to various other logging mechanisms
+        instead of just stderr.
+
+        * page/ViewportConfiguration.h:
+        (WebCore::ViewportConfiguration::setCanIgnoreScalingConstraints):
+        (WebCore::ViewportConfiguration::setIgnoreScalingConstraints): Deleted.
+
+2015-03-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Use out-of-band messaging for RenderBox::firstLineBaseline() and RenderBox::inlineBlockBaseline()
+        https://bugs.webkit.org/show_bug.cgi?id=142569
+
+        Reviewed by David Hyatt.
+
+        Currently, RenderBox::firstLineBaseline() and RenderBox::inlineBlockBaseline() return -1 to mean
+        that its baseline should be skipped. Instead of using this sentinel value, this patch changes the
+        return type from int to Optional<int>.
+
+        No new tests because there is no behavior change.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::baselinePosition):
+        (WebCore::RenderBlock::firstLineBaseline):
+        (WebCore::RenderBlock::inlineBlockBaseline):
+        * rendering/RenderBlock.h:
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::firstLineBaseline):
+        (WebCore::RenderBlockFlow::inlineBlockBaseline):
+        * rendering/RenderBlockFlow.h:
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::firstLineBaseline):
+        (WebCore::RenderBox::inlineBlockBaseline):
+        * rendering/RenderDeprecatedFlexibleBox.cpp:
+        (WebCore::RenderDeprecatedFlexibleBox::layoutHorizontalBox):
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::baselinePosition):
+        (WebCore::RenderFlexibleBox::firstLineBaseline):
+        (WebCore::RenderFlexibleBox::inlineBlockBaseline):
+        (WebCore::RenderFlexibleBox::marginBoxAscentForChild):
+        * rendering/RenderFlexibleBox.h:
+        * rendering/RenderMenuList.h:
+        * rendering/RenderTable.cpp:
+        (WebCore::RenderTable::cellAbove):
+        (WebCore::RenderTable::cellBelow):
+        (WebCore::RenderTable::cellBefore):
+        (WebCore::RenderTable::cellAfter):
+        (WebCore::RenderTable::firstLineBlock):
+        (WebCore::RenderTable::baselinePosition):
+        (WebCore::RenderTable::inlineBlockBaseline):
+        (WebCore::RenderTable::firstLineBaseline):
+        * rendering/RenderTable.h:
+        * rendering/RenderTableCell.cpp:
+        (WebCore::RenderTableCell::cellBaselinePosition):
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::firstLineBaseline):
+        * rendering/RenderTableSection.h:
+        * rendering/RenderTextControl.h:
+        * rendering/mathml/RenderMathMLBlock.cpp:
+        (WebCore::RenderMathMLBlock::baselinePosition):
+        (WebCore::RenderMathMLTable::firstLineBaseline):
+        * rendering/mathml/RenderMathMLBlock.h:
+        * rendering/mathml/RenderMathMLFraction.cpp:
+        (WebCore::RenderMathMLFraction::firstLineBaseline):
+        * rendering/mathml/RenderMathMLFraction.h:
+        * rendering/mathml/RenderMathMLOperator.cpp:
+        (WebCore::RenderMathMLOperator::firstLineBaseline):
+        * rendering/mathml/RenderMathMLOperator.h:
+        * rendering/mathml/RenderMathMLRoot.cpp:
+        (WebCore::RenderMathMLRoot::firstLineBaseline):
+        (WebCore::RenderMathMLRoot::layout):
+        * rendering/mathml/RenderMathMLRoot.h:
+        * rendering/mathml/RenderMathMLRow.cpp:
+        (WebCore::RenderMathMLRow::layout):
+        * rendering/mathml/RenderMathMLScripts.cpp:
+        (WebCore::RenderMathMLScripts::layout):
+        (WebCore::RenderMathMLScripts::firstLineBaseline):
+        * rendering/mathml/RenderMathMLScripts.h:
+        * rendering/mathml/RenderMathMLSpace.cpp:
+        (WebCore::RenderMathMLSpace::firstLineBaseline):
+        * rendering/mathml/RenderMathMLSpace.h:
+        * rendering/mathml/RenderMathMLUnderOver.cpp:
+        (WebCore::RenderMathMLUnderOver::firstLineBaseline):
+        * rendering/mathml/RenderMathMLUnderOver.h:
+
+2015-03-11  Timothy Horton  <timothy_horton@apple.com>
+
+        <attachment>s should be created when dropping files onto contentEditable areas
+        https://bugs.webkit.org/show_bug.cgi?id=142494
+        <rdar://problem/19982553>
+
+        Reviewed by Anders Carlsson.
+
+        Covered by existing tests.
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::WebContentReader::readFilenames):
+        Instead of inserting the dropped URLs as strings, make an <attachment>
+        for each.
+
+2015-03-11  David Hyatt  <hyatt@apple.com>
+
+        Optimize offsetWidth and offsetHeight to avoid doing layouts.
+        https://bugs.webkit.org/show_bug.cgi?id=142544
+
+        Reviewed by Beth Dakin.
+
+        * dom/Document.cpp:
+        (WebCore::Document::updateLayoutIfDimensionsOutOfDate):
+        * dom/Document.h:
+        Added a new method that only updates layout if it determines that the desired dimensions are out
+        of date.
+
+        * dom/Element.cpp:
+        (WebCore::Element::offsetWidth):
+        (WebCore::Element::offsetHeight):
+        Patch offsetWidth and offsetHeight to call the new method rather than updateLayoutIgnorePendingStylesheets.
+
+2015-03-11  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181367.
+        https://bugs.webkit.org/show_bug.cgi?id=142581
+
+        Caused crashes on the debug bots (Requested by cdumez on
+        #webkit).
+
+        Reverted changeset:
+
+        "Web Inspector: CSS parser errors in the console should
+        include column numbers"
+        https://bugs.webkit.org/show_bug.cgi?id=114313
+        http://trac.webkit.org/changeset/181367
+
+2015-03-11  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Inline block children do not have correct baselines if their children are also block elements
+        https://bugs.webkit.org/show_bug.cgi?id=142559
+
+        Reviewed by Darin Adler.
+
+        Perform the same computation on child block elements as child inline elements.
+
+        Test: fast/text/baseline-inline-block-block-children.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::inlineBlockBaseline):
+
+2015-03-11  Carlos Alberto Lopez Perez  <clopez@igalia.com>
+
+        [CMake][GStreamer] Building EFL or GTK with ENABLE_VIDEO and without ENABLE_WEB_AUDIO is broken.
+        https://bugs.webkit.org/show_bug.cgi?id=142577
+
+        Reviewed by Carlos Garcia Campos.
+
+        No new tests, this is a build fix.
+
+        * PlatformEfl.cmake: Include GSTREAMER_AUDIO_LIBRARIES on the link step both for ENABLE_VIDEO and ENABLE_WEB_AUDIO.
+        * PlatformGTK.cmake: Idem.
+
+2015-03-10  Philippe Normand  <pnormand@igalia.com>
+
+        Rename MediaStreamCenter to RealtimeMediaSourceCenter
+        https://bugs.webkit.org/show_bug.cgi?id=142535
+
+        Reviewed by Eric Carlson.
+
+        As per bug title, rename MediaStreamCenter to
+        RealtimeMediaSourceCenter, this class manages
+        RealtimeMediaSources, not MediaStreams. Some un-needed includes of
+        the header were also removed.
+
+2015-03-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove unnecessary create() factory functions
+        https://bugs.webkit.org/show_bug.cgi?id=142558
+
+        Reviewed by Darin Adler.
+
+        create() function which just returns new instance can be replaced with std::make_unique<>.
+
+        No new tests, no behavior changes.
+
+        * bindings/js/JSCryptoKeySerializationJWK.cpp:
+        (WebCore::JSCryptoKeySerializationJWK::keyDataOctetSequence):
+        * crypto/keys/CryptoKeyAES.cpp:
+        (WebCore::CryptoKeyAES::exportData):
+        * crypto/keys/CryptoKeyDataOctetSequence.h:
+        * crypto/keys/CryptoKeyHMAC.cpp:
+        (WebCore::CryptoKeyHMAC::exportData):
+        * crypto/keys/CryptoKeySerializationRaw.cpp:
+        (WebCore::CryptoKeySerializationRaw::keyData):
+        * platform/audio/mac/CARingBuffer.cpp:
+        (WebCore::CARingBuffer::create): Deleted.
+        * platform/audio/mac/CARingBuffer.h:
+        * platform/graphics/avfoundation/AudioSourceProviderAVFObjC.mm:
+        (WebCore::AudioSourceProviderAVFObjC::prepare):
+        * testing/Internals.cpp:
+        (WebCore::Internals::queueMicroTask):
+        * testing/MicroTaskTest.cpp:
+        (WebCore::MicroTaskTest::create): Deleted.
+        * testing/MicroTaskTest.h:
+        (WebCore::MicroTaskTest::MicroTaskTest):
+
+2015-03-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: CSS parser errors in the console should include column numbers
+        https://bugs.webkit.org/show_bug.cgi?id=114313
+
+        Reviewed by Benjamin Poulain.
+
+        Test: inspector-protocol/console/warnings-errors.html
+
+        * css/CSSParser.h:
+        (WebCore::CSSParser::currentCharacterOffset):
+        Get the current character offset depending on the source type.
+        Add instance variables to track column position and start
+        line / column for inline stylesheets.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::CSSParser):
+        (WebCore::CSSParser::parseSheet):
+        Initialize new instance variables.
+
+        (WebCore::CSSParser::currentLocation):
+        Update to include column information. Also, if we are on the first line
+        we may need to take into account a start column offset as well.
+
+        (WebCore::CSSParser::realLex):
+        When bumping the line number, reset the column offset for the next
+        line with the next character.
+
+        (WebCore::CSSParser::syntaxError):
+        (WebCore::CSSParser::logError):
+        Include column information.
+
+        * css/StyleSheetContents.cpp:
+        (WebCore::StyleSheetContents::parseAuthorStyleSheet):
+        (WebCore::StyleSheetContents::parseString):
+        (WebCore::StyleSheetContents::parseStringAtLineAndColumn):
+        Include column information.
+
+        * css/StyleSheetContents.h:
+        * dom/InlineStyleSheetOwner.cpp:
+        (WebCore::InlineStyleSheetOwner::InlineStyleSheetOwner):
+        (WebCore::InlineStyleSheetOwner::createSheet):
+        Save and use column information later on.
+
+        * dom/InlineStyleSheetOwner.h:
+        * inspector/InspectorStyleSheet.cpp:
+        (WebCore::InspectorStyleSheet::ensureSourceData):
+        Updated parser signature needs starting column and no longer has optional parameters.
+
+2015-03-10  Darin Adler  <darin@apple.com>
+
+        Try to fix the GTK build.
+
+        * html/HTMLVideoElement.idl: Work around gobject bindings generator limitation
+        by putting in a LANGUAGE_GOBJECT conditional.
+
 2015-03-10  Darin Adler  <darin@apple.com>
 
         Some event handler fixes
