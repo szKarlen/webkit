@@ -1,3 +1,55 @@
+2015-03-09  Darin Adler  <darin@apple.com>
+
+        Some event handler fixes
+        https://bugs.webkit.org/show_bug.cgi?id=142474
+
+        Reviewed by Anders Carlsson.
+
+        * fast/dom/event-handler-attributes-expected.txt: Updated for new tests and to
+        expect more tests to pass.
+
+        * fast/dom/event-handler-attributes.html: Added testing of event handlers on
+        non-HTML, non-SVG elements, and on SVG elements. Also removed
+        webkitpresentationmodechanged from the test, for now at least.
+
+        * fast/events/event-attribute-expected.txt: Updated to expect more tests to pass.
+
+2015-03-10  Brent Fulgham  <bfulgham@apple.com>
+
+        CSS scroll-snap-destination and scroll-snap-coordinate are not honoring position values
+        https://bugs.webkit.org/show_bug.cgi?id=142411
+
+        Reviewed by Simon Fraser.
+
+        Add a test for <position> types in scroll snap operations. Also update the test expectations
+        for computed styles now that double-precision math is being used for calculated values.
+
+        * css3/scroll-snap/scroll-snap-position-values-expected.txt: Added.
+        * css3/scroll-snap/scroll-snap-position-values.html: Added.
+        * css3/scroll-snap/scroll-snap-property-computed-style-expected.txt: Updated
+        * css3/scroll-snap/scroll-snap-property-computed-style.js: Updated
+
+
+2015-03-10  Enrica Casucci  <enrica@apple.com>
+
+        Add support for more emoji with variation.
+        https://bugs.webkit.org/show_bug.cgi?id=142548
+        rdar://problem/20105008
+
+        Reviewed by Tim Horton.
+
+        * editing/selection/extend-by-character-007-expected.txt: Added.
+        * editing/selection/extend-by-character-007.html: Added.
+
+2015-03-10  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Refactor media controls code
+        https://bugs.webkit.org/show_bug.cgi?id=142455
+
+        Reviewed by Dean Jackson.
+
+        * platform/mac/http/tests/media/hls/video-controls-live-stream-expected.txt:
+
 2015-03-10  Yusuke Suzuki  <utatane.tea@gmail.com>
 
         Upgrade Map, Set and WeakMap constructor interface

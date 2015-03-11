@@ -224,8 +224,12 @@ void HTMLElement::populateEventNameForAttributeLocalNameMap(HashMap<AtomicString
 {
     static const QualifiedName* const simpleTable[] = {
         &onabortAttr,
+        &onanimationendAttr,
+        &onanimationiterationAttr,
+        &onanimationstartAttr,
         &onbeforecopyAttr,
         &onbeforecutAttr,
+        &onbeforeloadAttr,
         &onbeforepasteAttr,
         &onblurAttr,
         &oncanplayAttr,
@@ -275,6 +279,7 @@ void HTMLElement::populateEventNameForAttributeLocalNameMap(HashMap<AtomicString
         &onratechangeAttr,
         &onresetAttr,
         &onscrollAttr,
+        &onsearchAttr,
         &onseekedAttr,
         &onseekingAttr,
         &onselectAttr,
@@ -287,23 +292,37 @@ void HTMLElement::populateEventNameForAttributeLocalNameMap(HashMap<AtomicString
         &ontouchendAttr,
         &ontouchmoveAttr,
         &ontouchstartAttr,
+        &ontransitionendAttr,
         &onvolumechangeAttr,
         &onwaitingAttr,
+        &onwebkitbeginfullscreenAttr,
+        &onwebkitendfullscreenAttr,
+        &onwheelAttr,
+#if ENABLE(FULLSCREEN_API)
+        &onwebkitfullscreenchangeAttr,
+        &onwebkitfullscreenerrorAttr,
+#endif
+#if ENABLE(IOS_GESTURE_EVENTS)
+        &ongesturechangeAttr,
+        &ongestureendAttr,
+        &ongesturestartAttr,
+#endif
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+        &onautocompleteAttr,
+        &onautocompleteerrorAttr,
+#endif
+#if ENABLE(VIDEO_PRESENTATION_MODE)
+        &onwebkitpresentationmodechangedAttr,
+#endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
         &onwebkitwillrevealbottomAttr,
         &onwebkitwillrevealleftAttr,
         &onwebkitwillrevealrightAttr,
         &onwebkitwillrevealtopAttr,
 #endif
-        &onwheelAttr,
-#if ENABLE(IOS_GESTURE_EVENTS)
-        &ongesturechangeAttr,
-        &ongestureendAttr,
-        &ongesturestartAttr,
-#endif
-#if ENABLE(FULLSCREEN_API)
-        &onwebkitfullscreenchangeAttr,
-        &onwebkitfullscreenerrorAttr,
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+        &onwebkitcurrentplaybacktargetiswirelesschangedAttr,
+        &onwebkitplaybacktargetavailabilitychangedAttr,
 #endif
     };
 
@@ -325,10 +344,6 @@ void HTMLElement::populateEventNameForAttributeLocalNameMap(HashMap<AtomicString
     };
 
     const CustomMapping customTable[] = {
-        { onanimationendAttr, eventNames().animationendEvent },
-        { onanimationiterationAttr, eventNames().animationiterationEvent },
-        { onanimationstartAttr, eventNames().animationstartEvent },
-        { ontransitionendAttr, eventNames().webkitTransitionEndEvent },
         { onwebkitanimationendAttr, eventNames().webkitAnimationEndEvent },
         { onwebkitanimationiterationAttr, eventNames().webkitAnimationIterationEvent },
         { onwebkitanimationstartAttr, eventNames().webkitAnimationStartEvent },
