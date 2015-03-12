@@ -1392,17 +1392,134 @@ template <class TreeBuilder> TreeStatement Parser<LexerType>::parseFunctionDecla
     JSTokenLocation location(tokenLocation());
     unsigned functionKeywordStart = tokenStart();
     next();
-    const Identifier* name = 0;
-    TreeFormalParameterList parameters = 0;
-    TreeFunctionBody body = 0;
-    unsigned openBraceOffset = 0;
-    unsigned closeBraceOffset = 0;
-    int bodyStartLine = 0;
-    unsigned bodyStartColumn = 0;
-    failIfFalse((parseFunctionInfo(context, FunctionNeedsName, FunctionMode, true, name, parameters, body, openBraceOffset, closeBraceOffset, bodyStartLine, bodyStartColumn)), "Cannot parse this function");
-    failIfFalse(name, "Function statements must have a name");
-    failIfFalseIfStrict(declareVariable(name), "Cannot declare a function named '", name->impl(), "' in strict mode");
-    return context.createFuncDeclStatement(location, name, body, parameters, openBraceOffset, closeBraceOffset, bodyStartLine, m_lastTokenEndPosition.line, bodyStartColumn, functionKeywordStart);
+    ParserFunctionInfo<TreeBuilder> info;
+    failIfFalse((parseFunctionInfo(context, FunctionNeedsName, FunctionMode, true, ConstructorKind::Base, info)), "Cannot parse this function");
+    failIfFalse(info.name, "Function statements must have a name");
+    failIfFalseIfStrict(declareVariable(info.name), "Cannot declare a function named '", info.name->impl(), "' in strict mode");
+    return context.createFuncDeclStatement(location, info, functionKeywordStart);
+}
+
+#if ENABLE(ES6_CLASS_SYNTAX)
+template <typename LexerType>
+template <class TreeBuilder> TreeStatement Parser<LexerType>::parseClassDeclaration(TreeBuilder& context)
+{
+    ASSERT(match(CLASSTOKEN));
+    JSTokenLocation location(tokenLocation());
+    JSTextPosition classStart = tokenStartPosition();
+    unsigned classStartLine = tokenLine();
+
+    TreeClassExpression classExpr = parseClass(context, FunctionNeedsName);
+    failIfFalse(classExpr, "Failed to parse class");
+
+    JSTextPosition classEnd = lastTokenEndPosition();
+    unsigned classEndLine = tokenLine();
+
+    return context.createClassDeclStatement(location, classExpr, classStart, classEnd, classStartLine, classEndLine);
+}
+
+template <typename LexerType>
+template <class TreeBuilder> TreeClassExpression Parser<LexerType>::parseClass(TreeBuilder& context, FunctionRequirements requirements)
+{
+    ASSERT(match(CLASSTOKEN));
+    JSTokenLocation location(tokenLocation());
+    next();
+
+    AutoPopScopeRef classScope(this, pushScope());
+    classScope->setStrictMode();
+
+    const Identifier* className = nullptr;
+    if (match(IDENT)) {
+        className = m_token.m_data.ident;
+        next();
+        failIfFalse(classScope->declareVariable(className), "'", className->impl(), "' is not a valid class name");
+    } else if (requirements == FunctionNeedsName) {
+        semanticFailureDueToKeyword("class name");
+        failDueToUnexpectedToken();
+    } else
+        className = &m_vm->propertyNames->nullIdentifier;
+    ASSERT(className);
+
+    TreeExpression parentClass = 0;
+    if (consume(EXTENDS)) {
+        parentClass = parsePrimaryExpression(context);
+        failIfFalse(parentClass, "Cannot parse the parent class name");
+    }
+    const ConstructorKind constructorKind = parentClass ? ConstructorKind::Derived : ConstructorKind::Base;
+
+    consumeOrFailWithFlags(OPENBRACE, TreeBuilder::DontBuildStrings, "Expected opening '{' at the start of a class body");
+
+    TreeExpression constructor = 0;
+    TreePropertyList staticMethods = 0;
+    TreePropertyList instanceMethods = 0;
+    TreePropertyList instanceMethodsTail = 0;
+    TreePropertyList staticMethodsTail = 0;
+    while (!match(CLOSEBRACE)) {
+        if (match(SEMICOLON))
+            next();
+
+        JSTokenLocation methodLocation(tokenLocation());
+        unsigned methodStart = tokenStart();
+
+        // For backwards compatibility, "static" is a non-reserved keyword in non-strict mode.
+        bool isStaticMethod = match(RESERVED_IF_STRICT) && *m_token.m_data.ident == m_vm->propertyNames->staticKeyword;
+        if (isStaticMethod)
+            next();
+
+        matchOrFail(IDENT, "Expected an indentifier");
+
+        const CommonIdentifiers& propertyNames = *m_vm->propertyNames;
+        const Identifier& ident = *m_token.m_data.ident;
+        bool isGetter = ident == propertyNames.get;
+        bool isSetter = ident == propertyNames.set;
+
+        TreeProperty property;
+        const bool alwaysStrictInsideClass = true;
+        if (isGetter || isSetter) {
+            semanticFailIfTrue(isStaticMethod, "Cannot declare a static", stringForFunctionMode(isGetter ? GetterMode : SetterMode));
+            nextExpectIdentifier(LexerFlagsIgnoreReservedWords);
+            property = parseGetterSetter(context, alwaysStrictInsideClass, isGetter ? PropertyNode::Getter : PropertyNode::Setter, methodStart, constructorKind, SuperBinding::Needed);
+            failIfFalse(property, "Cannot parse this method");
+        } else {
+            ParserFunctionInfo<TreeBuilder> methodInfo;
+            failIfFalse((parseFunctionInfo(context, FunctionNeedsName, MethodMode, false, constructorKind, methodInfo)), "Cannot parse this method");
+            failIfFalse(methodInfo.name, "method must have a name");
+            failIfFalse(declareVariable(methodInfo.name), "Cannot declare a method named '", methodInfo.name->impl(), "'");
+
+            bool isConstructor = !isStaticMethod && *methodInfo.name == propertyNames.constructor;
+            if (isConstructor)
+                methodInfo.name = className;
+
+            TreeExpression method = context.createFunctionExpr(methodLocation, methodInfo, methodStart);
+            if (isConstructor) {
+                semanticFailIfTrue(constructor, "Cannot declare multiple constructors in a single class");
+                constructor = method;
+                continue;
+            }
+
+            // FIXME: Syntax error when super() is called
+            semanticFailIfTrue(isStaticMethod && *methodInfo.name == propertyNames.prototype,
+                "Cannot declare a static method named 'prototype'");
+            property = context.createProperty(methodInfo.name, method, PropertyNode::Constant, PropertyNode::Unknown, alwaysStrictInsideClass, SuperBinding::Needed);
+        }
+
+        TreePropertyList& tail = isStaticMethod ? staticMethodsTail : instanceMethodsTail;
+        if (tail)
+            tail = context.createPropertyList(methodLocation, property, tail);
+        else {
+            tail = context.createPropertyList(methodLocation, property);
+            if (isStaticMethod)
+                staticMethods = tail;
+            else
+                instanceMethods = tail;
+        }
+    }
+
+    // FIXME: Create a Miranda function instead.
+    semanticFailIfFalse(constructor, "Class declaration without a constructor is not supported yet");
+
+    consumeOrFail(CLOSEBRACE, "Expected a closing '}' after a class body");
+
+    return context.createClassExpr(location, *className, constructor, parentClass, instanceMethods, staticMethods);
 }
 
 struct LabelInfo {

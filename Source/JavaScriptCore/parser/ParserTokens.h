@@ -75,6 +75,15 @@ enum JSTokenType {
     FINALLY,
     DEBUGGER,
     ELSE,
+#if ENABLE(ES6_CLASS_SYNTAX)
+    CLASSTOKEN,
+    EXTENDS,
+    SUPER,
+#else
+    CLASSTOKEN = RESERVED,
+    EXTENDS = RESERVED,
+    SUPER = RESERVED,
+#endif
     OPENBRACE = 0,
     CLOSEBRACE,
     OPENPAREN,
