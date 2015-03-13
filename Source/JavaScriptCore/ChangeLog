@@ -1,3 +1,424 @@
+2015-03-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Prohibit GC while sweeping
+        https://bugs.webkit.org/show_bug.cgi?id=142638
+
+        Reviewed by Andreas Kling.
+
+        I noticed in https://bugs.webkit.org/show_bug.cgi?id=142636 that a GC
+        could trigger a sweep which could trigger another GC. Yo Dawg.
+
+        I tried to figure out whether this could cause problems or not and it
+        made me cross-eyed.
+
+        (Some clients like to report extra memory cost during deallocation as a
+        way to indicate that the GC now owns something exclusively. It's
+        arguably a bug to communicate with the GC in this way, but we shouldn't
+        do crazy when this happens.)
+
+        This patch makes explicit the fact that we don't allow GC while sweeping.
+
+        Usually, sweeping implicitly defers GC by virtue of happening during
+        allocation. But not always.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::collectAllGarbage): Defer GC while sweeping due to an
+        explicit GC request.
+
+        (JSC::Heap::didFinishCollection): Make sure that zombifying sweep
+        defers GC by not returning to the non-GC state until we're all done.
+
+        * heap/IncrementalSweeper.cpp:
+        (JSC::IncrementalSweeper::sweepNextBlock): Defer GC while sweeping due
+        to a timer.
+
+2015-03-13  Mark Lam  <mark.lam@apple.com>
+
+        Replace TCSpinLock with a new WTF::SpinLock based on WTF::Atomic.
+        <https://webkit.org/b/142674>
+
+        Reviewed by Filip Pizlo.
+
+        * API/JSValue.mm:
+        (handerForStructTag):
+        * API/JSWrapperMap.mm:
+        * dfg/DFGCommon.cpp:
+        (JSC::DFG::startCrashing):
+        (JSC::DFG::isCrashing):
+        - Changed to use a StaticSpinLock since that's what this code was trying to do
+          anyway.
+        * heap/CopiedBlock.h:
+        (JSC::CopiedBlock::CopiedBlock):
+        * heap/CopiedSpace.cpp:
+        (JSC::CopiedSpace::CopiedSpace):
+        * heap/CopiedSpace.h:
+        * heap/GCThreadSharedData.cpp:
+        (JSC::GCThreadSharedData::GCThreadSharedData):
+        * heap/GCThreadSharedData.h:
+        * heap/ListableHandler.h:
+        (JSC::ListableHandler::List::List):
+        * parser/SourceProvider.cpp:
+        * profiler/ProfilerDatabase.cpp:
+        (JSC::Profiler::Database::addDatabaseToAtExit):
+        (JSC::Profiler::Database::removeDatabaseFromAtExit):
+        (JSC::Profiler::Database::removeFirstAtExitDatabase):
+
+2015-03-13  Ryosuke Niwa  <rniwa@webkit.org>
+
+        BytecodeGenerator needs to be re-entrant to support miranda functions
+        https://bugs.webkit.org/show_bug.cgi?id=142627
+
+        Reviewed by Filip Pizlo.
+
+        Made CodeCache::getGlobalCodeBlock and CodeCache::getFunctionExecutableFromGlobalCode re-entrant
+        by not keeping AddResult while invoking BytecodeGenerator::generate.
+
+        This is needed to support Miranda functions since they need to be lazily initialized.
+
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode):
+        * runtime/CodeCache.h:
+        (JSC::CodeCacheMap::findCacheAndUpdateAge): Extracted from add.
+        (JSC::CodeCacheMap::addCache): Extracted from add.
+        (JSC::CodeCacheMap::add): Deleted.
+
+2015-03-13  Mark Lam  <mark.lam@apple.com>
+
+        Introduce WTF::Atomic to wrap std::atomic for a friendlier CAS.
+        <https://webkit.org/b/142661>
+
+        Reviewed by Filip Pizlo.
+
+        Changed CodeBlock, and the DFG's crashLock to use WTF::Atomic instead of
+        std::atomic.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::visitAggregate):
+        * bytecode/CodeBlock.h:
+        * dfg/DFGCommon.cpp:
+        (JSC::DFG::startCrashing):
+
+2015-03-12  Mark Lam  <mark.lam@apple.com>
+
+        Change the DFG crashLock to use std::atomic.
+        <https://webkit.org/b/142649>
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGCommon.cpp:
+        (JSC::DFG::startCrashing):
+        (JSC::DFG::isCrashing):
+
+2015-03-12  Filip Pizlo  <fpizlo@apple.com>
+
+        Bytecode liveness analysis should have more lambdas and fewer sets
+        https://bugs.webkit.org/show_bug.cgi?id=142647
+
+        Reviewed by Mark Lam.
+        
+        In bug 141174 I'll need to identify all of the bytecode kill sites. This requires hooking into
+        the bytecode analysis' stepOverFunction method, except in such a way that we observe uses that
+        are not in outs. This refactors stepOverFunction so that you can pass it use/def functors that
+        can either be used to propagate outs (as we do right now) or to additionally detect kills or
+        whatever else.
+        
+        In order to achieve this, the liveness analysis was moved off of maintaining uses/defs
+        bitvectors. This wasn't helping the abstraction and was probably inefficient. The new code
+        should be a bit faster since we don't have to clear uses/defs bitvectors on each instruction. On
+        the other hand, being able to intercept each use means that our code for exception handlers is
+        no longer a bitwise-merge; it requires finding set bits. Fortunately, this code only kicks in
+        for instructions inside a try, and its performance is O(live at catch), so that's probably not
+        bad.
+
+        * bytecode/BytecodeLivenessAnalysis.cpp:
+        (JSC::indexForOperand):
+        (JSC::stepOverInstruction):
+        (JSC::computeLocalLivenessForBytecodeOffset):
+        (JSC::BytecodeLivenessAnalysis::computeFullLiveness):
+        (JSC::setForOperand): Deleted.
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset):
+        (JSC::computeDefsForBytecodeOffset):
+        * bytecode/CodeBlock.cpp:
+
+2015-03-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        "this" should be in TDZ until super is called in the constructor of a derived class
+        https://bugs.webkit.org/show_bug.cgi?id=142527
+
+        Reviewed by Mark Hahnenberg.
+
+        DFG and FTL implementations co-authored by Filip Pizlo.
+
+        In ES6 class syntax, "this" register must be in the "temporal dead zone" (TDZ) and throw ReferenceError until
+        super() is called inside the constructor of a derived class.
+
+        Added op_check_tdz, a new OP code, which throws a reference error when the first operand is an empty value
+        to all tiers of JIT and LLint. The op code throws in the slow path on the basis that a TDZ error should be
+        a programming error and not a part of the programs' normal control flow. In DFG, this op code is represented
+        by a no-op must-generate node CheckNotEmpty modeled after CheckCell.
+
+        Also made the constructor of a derived class assign the empty value to "this" register rather than undefined
+        so that ThisNode can emit the op_check_tdz to check the initialized-ness of "this" in such a constructor.
+
+        * bytecode/BytecodeList.json: Added op_check_tdz.
+        * bytecode/BytecodeUseDef.h:
+        (JSC::computeUsesForBytecodeOffset): Ditto.
+        (JSC::computeDefsForBytecodeOffset): Ditto.
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode): Ditto.
+        * bytecode/ExitKind.cpp:
+        (JSC::exitKindToString): Added TDZFailure.
+        * bytecode/ExitKind.h: Ditto.
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator): Assign the empty value to "this" register to indicate it's in TDZ.
+        (JSC::BytecodeGenerator::emitTDZCheck): Added.
+        (JSC::BytecodeGenerator::emitReturn): Emit the TDZ check since "this" can still be in TDZ if super() was never
+        called. e.g. class B extends A { constructor() { } }
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ThisNode::emitBytecode): Always emit the TDZ check if we're inside the constructor of a derived class.
+        We can't omit this check even if the result was ignored per spec.
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects): Previously, empty value could never appear
+        in a local variable. This is no longer true so generalize this code. Also added the support for CheckNotEmpty.
+        Like CheckCell, we phantomize this DFG node in the constant folding phase if the type of the operand is already
+        found to be not empty. Otherwise filter out SpecEmpty.
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock): Added op_check_tdz.
+        * dfg/DFGCapabilities.cpp:
+        (JSC::DFG::capabilityLevel): op_check_tdz can be compiled and inlined.
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize): CheckNotEmpty doesn't read or write values.
+        * dfg/DFGConstantFoldingPhase.cpp:
+        (JSC::DFG::ConstantFoldingPhase::foldConstants): Convert CheckNotEmpty to a phantom if non-emptiness had already
+        been proven for the operand prior to this node.
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC): CheckNotEmpty does not trigger GC.
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode): CheckNotEmpty is a no-op in the fixup phase.
+        * dfg/DFGNodeType.h: CheckNotEmpty cannot be removed even if the result was ignored. See ThisNode::emitBytecode.
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate): CheckNotEmpty doesn't return any value.
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute): CheckNotEmpty doesn't load from heap so it's safe.
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile): Speculative the operand to be not empty. OSR exit if the speculation fails.
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile): Ditto.
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile): CheckNotEmpty can be compiled in FTL.
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode): Calls compileCheckNotEmpty for CheckNotEmpty.
+        (JSC::FTL::LowerDFGToLLVM::compileCheckNotEmpty): OSR exit with "TDZFailure" if the operand is not empty.
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass): Added op_check_tdz.
+        (JSC::JIT::privateCompileSlowCases): Ditto.
+        * jit/JIT.h:
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_check_tdz): Implements op_check_tdz in Baseline JIT.
+        (JSC::JIT::emitSlow_op_check_tdz): Ditto.
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_check_tdz): Ditto.
+        (JSC::JIT::emitSlow_op_check_tdz): Ditto.
+        * llint/LowLevelInterpreter32_64.asm: Implements op_check_tdz in LLint.
+        * llint/LowLevelInterpreter64.asm: Ditto.
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL): Throws a reference error for op_check_tdz. Shared by LLint and Baseline JIT.
+        * runtime/CommonSlowPaths.h:
+        * tests/stress/class-syntax-no-loop-tdz.js: Added.
+        * tests/stress/class-syntax-no-tdz-in-catch.js: Added.
+        * tests/stress/class-syntax-no-tdz-in-conditional.js: Added.
+        * tests/stress/class-syntax-no-tdz-in-loop-no-inline-super.js: Added.
+        * tests/stress/class-syntax-no-tdz-in-loop.js: Added.
+        * tests/stress/class-syntax-no-tdz.js: Added.
+        * tests/stress/class-syntax-tdz-in-catch.js: Added.
+        * tests/stress/class-syntax-tdz-in-conditional.js: Added.
+        * tests/stress/class-syntax-tdz-in-loop.js: Added.
+        * tests/stress/class-syntax-tdz.js: Added.
+
+2015-03-12  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Integrate MapData into JSMap and JSSet
+        https://bugs.webkit.org/show_bug.cgi?id=142556
+
+        Reviewed by Filip Pizlo.
+
+        This patch integrates MapData into JSMap and JSSet.
+        This removes 2 object allocation per one JSMap / JSSet.
+
+        MapDataImpl is specialized into MapData and SetData.
+        In the case of SetData, it does not have the dummy values
+        previously stored in the MapDataImpl. So the storage size of SetData
+        becomes the half of the previous implementation.
+
+        And now MapData and SetData are completely integrated into JSMap and JSSet,
+        these structures are not exposed to the other code even in WebCore world.
+
+        And at the same time, this patch fixes missing destroy functions
+        in JSMapIterator and JSSetIterator.
+        They are needed because MapData::const_iterator is a non-trivial destructor.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/JSMap.cpp:
+        (JSC::JSMap::destroy):
+        (JSC::JSMap::visitChildren):
+        (JSC::JSMap::copyBackingStore):
+        (JSC::JSMap::has):
+        (JSC::JSMap::size):
+        (JSC::JSMap::get):
+        (JSC::JSMap::set):
+        (JSC::JSMap::clear):
+        (JSC::JSMap::remove):
+        (JSC::JSMap::finishCreation): Deleted.
+        * runtime/JSMap.h:
+        (JSC::JSMap::Entry::key):
+        (JSC::JSMap::Entry::value):
+        (JSC::JSMap::Entry::visitChildren):
+        (JSC::JSMap::Entry::setKey):
+        (JSC::JSMap::Entry::setKeyWithoutWriteBarrier):
+        (JSC::JSMap::Entry::setValue):
+        (JSC::JSMap::Entry::clear):
+        (JSC::JSMap::begin):
+        (JSC::JSMap::end):
+        (JSC::JSMap::JSMap):
+        (JSC::JSMap::mapData): Deleted.
+        * runtime/JSMapIterator.cpp:
+        (JSC::JSMapIterator::finishCreation):
+        (JSC::JSMapIterator::destroy):
+        (JSC::JSMapIterator::visitChildren):
+        * runtime/JSMapIterator.h:
+        (JSC::JSMapIterator::JSMapIterator):
+        * runtime/JSSet.cpp:
+        (JSC::JSSet::destroy):
+        (JSC::JSSet::visitChildren):
+        (JSC::JSSet::copyBackingStore):
+        (JSC::JSSet::has):
+        (JSC::JSSet::size):
+        (JSC::JSSet::add):
+        (JSC::JSSet::clear):
+        (JSC::JSSet::remove):
+        (JSC::JSSet::finishCreation): Deleted.
+        * runtime/JSSet.h:
+        (JSC::JSSet::Entry::key):
+        (JSC::JSSet::Entry::value):
+        (JSC::JSSet::Entry::visitChildren):
+        (JSC::JSSet::Entry::setKey):
+        (JSC::JSSet::Entry::setKeyWithoutWriteBarrier):
+        (JSC::JSSet::Entry::setValue):
+        (JSC::JSSet::Entry::clear):
+        (JSC::JSSet::begin):
+        (JSC::JSSet::end):
+        (JSC::JSSet::JSSet):
+        (JSC::JSSet::mapData): Deleted.
+        * runtime/JSSetIterator.cpp:
+        (JSC::JSSetIterator::finishCreation):
+        (JSC::JSSetIterator::visitChildren):
+        (JSC::JSSetIterator::destroy):
+        * runtime/JSSetIterator.h:
+        (JSC::JSSetIterator::JSSetIterator):
+        * runtime/MapConstructor.cpp:
+        (JSC::constructMap):
+        * runtime/MapData.h:
+        (JSC::MapDataImpl::const_iterator::key):
+        (JSC::MapDataImpl::const_iterator::value):
+        (JSC::MapDataImpl::size):
+        (JSC::MapDataImpl<Entry>::MapDataImpl):
+        (JSC::MapDataImpl<Entry>::clear):
+        (JSC::MapDataImpl<Entry>::KeyType::KeyType):
+        (JSC::MapDataImpl<Entry>::const_iterator::internalIncrement):
+        (JSC::MapDataImpl<Entry>::const_iterator::ensureSlot):
+        (JSC::MapDataImpl<Entry>::const_iterator::const_iterator):
+        (JSC::MapDataImpl<Entry>::const_iterator::~const_iterator):
+        (JSC::MapDataImpl<Entry>::const_iterator::operator):
+        (JSC::=):
+        (JSC::MapData::const_iterator::key): Deleted.
+        (JSC::MapData::const_iterator::value): Deleted.
+        (JSC::MapData::create): Deleted.
+        (JSC::MapData::createStructure): Deleted.
+        (JSC::MapData::size): Deleted.
+        (JSC::MapData::clear): Deleted.
+        (JSC::MapData::KeyType::KeyType): Deleted.
+        (JSC::MapData::const_iterator::internalIncrement): Deleted.
+        (JSC::MapData::const_iterator::ensureSlot): Deleted.
+        (JSC::MapData::const_iterator::const_iterator): Deleted.
+        (JSC::MapData::const_iterator::~const_iterator): Deleted.
+        (JSC::MapData::const_iterator::operator*): Deleted.
+        (JSC::MapData::const_iterator::end): Deleted.
+        (JSC::MapData::const_iterator::operator!=): Deleted.
+        (JSC::MapData::const_iterator::operator==): Deleted.
+        * runtime/MapDataInlines.h: Renamed from Source/JavaScriptCore/runtime/MapData.cpp.
+        (JSC::MapDataImpl<Entry>::find):
+        (JSC::MapDataImpl<Entry>::contains):
+        (JSC::MapDataImpl<Entry>::add):
+        (JSC::MapDataImpl<Entry>::set):
+        (JSC::MapDataImpl<Entry>::get):
+        (JSC::MapDataImpl<Entry>::remove):
+        (JSC::MapDataImpl<Entry>::replaceAndPackBackingStore):
+        (JSC::MapDataImpl<Entry>::replaceBackingStore):
+        (JSC::MapDataImpl<Entry>::ensureSpaceForAppend):
+        (JSC::MapDataImpl<Entry>::visitChildren):
+        (JSC::MapDataImpl<Entry>::copyBackingStore):
+        * runtime/MapPrototype.cpp:
+        (JSC::getMap):
+        (JSC::mapProtoFuncClear):
+        (JSC::mapProtoFuncDelete):
+        (JSC::mapProtoFuncForEach):
+        (JSC::mapProtoFuncGet):
+        (JSC::mapProtoFuncHas):
+        (JSC::mapProtoFuncSet):
+        (JSC::mapProtoFuncSize):
+        (JSC::getMapData): Deleted.
+        * runtime/SetPrototype.cpp:
+        (JSC::getSet):
+        (JSC::setProtoFuncAdd):
+        (JSC::setProtoFuncClear):
+        (JSC::setProtoFuncDelete):
+        (JSC::setProtoFuncForEach):
+        (JSC::setProtoFuncHas):
+        (JSC::setProtoFuncSize):
+        (JSC::getMapData): Deleted.
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        * runtime/VM.h:
+
+2015-03-12  Mark Lam  <mark.lam@apple.com>
+
+        Use std::atomic for CodeBlock::m_visitAggregateHasBeenCalled.
+        <https://webkit.org/b/142640>
+
+        Reviewed by Mark Hahnenberg.
+
+        We used to spin our own compare and swap on a uint8_t.  Now that we can
+        use C++11, let's use std::atomic instead.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::visitAggregate):
+        - The CAS here needs std::memory_order_acquire ordering because it
+          requires lock acquisition semantics to visit the CodeBlock.
+
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlockSet::mark):
+        * heap/CodeBlockSet.cpp:
+        (JSC::CodeBlockSet::clearMarksForFullCollection):
+        (JSC::CodeBlockSet::clearMarksForEdenCollection):
+        - These can go with relaxed ordering because they are all done before
+          the GC starts parallel marking.
+
+2015-03-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [cmake] Fix the incremental build issue revealed by r181419
+        https://bugs.webkit.org/show_bug.cgi?id=142613
+
+        Reviewed by Carlos Garcia Campos.
+
+        * CMakeLists.txt:
+
 2015-03-11  Ryosuke Niwa  <rniwa@webkit.org>
 
         "static" should not be a reserved keyword in non-strict mode even when ES6 class is enabled
