@@ -1,3 +1,178 @@
+2015-03-17  Mark Lam  <mark.lam@apple.com>
+
+        Refactor execution time limit tests out of testapi.c.
+        <https://webkit.org/b/142798>
+
+        Rubber stamped by Michael Saboff.
+
+        These tests were sometimes failing to time out on C loop builds.  Let's
+        refactor them out of the big monolith that is testapi.c so that we can
+        reason more easily about them and make adjustments if needed.
+
+        * API/tests/ExecutionTimeLimitTest.cpp: Added.
+        (currentCPUTime):
+        (currentCPUTimeAsJSFunctionCallback):
+        (shouldTerminateCallback):
+        (cancelTerminateCallback):
+        (extendTerminateCallback):
+        (testExecutionTimeLimit):
+        * API/tests/ExecutionTimeLimitTest.h: Added.
+        * API/tests/testapi.c:
+        (main):
+        (currentCPUTime): Deleted.
+        (currentCPUTime_callAsFunction): Deleted.
+        (shouldTerminateCallback): Deleted.
+        (cancelTerminateCallback): Deleted.
+        (extendTerminateCallback): Deleted.
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2015-03-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Built-in functions should know that they use strict mode
+        https://bugs.webkit.org/show_bug.cgi?id=142788
+
+        Reviewed by Mark Lam.
+
+        Even though all of our builtin functions use strict mode, the parser
+        thinks that they don't. This is because Executable::toStrictness treats
+        builtin-ness and strict-ness as mutually exclusive.
+
+        The fix is to disambiguate builtin-ness from strict-ness.
+
+        This bug is currently unobservable because of some other parser bugs. But
+        it causes lots of test failures once those other bugs are fixed.
+
+        * API/JSScriptRef.cpp:
+        (parseScript):
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createBuiltinExecutable): Adopt the new API
+        for a separate value to indicate builtin-ness vs strict-ness.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::generateFunctionCodeBlock):
+        (JSC::UnlinkedFunctionExecutable::codeBlockFor): Ditto.
+
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedFunctionExecutable::toStrictness): Deleted. This function
+        was misleading since it pretended that no builtin function was ever
+        strict, which is the opposite of true.
+
+        * parser/Lexer.cpp:
+        (JSC::Lexer<T>::Lexer):
+        * parser/Lexer.h:
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::Parser):
+        * parser/Parser.h:
+        (JSC::parse): Adopt the new API.
+
+        * parser/ParserModes.h: Added JSParserBuiltinMode, and tried to give
+        existing modes clearer names.
+
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getProgramCodeBlock):
+        (JSC::CodeCache::getEvalCodeBlock):
+        (JSC::CodeCache::getFunctionExecutableFromGlobalCode): Adopt the new API.
+
+        * runtime/CodeCache.h:
+        (JSC::SourceCodeKey::SourceCodeKey): Be sure to treat strict-ness and
+        bulitin-ness as separate pieces of the code cache key. We would not want
+        a user function to match a built-in function in the cache, even if they
+        agreed about strictness, since builtin functions have different lexing
+        rules.
+
+        * runtime/Completion.cpp:
+        (JSC::checkSyntax):
+        * runtime/Executable.cpp:
+        (JSC::FunctionExecutable::FunctionExecutable):
+        (JSC::ProgramExecutable::checkSyntax):
+        * runtime/Executable.h:
+        (JSC::FunctionExecutable::create):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::createProgramCodeBlock):
+        (JSC::JSGlobalObject::createEvalCodeBlock): Adopt the new API.
+
+2015-03-16  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG IR shouldn't have a separate node for every kind of put hint that could be described using PromotedLocationDescriptor
+        https://bugs.webkit.org/show_bug.cgi?id=142769
+
+        Reviewed by Michael Saboff.
+        
+        When we sink an object allocation, we need to have some way of tracking what stores would
+        have happened had the allocation not been sunk, so that we know how to rematerialize the
+        object on OSR exit. Prior to this change, trunk had two ways of describing such a "put
+        hint":
+        
+        - The PutStrutureHint and PutByOffsetHint node types.
+        - The PromotedLocationDescriptor class, which has an enum with cases StructurePLoc and
+          NamedPropertyPLoc.
+        
+        We also had ways of converting from a Node with those two node types to a
+        PromotedLocationDescriptor, and we had a way of converting a PromotedLocationDescriptor to
+        a Node.
+        
+        This change removes the redundancy. We now have just one node type that corresponds to a
+        put hint, and it's called PutHint. It has a PromotedLocationDescriptor as metadata.
+        Converting between a PutHint node and a PromotedLocationDescriptor and vice-versa is now
+        trivial.
+        
+        This means that if we add new kinds of sunken objects, we'll have less pro-forma to write
+        for the put hints to those objects. This is mainly to simplify the implementation of
+        arguments elimination in bug 141174.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        (JSC::DFG::Graph::mergeRelevantToOSR):
+        * dfg/DFGMayExit.cpp:
+        (JSC::DFG::mayExit):
+        * dfg/DFGNode.cpp:
+        (JSC::DFG::Node::convertToPutHint):
+        (JSC::DFG::Node::convertToPutStructureHint):
+        (JSC::DFG::Node::convertToPutByOffsetHint):
+        (JSC::DFG::Node::promotedLocationDescriptor):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasIdentifier):
+        (JSC::DFG::Node::hasPromotedLocationDescriptor):
+        (JSC::DFG::Node::convertToPutByOffsetHint): Deleted.
+        (JSC::DFG::Node::convertToPutStructureHint): Deleted.
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSRAvailabilityAnalysisPhase.cpp:
+        (JSC::DFG::LocalOSRAvailabilityCalculator::executeNode):
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::run):
+        (JSC::DFG::ObjectAllocationSinkingPhase::lowerNonReadingOperationsOnPhantomAllocations):
+        (JSC::DFG::ObjectAllocationSinkingPhase::handleNode):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGPromoteHeapAccess.h:
+        (JSC::DFG::promoteHeapAccess):
+        * dfg/DFGPromotedHeapLocation.cpp:
+        (JSC::DFG::PromotedHeapLocation::createHint):
+        * dfg/DFGPromotedHeapLocation.h:
+        (JSC::DFG::PromotedLocationDescriptor::imm1):
+        (JSC::DFG::PromotedLocationDescriptor::imm2):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::validateCPS):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+
 2015-03-17  Michael Saboff  <msaboff@apple.com>
 
         Windows X86-64 should use the fixed executable allocator
