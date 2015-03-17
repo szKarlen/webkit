@@ -610,6 +610,7 @@
     <ClCompile Include="..\jit\AssemblyHelpers.cpp" />
     <ClCompile Include="..\jit\BinarySwitch.cpp" />
     <ClCompile Include="..\jit\ExecutableAllocator.cpp" />
+    <ClCompile Include="..\jit\ExecutableAllocatorFixedVMPool.cpp" />
     <ClCompile Include="..\jit\GCAwareJITStubRoutine.cpp" />
     <ClCompile Include="..\jit\HostCallReturnValue.cpp" />
     <ClCompile Include="..\jit\JIT.cpp" />
@@ -1213,11 +1214,8 @@
     <ClInclude Include="..\ftl\FTLJITCode.h" />
     <ClInclude Include="..\ftl\FTLJITFinalizer.h" />
     <ClInclude Include="..\ftl\FTLJSCall.h" />
-<<<<<<< HEAD
-=======
     <ClInclude Include="..\ftl\FTLJSCallBase.h" />
     <ClInclude Include="..\ftl\FTLJSCallVarargs.h" />
->>>>>>> 8fefdd3... DFG should really support varargs
     <ClInclude Include="..\ftl\FTLLink.h" />
     <ClInclude Include="..\ftl\FTLLocation.h" />
     <ClInclude Include="..\ftl\FTLLowerDFGToLLVM.h" />

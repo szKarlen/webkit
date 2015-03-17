@@ -1747,11 +1747,8 @@
     <ClCompile Include="..\debugger\JSDebugger.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\API\JSDebuggerRef.cpp">
-      <Filter>API</Filter>
-    </ClCompile>
-    <ClCompile Include="..\API\JSObjectRefUnsafe.cpp">
-      <Filter>API</Filter>
+    <ClCompile Include="..\jit\PolymorphicCallStubRoutine.cpp">
+      <Filter>jit</Filter>
     </ClCompile>
     <ClCompile Include="..\API\JSValueRefUnsafe.cpp">
       <Filter>API</Filter>
@@ -1776,6 +1773,14 @@
     </ClCompile>
     <ClCompile Include="..\API\JSProfilerPrivate.cpp">
       <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dfg\DFGPutStackSinkingPhase.cpp" />
+    <ClCompile Include="..\ftl\FTLJSCallBase.cpp" />
+    <ClCompile Include="..\ftl\FTLJSCallVarargs.cpp" />
+    <ClCompile Include="..\runtime\JSCatchScope.cpp" />
+    <ClCompile Include="..\runtime\JSFunctionNameScope.cpp" />
+    <ClCompile Include="..\jit\ExecutableAllocatorFixedVMPool.cpp">
+      <Filter>jit</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -4217,6 +4222,7 @@
     <ClInclude Include="..\debugger\JSDebuggerBase.h">
       <Filter>debugger</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="..\API\JSDebuggerRef.h">
       <Filter>API</Filter>
     </ClInclude>
@@ -4247,6 +4253,18 @@
     <ClInclude Include="..\API\JSProfilerPrivate.h">
       <Filter>API</Filter>
     </ClInclude>
+=======
+    <ClInclude Include="..\jit\PolymorphicCallStubRoutine.h">
+      <Filter>jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jit\SetupVarargsFrame.h" />
+    <ClInclude Include="..\dfg\DFGPutStackSinkingPhase.h" />
+    <ClInclude Include="..\ftl\FTLJSCallBase.h" />
+    <ClInclude Include="..\ftl\FTLJSCallVarargs.h" />
+    <ClInclude Include="..\runtime\JSCatchScope.h" />
+    <ClInclude Include="..\runtime\JSFunctionNameScope.h" />
+    <ClInclude Include="..\runtime\MathCommon.h" />
+>>>>>>> 632f8d1... Windows X86-64 should use the fixed executable allocator
   </ItemGroup>
   <ItemGroup>
     <None Include="JavaScriptCorePreLink.cmd" />
