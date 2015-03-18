@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 2015-03-30  Per Arne Vollan  <peavo@outlook.com>
 
         [WinCairo] Crash when closing window while video is loading
@@ -3935,6 +3936,8 @@
         (-[WebAVPlayerController playerViewControllerWillCancelOptimizedFullscreen:]):
         (-[WebAVPlayerController playerViewControllerWillCancelOptimizedFullscree:]): Deleted.
 
+=======
+>>>>>>> e2af018... Avoid repaints when changing transform on an element with multiple background images
 2015-03-18  Simon Fraser  <simon.fraser@apple.com>
 
         Avoid repaints when changing transform on an element with multiple background images

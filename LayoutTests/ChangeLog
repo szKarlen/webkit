@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2015-05-17  Benjamin Poulain  <benjamin@webkit.org>
 
         [JSC] Make StringRecursionChecker faster in the simple cases without any recursion
@@ -7839,6 +7840,8 @@
         * webaudio/resources/convolution-testing.js: (checkTriangularPulse): Slightly increase
         the tolerance. It's still extremely low.
 
+=======
+>>>>>>> e2af018... Avoid repaints when changing transform on an element with multiple background images
 2015-03-18  Simon Fraser  <simon.fraser@apple.com>
 
         Avoid repaints when changing transform on an element with multiple background images
