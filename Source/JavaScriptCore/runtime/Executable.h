@@ -545,9 +545,11 @@ class FunctionExecutable : public ScriptExecutable {
 public:
     typedef ScriptExecutable Base;
 
-    static FunctionExecutable* create(VM& vm, const SourceCode& source, UnlinkedFunctionExecutable* unlinkedExecutable, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces = true)
+    static FunctionExecutable* create(
+        VM& vm, const SourceCode& source, UnlinkedFunctionExecutable* unlinkedExecutable, 
+        unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn)
     {
-        FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(vm.heap)) FunctionExecutable(vm, source, unlinkedExecutable, firstLine, lastLine, startColumn, endColumn, bodyIncludesBraces);
+        FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(vm.heap)) FunctionExecutable(vm, source, unlinkedExecutable, firstLine, lastLine, startColumn, endColumn);
         executable->finishCreation(vm);
         return executable;
     }
@@ -644,10 +646,14 @@ public:
 
     void clearCode();
 
-    bool bodyIncludesBraces() const { return m_bodyIncludesBraces; }
-
 private:
+<<<<<<< HEAD
     FunctionExecutable(VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces);
+=======
+    FunctionExecutable(
+        VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, 
+        unsigned lastLine, unsigned startColumn, unsigned endColumn);
+>>>>>>> 32bac81... Function bodies should always include braces
 
     bool isCompiling()
     {
@@ -665,8 +671,11 @@ private:
     WriteBarrier<UnlinkedFunctionExecutable> m_unlinkedExecutable;
     RefPtr<FunctionCodeBlock> m_codeBlockForCall;
     RefPtr<FunctionCodeBlock> m_codeBlockForConstruct;
+<<<<<<< HEAD
     bool m_bodyIncludesBraces;
     bool m_didParseForTheFirstTime;
+=======
+>>>>>>> 32bac81... Function bodies should always include braces
     RefPtr<TypeSet> m_returnStatementTypeSet;
 };
 

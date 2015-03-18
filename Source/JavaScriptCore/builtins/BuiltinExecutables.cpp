@@ -68,8 +68,11 @@ UnlinkedFunctionExecutable* BuiltinExecutables::createExecutableInternal(const S
     JSParserStrictness strictness = isParsingDefaultConstructor ? JSParseNormal : JSParseBuiltin;
     UnlinkedFunctionKind kind = isParsingDefaultConstructor ? UnlinkedNormalFunction : UnlinkedBuiltinFunction;
     RefPtr<SourceProvider> sourceOverride = isParsingDefaultConstructor ? source.provider() : nullptr;
-    std::unique_ptr<ProgramNode> program = parse<ProgramNode>(&m_vm, source, 0, Identifier(), strictness, JSParseProgramCode,
-        error, &positionBeforeLastNewline, false, constructorKind);
+    std::unique_ptr<ProgramNode> program = parse<ProgramNode>(
+        &m_vm, source, 0, Identifier(), builtinMode, 
+        JSParserStrictMode::NotStrict, 
+        JSParserCodeType::Program,
+        error, &positionBeforeLastNewline, constructorKind);
 
     if (!program) {
         dataLog("Fatal error compiling builtin function '", name.string(), "': ", error.m_message);
