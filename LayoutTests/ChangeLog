@@ -1,3 +1,404 @@
+2015-03-20  Joseph Pecoraro  <pecoraro@apple.com>
+
+        SyntaxChecker assertion is trapped with computed property name and getter
+        https://bugs.webkit.org/show_bug.cgi?id=142863
+
+        Reviewed by Ryosuke Niwa.
+
+        * js/basic-computed-property-name-expected.txt:
+        * js/script-tests/basic-computed-property-name.js:
+        (a.string_appeared_here.runTest):
+        Add tests that wrap the expression in a function, this
+        will test the syntax checker.
+
+2015-03-20  Alexey Proskuryakov  <ap@apple.com>
+
+        platform/mac/fast/loader/file-url-mimetypes-3.html fails when MS Office is installed
+        https://bugs.webkit.org/show_bug.cgi?id=142884
+
+        Reviewed by Tim Horton.
+
+        Disable a test for .xls until rdar://problem/20232251 is fixed. It is not particularly
+        relevant to a web browser which MIME type local Excel files get anyway.
+
+        * platform/mac/fast/loader/file-url-mimetypes-3-expected.txt:
+        * platform/mac/fast/loader/file-url-mimetypes-3.html:
+
+2015-03-20  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] svg/text/non-bmp-positioning-lists.svg fails when MS Office is installed
+        https://bugs.webkit.org/show_bug.cgi?id=142861
+
+        Reviewed by Tim Horton.
+
+        Converted into a reftest. It would be nice to make tests not depend on installed
+        fonts in general, but that doesn't seem very feasible (rdar://problem/20000350).
+
+        * platform/efl/svg/text/non-bmp-positioning-lists-expected.png: Removed.
+        * platform/efl/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * platform/gtk/svg/text/non-bmp-positioning-lists-expected.png: Removed.
+        * platform/gtk/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * platform/ios-sim-deprecated/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * platform/ios-simulator/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * platform/mac/svg/text/non-bmp-positioning-lists-expected.png: Removed.
+        * platform/mac/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * platform/win/svg/text/non-bmp-positioning-lists-expected.txt: Removed.
+        * svg/text/non-bmp-positioning-lists-expected.svg: Added.
+
+2015-03-20  Hunseop Jeong  <hs85.jeong@samsung.com>
+
+        Unreviewed EFL gardening. Update attachment-foo tests to failure. 
+        https://bugs.webkit.org/show_bug.cgi?id=142653
+
+        * platform/efl/TestExpectations:
+
+2015-03-20  Hunseop Jeong  <hs85.jeong@samsung.com>
+
+        Unreviewed EFL gardening. Remove duplicate or ambiguous entry lines. 
+        https://bugs.webkit.org/show_bug.cgi?id=142775
+
+        * platform/efl/TestExpectations:
+
+2015-03-19  Andy Estes  <aestes@apple.com>
+
+        [Content Filtering] Add tests for unblock requests
+        https://bugs.webkit.org/show_bug.cgi?id=142900
+
+        Reviewed by Andreas Kling.
+
+        Taught contentfiltering.js how to perform an unblock request test, and added tests for both allowed and blocked requests.
+
+        * contentfiltering/allow-after-unblock-request-expected.html: Added.
+        * contentfiltering/allow-after-unblock-request.html: Added.
+        * contentfiltering/block-after-unblock-request-expected.html: Added.
+        * contentfiltering/block-after-unblock-request.html: Added.
+        * contentfiltering/resources/contentfiltering.js:
+        (testContentFiltering): Added an argument specifying if the decision applies to the initial load or the unblock request.
+        (_doTest): When testing unblock handling, navigate the test iframe to settings.unblockRequestURL when the error page is displayed.
+        If the unblock is denied, the test harness will call window.unblockRequestDenied(). If the unblock is successful,
+        the iframe will reload, which we detect by listening for its load event.
+
+2015-03-19  Andy Estes  <aestes@apple.com>
+
+        [Content Filtering] Give contentfiltering tests a JavaScript harness
+        https://bugs.webkit.org/show_bug.cgi?id=142899
+
+        Reviewed by Andreas Kling.
+
+        Create a JavaScript function to run the contentfiltering/ tests. This consolidates shared logic and will make
+        it easier to write new tests.
+
+        * TestExpectations: Skipped a test that times out with the new harness (but it also failed before).
+        * contentfiltering/allow-after-add-data.html: Called testContentFiltering().
+        * contentfiltering/allow-after-finished-adding-data.html: Ditto.
+        * contentfiltering/allow-after-response.html: Ditto.
+        * contentfiltering/block-after-add-data.html: Ditto.
+        * contentfiltering/block-after-finished-adding-data.html: Ditto.
+        * contentfiltering/block-after-response.html: Ditto.
+        * contentfiltering/resources/contentfiltering.js: Added.
+
+2015-03-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Try to get the Debug bots green.
+
+        * platform/win/TestExpectations:
+
+2015-03-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Skip an <attachment> test that times out on Windows.
+
+        Also mark two flakes I noticed on the test bots.
+
+        * platform/win/TestExpectations:
+
+2015-03-19  Dean Jackson  <dino@apple.com>
+
+        CSS Animations with triggers should map scroll position to duration
+        https://bugs.webkit.org/show_bug.cgi?id=142870
+        <rdar://problem/20227244>
+
+        Reviewed by Simon Fraser.
+
+        Add a new test that exercises an animation trigger over a scroll
+        region, and a test of the boundary condition. Also, unskip a test that
+        was failing due to a bug fixed in this patch.
+
+        * animations/trigger-container-scroll-boundaries-expected.txt: Added.
+        * animations/trigger-container-scroll-boundaries.html: Added.
+        * animations/trigger-container-scroll-empty-expected.txt: Added.
+        * animations/trigger-container-scroll-empty.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/win/TestExpectations:
+
+2015-03-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Adopt ES6 Class Syntax for all Model Objects
+        https://bugs.webkit.org/show_bug.cgi?id=142858
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/model/parse-script-syntax-tree.html:
+        This test was calling a constructor without "new". Class
+        syntax enforces "new" and threw an exception.
+
+2015-03-19  Enrica Casucci  <enrica@apple.com>
+
+        REGRESSION (r109593): Clicking after last inline element could cause a crash.
+        https://bugs.webkit.org/show_bug.cgi?id=142880
+        rdar://problem/17222294
+
+        Reviewed by Ryosuke Niwa.
+
+        * editing/selection/click-after-last-inline-crash-expected.txt: Added.
+        * editing/selection/click-after-last-inline-crash.html: Added.
+
+2015-03-19  Enrica Casucci  <enrica@apple.com>
+
+        <attachment> should put URLs on the pasteboard so that Finder can accept drops.
+        https://bugs.webkit.org/show_bug.cgi?id=142801
+        rdar://problem/19982527
+
+        Reviewed by Tim Horton.
+
+        * editing/pasteboard/drag-and-drop-attachment-contenteditable-expected.txt: Added.
+        * editing/pasteboard/drag-and-drop-attachment-contenteditable.html: Added.
+        * platform/mac-wk2/TestExpectations: Skipping new test on WK2 since it uses eventSender.
+
+2015-03-19  Dean Jackson  <dino@apple.com>
+
+        http://webkit.org/b/142790
+
+        Temporarily skip animations/trigger-container-scroll-simple.html
+        while it is crashing.
+
+        * platform/mac/TestExpectations:
+
+2015-03-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Test gardening.
+
+        * platform/win/TestExpectations:
+
+2015-03-19  Marcos Chavarría Teijeiro  <chavarria1991@gmail.com>
+
+        [GTK] Skip Legacy WebNotifications test
+        https://bugs.webkit.org/show_bug.cgi?id=141962
+
+        The revision r177073 skips all legacy tests for notifications except from
+        http/tests/notifications/legacy/notification-request-permission-then-navigate.html
+        which was failing. We skip this test now too.
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/gtk/TestExpectations:
+
+2015-03-19  Xabier Rodriguez Calvar <calvaris@igalia.com> and Youenn Fablet  <youenn.fablet@crf.canon.fr>
+
+        [Streams API] Update ReadableStream API according new version of the specification
+        https://bugs.webkit.org/show_bug.cgi?id=142822
+
+        Reviewed by Benjamin Poulain.
+
+        Removing tests checking ready and closed.
+        Removing assertions checking read(), ready, closed and state.
+        Adding assertions to test getReader() and parameters of remaining methods.
+
+        * streams/readablestream-constructor-expected.txt:
+        * streams/readablestream-constructor.html:
+
+2015-03-19  Chris Dumez  <cdumez@apple.com>
+
+        The network cache should ignore "cache-control: no-cache, must-revalidate" on history navigation
+        https://bugs.webkit.org/show_bug.cgi?id=142831
+        <rdar://problem/20209957>
+
+        Reviewed by Antti Koivisto.
+
+        Rebaseline disk-cache-validation-back-navigation-policy.html test now
+        that we ignore "cache-control: no-cache, must-revalidate" on history
+        navigation. This is a progression.
+
+        * http/tests/cache/disk-cache-validation-back-navigation-policy-expected.txt:
+
+2015-03-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Windows gardening for debug bots.
+
+        * platform/win/TestExpectations:
+
+2015-03-18  Antti Koivisto  <antti@apple.com>
+
+        Test disk cache behavior when using back navigation cache policy
+        https://bugs.webkit.org/show_bug.cgi?id=142848
+
+        Reviewed by Chris Dumez.
+
+        * http/tests/cache/disk-cache-validation-back-navigation-policy-expected.txt: Added.
+        * http/tests/cache/disk-cache-validation-back-navigation-policy.html: Added.
+
+            Test permutations of cache headers on reload including Cache-control: must-revalidate.
+
+        * platform/mac-wk1/TestExpectations:
+        * platform/win/TestExpectations:
+
+2015-03-18  Joseph Pecoraro  <pecoraro@apple.com>
+
+        ES6 Classes: Extends should accept an expression without parenthesis
+        https://bugs.webkit.org/show_bug.cgi?id=142840
+
+        Reviewed by Ryosuke Niwa.
+
+        * js/class-syntax-extends-expected.txt:
+        * js/script-tests/class-syntax-extends.js:
+        Extend the test to test cases of extends with different types of expressions.
+
+2015-03-18  Said Abou-Hallawa  <sabouhallawa@apple.com>
+
+        Switching between two SVG images with no intrinsic sizes causes them to get the default SVG size instead of the container size.
+        https://bugs.webkit.org/show_bug.cgi?id=142805.
+
+        Reviewed by Darin Adler.
+
+        * svg/as-image/svg-no-intrinsic-size-switching-expected.html: Added.
+        * svg/as-image/svg-no-intrinsic-size-switching.html: Added.
+        Ensure that switching the source of an <img> element between two SVG images,
+        which have no intrinsic sizes, gets the image the size of the container and
+        not the default SVG intrinsic size which is 300x150 pixels.
+
+2015-03-18  Alexey Proskuryakov  <ap@apple.com>
+
+        webaudio/convolution-mono-mono.html fails on some machines
+        rdar://problem/19996807
+
+        Rubber-stampted by Jer Noble.
+
+        * webaudio/resources/convolution-testing.js: (checkTriangularPulse): Slightly increase
+        the tolerance. It's still extremely low.
+
+2015-03-18  Simon Fraser  <simon.fraser@apple.com>
+
+        Avoid repaints when changing transform on an element with multiple background images
+        https://bugs.webkit.org/show_bug.cgi?id=142841
+
+        Reviewed by Zalan Bujtas.
+        
+        Test that changes transform on a composited element with 2 background images,
+        and tests for no repaints.
+
+        * fast/repaint/multiple-backgrounds-style-change-expected.txt: Added.
+        * fast/repaint/multiple-backgrounds-style-change.html: Added.
+
+2015-03-18  Marcos Chavarría Teijeiro  <chavarria1991@gmail.com>
+
+        Unreviewed GTK Gardening 18th March
+        https://bugs.webkit.org/show_bug.cgi?id=142824
+
+        Unreviewed.
+
+        * platform/gtk/TestExpectations:
+
+2015-03-18  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Use filterRootId in SelectorQuery even if CSS JIT is not enabled
+        https://bugs.webkit.org/show_bug.cgi?id=142703
+
+        Reviewed by Benjamin Poulain.
+
+        This is covered by the following layout-tests.
+        CompilableSingleWithRootFilter and CompilableSingle are covered by them.
+
+        - fast/selectors/filter-root-node-with-selector-contains-adjacents.html
+        - fast/selectors/querySelector-id-filtering.html
+        - fast/selectors/querySelector-scope-filtered-root.html
+
+        And add tests to cover the following cases.
+
+        - Failures on selectorForIdLookup()'s rootNode.inDocument().
+        - Failures on selectorForIdLookup()'s rootNode.document().inQuirksMode().
+
+        * fast/selectors/querySelector-with-id-for-detached-element-expected.txt: Added.
+        * fast/selectors/querySelector-with-id-for-detached-element.html: Added.
+        * fast/selectors/querySelector-with-id-in-quirks-mode-expected.txt: Added.
+        * fast/selectors/querySelector-with-id-in-quirks-mode.html: Added.
+
+2015-03-18  Zalan Bujtas  <zalan@apple.com>
+
+        Simple line layout: Split fragments on renderer boundary on the fly.
+        https://bugs.webkit.org/show_bug.cgi?id=142579
+
+        Reviewed by Antti Koivisto.
+
+        Fragment splitting at renderers' boundary at the end of the line is no longer needed.
+        This patch ensures that TextFragmentIterator::nextTextFragment() does not concatenate
+        fragments across renderer boundary.
+
+        * fast/text/simple-line-with-multiple-renderers-expected.html: Added.
+        * fast/text/simple-line-with-multiple-renderers.html: Added.
+
+2015-03-18  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        Flex and grid items should be painted as inline-blocks
+        https://bugs.webkit.org/show_bug.cgi?id=142266
+
+        Reviewed by Darin Adler.
+
+        * css3/flexbox/flex-item-text-background-not-interleaved-expected.html: Added.
+        * css3/flexbox/flex-item-text-background-not-interleaved.html: Added.
+        * fast/css-grid-layout/float-not-protruding-into-next-grid-item-expected.html:
+        Add some vertical space to avoid issues with backgrounds.
+        * fast/css-grid-layout/float-not-protruding-into-next-grid-item.html:
+        Ditto.
+        * fast/css-grid-layout/grid-item-text-background-not-interleaved-expected.html: Added.
+        * fast/css-grid-layout/grid-item-text-background-not-interleaved.html: Added.
+
+2015-03-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181667, r181682, and r181683.
+        https://bugs.webkit.org/show_bug.cgi?id=142812
+
+        Broke multiple tests with ASan, plus dependent commits
+        (Requested by ap on #webkit).
+
+        Reverted changesets:
+
+        "Simple line layout: Split fragments on renderer boundary on
+        the fly."
+        https://bugs.webkit.org/show_bug.cgi?id=142579
+        http://trac.webkit.org/changeset/181667
+
+        "Simple line layout: Change FlowContents::segmentForPosition()
+        to segmentForRun()."
+        https://bugs.webkit.org/show_bug.cgi?id=142785
+        http://trac.webkit.org/changeset/181682
+
+        "Simple line layout: Use Vector<>::const_iterator instead of
+        custom FlowContents::Iterator."
+        https://bugs.webkit.org/show_bug.cgi?id=142809
+        http://trac.webkit.org/changeset/181683
+
+2015-03-17  Alexey Proskuryakov  <ap@apple.com>
+
+        fast/images/animated-png.html is crashing / failing on Yosemite
+        https://bugs.webkit.org/show_bug.cgi?id=142726
+
+        Further tweaked test expectations.
+
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+
+2015-03-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        Tracked down the tests that were leaving the page cache in a bad state.
+        By skipping those tests, we can run all the others. These bugs are being
+        investigated in Bug 140871.
+
+        * platform/win/TestExpectations:
+
+>>>>>>> 72cbab8... SyntaxChecker assertion is trapped with computed property name and getter
 2015-03-17  Geoffrey Garen  <ggaren@apple.com>
 
         Function bodies should always include braces
