@@ -608,11 +608,6 @@ FunctionExecutable* FunctionExecutable::fromGlobalCode(const Identifier& name, E
     return unlinkedExecutable->link(exec.vm(), source);
 }
 
-String FunctionExecutable::paramString() const
-{
-    return m_unlinkedExecutable->paramString();
-}
-
 void ExecutableBase::dump(PrintStream& out) const
 {
     ExecutableBase* realThis = const_cast<ExecutableBase*>(this);

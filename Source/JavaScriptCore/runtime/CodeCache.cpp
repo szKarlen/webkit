@@ -133,6 +133,7 @@ UnlinkedEvalCodeBlock* CodeCache::getEvalCodeBlock(VM& vm, EvalExecutable* execu
     return getGlobalCodeBlock<UnlinkedEvalCodeBlock>(vm, executable, source, strictness, debuggerMode, profilerMode, error);
 }
 
+// FIXME: There's no need to add the function's name to the key here. It's already in the source code.
 UnlinkedFunctionExecutable* CodeCache::getFunctionExecutableFromGlobalCode(VM& vm, const Identifier& name, const SourceCode& source, ParserError& error)
 {
     SourceCodeKey key = SourceCodeKey(source, name.string(), SourceCodeKey::FunctionType, JSParseNormal);
@@ -148,20 +149,25 @@ UnlinkedFunctionExecutable* CodeCache::getFunctionExecutableFromGlobalCode(VM& v
         return 0;
     }
 
-    // This function assumes an input string that would result in a single anonymous function expression.
-    StatementNode* exprStatement = program->singleStatement();
-    RELEASE_ASSERT(exprStatement);
-    RELEASE_ASSERT(exprStatement->isExprStatement());
-    ExpressionNode* funcExpr = static_cast<ExprStatementNode*>(exprStatement)->expr();
-    RELEASE_ASSERT(funcExpr);
-    RELEASE_ASSERT(funcExpr->isFuncExprNode());
-    FunctionBodyNode* body = static_cast<FuncExprNode*>(funcExpr)->body();
-    RELEASE_ASSERT(!program->hasCapturedVariables());
+    // This function assumes an input string that would result in a single function declaration.
+    StatementNode* statement = program->singleStatement();
+    ASSERT(statement);
+    ASSERT(statement->isBlock());
+    if (!statement || !statement->isBlock())
+        return nullptr;
+
+    StatementNode* funcDecl = static_cast<BlockNode*>(statement)->singleStatement();
+    ASSERT(funcDecl);
+    ASSERT(funcDecl->isFuncDeclNode());
+    if (!funcDecl || !funcDecl->isFuncDeclNode())
+        return nullptr;
+
+    FunctionBodyNode* body = static_cast<FuncDeclNode*>(funcDecl)->body();
+    ASSERT(body);
+    if (!body)
+        return nullptr;
     
     body->setEndPosition(positionBeforeLastNewline);
-    RELEASE_ASSERT(body);
-    RELEASE_ASSERT(body->ident().isNull());
-
     UnlinkedFunctionExecutable* functionExecutable = UnlinkedFunctionExecutable::create(&vm, source, body, UnlinkedNormalFunction);
     functionExecutable->m_nameValue.set(vm, functionExecutable, jsString(&vm, name.string()));
 

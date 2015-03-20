@@ -194,6 +194,7 @@ namespace JSC {
         virtual bool isBreak() const { return false; }
         virtual bool isContinue() const { return false; }
         virtual bool isBlock() const { return false; }
+        virtual bool isFuncDeclNode() const { return false; }
 
     protected:
         StatementNode* m_next;
@@ -1715,6 +1716,7 @@ namespace JSC {
     public:
         FuncDeclNode(const JSTokenLocation&, const Identifier&, FunctionBodyNode*, const SourceCode&, ParameterNode* = 0);
 
+        virtual bool isFuncDeclNode() const override { return true; }
         FunctionBodyNode* body() { return m_body; }
 
     private:

@@ -1769,7 +1769,7 @@ inline StatementNode* BlockNode::lastStatement() const
     return m_statements ? m_statements->lastStatement() : 0;
 }
 
-inline StatementNode* BlockNode::singleStatement() const
+StatementNode* BlockNode::singleStatement() const
 {
     return m_statements ? m_statements->singleStatement() : 0;
 }
