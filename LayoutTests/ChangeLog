@@ -1,3 +1,200 @@
+2015-03-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        __defineGetter__/__defineSetter__ should throw exceptions
+        https://bugs.webkit.org/show_bug.cgi?id=142934
+
+        Reviewed by Geoffrey Garen.
+
+        * js/property-getters-and-setters-expected.txt:
+        * js/script-tests/property-getters-and-setters.js:
+
+2015-03-23  Anders Carlsson  <andersca@apple.com>
+
+        Make platform/mac-wk2/plugins/destroy-during-async-npp-new.html work again
+        https://bugs.webkit.org/show_bug.cgi?id=133692
+        rdar://problem/17255947
+
+        Reviewed by Alexey Proskuryakov.
+
+        * platform/mac-wk2/TestExpectations:
+        Unskip test.
+
+2015-03-23  Alexey Proskuryakov  <ap@apple.com>
+
+        accessibility/textarea-selected-text-range.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=142976
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2015-03-22  Benjamin Poulain  <benjamin@webkit.org>
+
+        CSS Selectors: fix attribute case-insensitive matching of Contain and List
+        https://bugs.webkit.org/show_bug.cgi?id=142932
+
+        Reviewed by Darin Adler.
+
+        * fast/selectors/attribute-contains-value-matching-is-ascii-case-insensitive-expected.txt: Added.
+        * fast/selectors/attribute-contains-value-matching-is-ascii-case-insensitive.html: Added.
+        * fast/selectors/attribute-list-value-matching-is-ascii-case-insensitive-expected.txt: Added.
+        * fast/selectors/attribute-list-value-matching-is-ascii-case-insensitive.html: Added.
+
+2015-03-22  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Update new flaky tests and remove duplicated failure test.
+
+        Unreviewed EFL gardening.
+
+        * platform/efl/TestExpectations:
+        Remove duplicted attachment tests, and add new flaky tests regarding svg clip-path, pattern scale.
+
+2015-03-22  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Unreviewed EFL gradening on 23th Mar.
+
+        Skip attachment tests, unskip passing tests related with writing, webaudio.
+        Add new flaky tests.
+
+        * platform/efl/TestExpectations:
+
+2015-03-21  Dean Jackson  <dino@apple.com>
+
+        Remove the prefix for CSS Transforms
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        <rdar://problem/11568151>
+
+        Reviewed by Simon Fraser.
+
+        Convert the helper functions for transforms to use the unprefixed
+        form, and copy some tests to make sure the prefixed form still works.
+
+        * fast/css/getComputedStyle/computed-style-expected.txt:
+        * fast/css/getComputedStyle/computed-style-without-renderer-expected.txt:
+        * fast/css/getComputedStyle/resources/property-names.js:
+        * svg/css/getComputedStyle-basic-expected.txt:
+        * transforms/2d/computed-style-origin-expected.txt:
+        * transforms/2d/computed-style-origin.html:
+        * transforms/2d/resources/prefixed-transform-test-utils.js: Copied from LayoutTests/transforms/2d/resources/transform-test-utils.js.
+        (floatingPointEqual):
+        (compareMatrices):
+        (testTransforms):
+        * transforms/2d/resources/transform-test-utils.js:
+        (testTransforms):
+        * transforms/2d/transform-2d-prefixed-expected.txt: Added.
+        * transforms/2d/transform-2d-prefixed.html: Added.
+        * transforms/3d/general/prefixed-3dtransform-values-expected.txt: Added.
+        * transforms/3d/general/prefixed-3dtransform-values.html: Added.
+        * transitions/transition-end-event-multiple-04-expected.txt:
+        * transitions/transition-end-event-multiple-04.html:
+        * transitions/transition-end-event-transform-expected.txt:
+        * transitions/transition-end-event-transform.html:
+
+2015-03-21  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Fix a typo in Parser error message
+        https://bugs.webkit.org/show_bug.cgi?id=142942
+
+        Reviewed by Alexey Proskuryakov.
+
+        * js/class-syntax-declaration-expected.txt:
+        * js/class-syntax-expression-expected.txt:
+        * js/class-syntax-super-expected.txt:
+        * js/script-tests/class-syntax-declaration.js:
+        * js/script-tests/class-syntax-expression.js:
+        * js/script-tests/class-syntax-super.js:
+
+2015-03-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Try to get debug bots green.
+
+        * platform/win/TestExpectations:
+
+2015-03-21  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Computed Property names should allow only AssignmentExpressions not any Expression
+        https://bugs.webkit.org/show_bug.cgi?id=142902
+
+        Reviewed by Ryosuke Niwa.
+
+        * js/basic-computed-property-name-expected.txt:
+        * js/object-literal-computed-methods-expected.txt:
+        * js/script-tests/basic-computed-property-name.js:
+        (runTest.runTest.runTest.runTest.runTest.runTest.runTest.runTestThrow):
+        * js/script-tests/object-literal-computed-methods.js:
+        Test that comma expressions are not allowed in computed property/method names.
+
+2015-03-21  Benjamin Poulain  <bpoulain@apple.com>
+
+        Import the blink test fast/css/currentcolor-strict-mode.html
+        https://bugs.webkit.org/show_bug.cgi?id=142838
+
+        Reviewed by Darin Adler.
+
+        * fast/css/currentcolor-strict-mode-expected.html: Added.
+        * fast/css/currentcolor-strict-mode.html: Added.
+
+2015-03-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181824.
+        https://bugs.webkit.org/show_bug.cgi?id=142935
+
+        Broke Windows build (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Remove the prefix for CSS Transforms"
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        http://trac.webkit.org/changeset/181824
+
+2015-03-20  Dean Jackson  <dino@apple.com>
+
+        Remove the prefix for CSS Transforms
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        <rdar://problem/11568151>
+
+        Reviewed by Simon Fraser.
+
+        Convert the helper functions for transforms to use the unprefixed
+        form, and copy some tests to make sure the prefixed form still works.
+
+        * fast/css/getComputedStyle/computed-style-expected.txt:
+        * fast/css/getComputedStyle/computed-style-without-renderer-expected.txt:
+        * fast/css/getComputedStyle/resources/property-names.js:
+        * svg/css/getComputedStyle-basic-expected.txt:
+        * transforms/2d/computed-style-origin-expected.txt:
+        * transforms/2d/computed-style-origin.html:
+        * transforms/2d/resources/prefixed-transform-test-utils.js: Copied from LayoutTests/transforms/2d/resources/transform-test-utils.js.
+        (floatingPointEqual):
+        (compareMatrices):
+        (testTransforms):
+        * transforms/2d/resources/transform-test-utils.js:
+        (testTransforms):
+        * transforms/2d/transform-2d-prefixed-expected.txt: Added.
+        * transforms/2d/transform-2d-prefixed.html: Added.
+        * transforms/3d/general/prefixed-3dtransform-values-expected.txt: Added.
+        * transforms/3d/general/prefixed-3dtransform-values.html: Added.
+        * transitions/transition-end-event-multiple-04-expected.txt:
+        * transitions/transition-end-event-multiple-04.html:
+        * transitions/transition-end-event-transform-expected.txt:
+        * transitions/transition-end-event-transform.html:
+
+2015-03-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Additional debug assertion documentation.
+
+        * platform/win/TestExpectations:
+
+2015-03-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] More debug assertions. Almost there!
+
+        * platform/win/TestExpectations:
+
+2015-03-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Attempting to get EWS green.
+
+        * platform/win/TestExpectations:
+
 2015-03-19  Geoffrey Garen  <ggaren@apple.com>
 
         Function.prototype.toString should not decompile the AST
