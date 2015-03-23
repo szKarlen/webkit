@@ -1,3 +1,463 @@
+2015-03-23  Alex Christensen  <achristensen@webkit.org>
+
+        [MediaFoundation] Implement seek.
+        https://bugs.webkit.org/show_bug.cgi?id=142594
+
+        Reviewed by Darin Adler.
+
+        * platform/graphics/win/MediaPlayerPrivateMediaFoundation.cpp:
+        (WebCore::MediaPlayerPrivateMediaFoundation::seeking):
+        (WebCore::MediaPlayerPrivateMediaFoundation::seekDouble):
+        (WebCore::MediaPlayerPrivateMediaFoundation::durationDouble):
+        * platform/graphics/win/MediaPlayerPrivateMediaFoundation.h:
+
+2015-03-23  Dan Bernstein  <mitz@apple.com>
+
+        Fixed the build.
+
+        * platform/graphics/cocoa/FontCocoa.mm:
+        (WebCore::Font::platformBoundsForGlyph): Switched to non-deprecated CTFontOrientation values.
+        (WebCore::Font::platformWidthForGlyph): Ditto.
+
+2015-03-23  Jer Noble  <jer.noble@apple.com>
+
+        [iOS] Accessibility crashing because MediaPlayer is laying out UI off the main thread
+        https://bugs.webkit.org/show_bug.cgi?id=142970
+
+        Reviewed by Eric Carlson.
+
+        Return early after synchronously calling to the main thread to allocate the volume
+        view, to avoid re-allocating the volume view again on the web thread.
+
+        * platform/audio/ios/MediaSessionManagerIOS.mm:
+        (-[WebMediaSessionHelper allocateVolumeView]):
+
+2015-03-23  Tim Horton  <timothy_horton@apple.com>
+
+        Add a share item to the link action menu
+        https://bugs.webkit.org/show_bug.cgi?id=142961
+        <rdar://problem/19198374>
+
+        Reviewed by Beth Dakin.
+
+        * English.lproj/Localizable.strings:
+        Remove some now-unused strings.
+
+        * platform/spi/mac/NSMenuSPI.h:
+        Add some SPI.
+
+2015-03-23  David Kilzer  <ddkilzer@apple.com>
+
+        [iOS] Build fix: CoreText deprecated kCTFontSystemFontType
+
+        Fix tracked by:  <rdar://problem/20261171>
+
+        * rendering/RenderThemeIOS.mm:
+        (WebCore::RenderThemeIOS::updateCachedSystemFontDescription):
+        Add clang pragmas.
+
+2015-03-23  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed test fix.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseScrollSnapDestination): Remove new assertion.
+
+2015-03-23  Brent Fulgham  <bfulgham@apple.com>
+
+        scroll-snap-destination and scroll-snap-coordinate do not seem to work together properly
+        https://bugs.webkit.org/show_bug.cgi?id=142552
+        <rdar://problem/20114743>
+
+        Reviewed by Dean Jackson.
+
+        Revise the snap point logic as follows:
+        (1) Put the snap point destination handling in a helper function to make the rest of the code
+            easier to read.
+        (2) Make sure we always have a left-hand snap point (i.e., position 0), but don't add multiple
+            left-hand snap points.
+        (3) Create a helper function to determine if we should be working with the scroll snap 'elements'
+            behavior. We want to use this for scroll-snap-destination/scroll-snap-coordinate markup.
+        (4) Create per-element snap point offsets when using scroll-snap-destination/scroll-snap-coordinate.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseScrollSnapDestination): Add assertion to try to catch bad parser state.
+        * page/scrolling/AxisScrollSnapOffsets.cpp:
+        (WebCore::destinationOffsetForViewSize): Added helper function to consolidate logic for handling
+        destination coordinates.
+        (WebCore::updateFromStyle): Make sure a left-hand snap point is always provided.
+        (WebCore::styleUsesElements): Added helper function.
+        (WebCore::updateSnapOffsetsForScrollableArea): Revise logic to generate 'per-element' snap point
+        offsets.
+
+2015-03-23  Yoav Weiss  <yoav@yoav.ws>
+
+        Refactor ImageLoader's setting of CachedImage
+        https://bugs.webkit.org/show_bug.cgi?id=142825
+
+        Reviewed by Chris Dumez.
+
+        No new tests, since there's no functional change.
+
+        setImage and setImageWithoutConsideringPendingLoadEvent were not called with new
+        CachedImages and were not used as originally intended. That resulted in some dead code,
+        and confusion when going over the code.
+        This patch renames these methods into equivalent clearImage* methods, and deletes resulting dead code.
+
+        * html/HTMLObjectElement.cpp:
+        (WebCore::HTMLObjectElement::renderFallbackContent): Changed setImage call to clearImage.
+        * loader/ImageLoader.cpp:
+        (WebCore::ImageLoader::clearImage):
+        (WebCore::ImageLoader::clearImageWithoutConsideringPendingLoadEvent):
+        (WebCore::ImageLoader::notifyFinished):
+        (WebCore::ImageLoader::elementDidMoveToNewDocument):
+        (WebCore::ImageLoader::setImage): Deleted.
+        (WebCore::ImageLoader::setImageWithoutConsideringPendingLoadEvent): Deleted.
+        * loader/ImageLoader.h:
+
+2015-03-22  Benjamin Poulain  <benjamin@webkit.org>
+
+        CSS Selectors: fix attribute case-insensitive matching of Contain and List
+        https://bugs.webkit.org/show_bug.cgi?id=142932
+
+        Reviewed by Darin Adler.
+
+        Fix the last two attribute selectors that were using full case-insensitive
+        match:
+            -Contain ([foo*=bar]).
+            -List (foo~=bar]).
+
+        Tests: fast/selectors/attribute-contains-value-matching-is-ascii-case-insensitive.html
+               fast/selectors/attribute-list-value-matching-is-ascii-case-insensitive.html
+
+        * css/SelectorChecker.cpp:
+        (WebCore::attributeValueMatches):
+        * cssjit/SelectorCompiler.cpp:
+        (WebCore::SelectorCompiler::attributeValueContains):
+        (WebCore::SelectorCompiler::attributeValueSpaceSeparetedListContains):
+
+2015-03-22  Benjamin Poulain  <bpoulain@apple.com>
+
+        Detect when url filter pattern with groups match the empty string
+        https://bugs.webkit.org/show_bug.cgi?id=142930
+
+        Reviewed by Sam Weinig.
+
+        The previous test was only accounting for simple atoms. This patch extends
+        it to groups.
+
+        * contentextensions/URLFilterParser.cpp:
+        (WebCore::ContentExtensions::Term::quantify):
+        (WebCore::ContentExtensions::Term::matchesAtLeastOneCharacter):
+        (WebCore::ContentExtensions::GraphBuilder::finalize):
+        (WebCore::ContentExtensions::Term::quantifier): Deleted.
+
+2015-03-22  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Enable WIRELESS_PLAYBACK_TARGET for WK1
+        https://bugs.webkit.org/show_bug.cgi?id=142940
+
+        Reviewed by Sam Weinig.
+
+        * dom/Document.cpp:
+        (WebCore::Document::didChoosePlaybackTarget): const-ify the didChoosePlaybackTarget argument.
+        * dom/Document.h:
+
+        * html/HTMLMediaSession.cpp:
+        (WebCore::HTMLMediaSession::didChoosePlaybackTarget): Ditto.
+        * html/HTMLMediaSession.h:
+
+        * page/Page.cpp:
+        (WebCore::Page::didChoosePlaybackTarget):  Ditto.
+        * page/Page.h:
+
+        * platform/audio/MediaSession.h:
+        * platform/graphics/MediaPlaybackTargetPickerClient.h:
+        * platform/graphics/avfoundation/objc/MediaPlaybackTargetPickerMac.mm: 
+        (WebCore::MediaPlaybackTargetPickerMac::devicePicker):  Ditto.
+
+2015-03-22  Anders Carlsson  <andersca@apple.com>
+
+        _WKWebsiteDataStore should clear WebSQL databases
+        https://bugs.webkit.org/show_bug.cgi?id=142947
+
+        Reviewed by Sam Weinig.
+
+        * Modules/webdatabase/DatabaseTracker.cpp:
+        (WebCore::DatabaseTracker::trackerWithDatabasePath):
+        Add a hack so we can get at a tracker from the UI process.
+
+        (WebCore::DatabaseTracker::deleteDatabasesModifiedSince):
+        New function that deletes all databases modified after a given time.
+
+        * Modules/webdatabase/DatabaseTracker.h:
+        Add new members and export the ones we want to call from WebKit2.
+
+        * Modules/webdatabase/OriginLock.h:
+        Export the destructor.
+
+2015-03-21  Dean Jackson  <dino@apple.com>
+
+        Remove the prefix for CSS Transforms
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        <rdar://problem/11568151>
+
+        Reviewed by Simon Fraser.
+
+        Support the bare form of:
+        - transform
+        - transform-style
+        - transform-origin
+        - perspective
+        - perspective-origin
+
+        For transform-style, we also still differentiate the prefixed property
+        because we may want to use that as an indicator of legacy content.
+
+        This is mostly a find and replace, but with some related naming
+        changes. The DOM interface for WebKitCSSTransformValue remains
+        unchanged.
+
+        Tests: transforms/2d/transform-2d-prefixed.html
+               transforms/3d/general/prefixed-3dtransform-values.html
+
+        * bindings/js/JSCSSStyleDeclarationCustom.cpp:
+        (WebCore::propertyChangeMayRepaintNonDescendants):
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::isLayoutDependent):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::isValidKeywordPropertyAndValue):
+        (WebCore::isKeywordPropertyID):
+        (WebCore::parseTranslateTransformValue):
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseTransformOrigin):
+        (WebCore::CSSParser::parsePerspectiveOrigin):
+        * css/CSSPropertyNames.in:
+        * css/StyleProperties.cpp:
+        (WebCore::StyleProperties::getPropertyValue):
+        (WebCore::StyleProperties::asText):
+        * css/WebKitCSSMatrix.cpp:
+        (WebCore::WebKitCSSMatrix::setMatrixValue):
+        * html/track/VTTCue.cpp:
+        (WebCore::VTTCueBox::applyCSSProperties):
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::computeExtentOfAnimation):
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::PropertyWrapperAcceleratedTransform::PropertyWrapperAcceleratedTransform):
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap):
+        * page/animation/CompositeAnimation.cpp:
+        (WebCore::CompositeAnimation::computeExtentOfTransformAnimation):
+        * page/animation/ImplicitAnimation.cpp:
+        (WebCore::ImplicitAnimation::computeExtentOfTransformAnimation):
+        * page/animation/KeyframeAnimation.cpp:
+        (WebCore::KeyframeAnimation::computeExtentOfTransformAnimation):
+        (WebCore::KeyframeAnimation::validateTransformFunctionList):
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::validateTransformOperations):
+        * platform/graphics/GraphicsLayerClient.h:
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::propertyIdToString):
+        (WebCore::GraphicsLayerCA::moveOrCopyAnimations):
+        (WebCore::GraphicsLayerCA::addAnimation):
+        (WebCore::GraphicsLayerCA::isRunningTransformAnimation):
+        (WebCore::GraphicsLayerCA::createAnimationFromKeyframes):
+        (WebCore::GraphicsLayerCA::createTransformAnimationsFromKeyframes):
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::addAnimation):
+        * platform/graphics/texmap/TextureMapperAnimation.cpp:
+        (WebCore::TextureMapperAnimation::applyInternal):
+        * platform/graphics/texmap/TextureMapperLayer.cpp:
+        (WebCore::TextureMapperLayer::syncAnimations):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::selfOrAncestorHasActiveTransformAnimation):
+        (WebCore::CoordinatedGraphicsLayer::selfOrAncestorHaveNonAffineTransforms):
+        (WebCore::CoordinatedGraphicsLayer::addAnimation):
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateGeometry):
+        (WebCore::RenderLayerBacking::startAnimation):
+        (WebCore::RenderLayerBacking::startTransition):
+        (WebCore::RenderLayerBacking::graphicsLayerToCSSProperty):
+        (WebCore::RenderLayerBacking::cssToGraphicsLayerProperty):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::requiresCompositingForAnimation):
+        (WebCore::RenderLayerCompositor::isRunningTransformAnimation):
+        * svg/SVGElement.cpp:
+        (WebCore::populateAttributeNameToCSSPropertyIDMap):
+
+2015-03-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181824.
+        https://bugs.webkit.org/show_bug.cgi?id=142935
+
+        Broke Windows build (Requested by ap on #webkit).
+
+        Reverted changeset:
+
+        "Remove the prefix for CSS Transforms"
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        http://trac.webkit.org/changeset/181824
+
+2015-03-20  Dean Jackson  <dino@apple.com>
+
+        Remove the prefix for CSS Transforms
+        https://bugs.webkit.org/show_bug.cgi?id=142927
+        <rdar://problem/11568151>
+
+        Reviewed by Simon Fraser.
+
+        Support the bare form of:
+        - transform
+        - transform-style
+        - transform-origin
+        - perspective
+        - perspective-origin
+
+        For transform-style, we also still differentiate the prefixed property
+        because we may want to use that as an indicator of legacy content.
+
+        This is mostly a find and replace, but with some related naming
+        changes. The DOM interface for WebKitCSSTransformValue remains
+        unchanged.
+
+        Tests: transforms/2d/transform-2d-prefixed.html
+               transforms/3d/general/prefixed-3dtransform-values.html
+
+        * bindings/js/JSCSSStyleDeclarationCustom.cpp:
+        (WebCore::propertyChangeMayRepaintNonDescendants):
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::isLayoutDependent):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::isValidKeywordPropertyAndValue):
+        (WebCore::isKeywordPropertyID):
+        (WebCore::parseTranslateTransformValue):
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseTransformOrigin):
+        (WebCore::CSSParser::parsePerspectiveOrigin):
+        * css/CSSPropertyNames.in:
+        * css/StyleProperties.cpp:
+        (WebCore::StyleProperties::getPropertyValue):
+        (WebCore::StyleProperties::asText):
+        * css/WebKitCSSMatrix.cpp:
+        (WebCore::WebKitCSSMatrix::setMatrixValue):
+        * html/track/VTTCue.cpp:
+        (WebCore::VTTCueBox::applyCSSProperties):
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::computeExtentOfAnimation):
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::PropertyWrapperAcceleratedTransform::PropertyWrapperAcceleratedTransform):
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap):
+        * page/animation/CompositeAnimation.cpp:
+        (WebCore::CompositeAnimation::computeExtentOfTransformAnimation):
+        * page/animation/ImplicitAnimation.cpp:
+        (WebCore::ImplicitAnimation::computeExtentOfTransformAnimation):
+        * page/animation/KeyframeAnimation.cpp:
+        (WebCore::KeyframeAnimation::computeExtentOfTransformAnimation):
+        (WebCore::KeyframeAnimation::validateTransformFunctionList):
+        * platform/graphics/GraphicsLayer.cpp:
+        (WebCore::GraphicsLayer::validateTransformOperations):
+        * platform/graphics/GraphicsLayerClient.h:
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::propertyIdToString):
+        (WebCore::GraphicsLayerCA::moveOrCopyAnimations):
+        (WebCore::GraphicsLayerCA::addAnimation):
+        (WebCore::GraphicsLayerCA::isRunningTransformAnimation):
+        (WebCore::GraphicsLayerCA::createAnimationFromKeyframes):
+        (WebCore::GraphicsLayerCA::createTransformAnimationsFromKeyframes):
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+        (WebCore::GraphicsLayerTextureMapper::addAnimation):
+        * platform/graphics/texmap/TextureMapperAnimation.cpp:
+        (WebCore::TextureMapperAnimation::applyInternal):
+        * platform/graphics/texmap/TextureMapperLayer.cpp:
+        (WebCore::TextureMapperLayer::syncAnimations):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::selfOrAncestorHasActiveTransformAnimation):
+        (WebCore::CoordinatedGraphicsLayer::selfOrAncestorHaveNonAffineTransforms):
+        (WebCore::CoordinatedGraphicsLayer::addAnimation):
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateGeometry):
+        (WebCore::RenderLayerBacking::startAnimation):
+        (WebCore::RenderLayerBacking::startTransition):
+        (WebCore::RenderLayerBacking::graphicsLayerToCSSProperty):
+        (WebCore::RenderLayerBacking::cssToGraphicsLayerProperty):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::requiresCompositingForAnimation):
+        (WebCore::RenderLayerCompositor::isRunningTransformAnimation):
+        * svg/SVGElement.cpp:
+        (WebCore::populateAttributeNameToCSSPropertyIDMap):
+
+2015-03-20  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        REGRESSION (r179429): Potential Use after free in JavaScriptCore`WTF::StringImpl::ref + 83
+        https://bugs.webkit.org/show_bug.cgi?id=142410
+
+        Reviewed by Geoffrey Garen.
+
+        The same issues are found in the existing code; PropertyName does not have ownership.
+        This patch rewrite the point that should have ownership to Identifier.
+
+        * bindings/js/JSDOMWindowCustom.cpp:
+        (WebCore::JSDOMWindow::getOwnPropertySlotByIndex):
+        (WebCore::JSDOMWindow::putByIndex):
+        * bindings/js/ReadableStreamJSSource.cpp:
+        (WebCore::getInternalSlotFromObject):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateImplementation):
+        * bindings/scripts/test/JS/JSTestCustomNamedGetter.cpp:
+        (WebCore::JSTestCustomNamedGetter::getOwnPropertySlotByIndex):
+        * bindings/scripts/test/JS/JSTestEventTarget.cpp:
+        (WebCore::JSTestEventTarget::getOwnPropertySlotByIndex):
+        * bindings/scripts/test/JS/JSTestInterface.cpp:
+        (WebCore::JSTestInterface::putByIndex):
+
+2015-03-20  Simon Fraser  <simon.fraser@apple.com>
+
+        Log the slow-scrolling reasons (if any) on first commit of a ScrollingTreeFrameScrollingNodeMac
+        https://bugs.webkit.org/show_bug.cgi?id=142917
+
+        Reviewed by Beth Dakin.
+        
+        The scrollperf test would fail to detect transitions between slow and fast scrolling
+        for new pages, because there was no logging when slow-scrolling scrolling tree was
+        torn down, and a new fast-scrolling tree constructed.
+        
+        Fix by always logging the slow-scrolling reasons in the first update of the
+        ScrollingTreeFrameScrollingNodeMac, even when the slow-scrolling reasons haven't
+        changed.
+
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.h:
+        * page/scrolling/mac/ScrollingTreeFrameScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::ScrollingTreeFrameScrollingNodeMac):
+        (WebCore::ScrollingTreeFrameScrollingNodeMac::updateBeforeChildren):
+
+2015-03-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Function.prototype.toString should not decompile the AST
+        https://bugs.webkit.org/show_bug.cgi?id=142853
+
+        Reviewed by Sam Weinig.
+
+        * bindings/js/JSLazyEventListener.cpp:
+        (WebCore::JSLazyEventListener::initializeJSFunction): Adjust the line
+        number of attribute event listeners to account for the leading newline
+        now added by JavaScriptCore.
+
+        This solution is not perfect, but there are a lot of pre-existing problems
+        with line and column reporting for attribute event listeners, and this
+        preserves existing behavior with reasonable reliability.
+
+2015-03-20  Alex Christensen  <achristensen@webkit.org>
+
+        Progress towards CMake on Mac.
+        https://bugs.webkit.org/show_bug.cgi?id=136003
+
+        Reviewed by Chris Dumez.
+
+        * PlatformMac.cmake:
+        Added some directories to create forwarding headers from.
+        Generate ObjC bindings.
+
 2015-03-20  Per Arne Vollan  <peavo@outlook.com>
 
         [WinCairo] Crash when leaving page while video is playing.
