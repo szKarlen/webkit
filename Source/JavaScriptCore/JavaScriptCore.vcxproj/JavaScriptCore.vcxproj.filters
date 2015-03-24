@@ -807,6 +807,9 @@
     <ClCompile Include="..\runtime\RegExpPrototype.cpp">
       <Filter>runtime</Filter>
     </ClCompile>
+    <ClCompile Include="..\runtime\RuntimeType.cpp">
+      <Filter>runtime</Filter>
+    </ClCompile>
     <ClCompile Include="..\runtime\SamplingCounter.cpp">
       <Filter>runtime</Filter>
     </ClCompile>
@@ -2885,6 +2888,12 @@
     <ClInclude Include="..\runtime\Reject.h">
       <Filter>runtime</Filter>
     </ClInclude>
+    <ClInclude Include="..\runtime\RuntimeFlags.h">
+      <Filter>runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\runtime\RuntimeType.h">
+      <Filter>runtime</Filter>
+    </ClInclude>
     <ClInclude Include="..\runtime\SamplingCounter.h">
       <Filter>runtime</Filter>
     </ClInclude>
@@ -4222,38 +4231,6 @@
     <ClInclude Include="..\debugger\JSDebuggerBase.h">
       <Filter>debugger</Filter>
     </ClInclude>
-<<<<<<< HEAD
-    <ClInclude Include="..\API\JSDebuggerRef.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSObjectRefUnsafe.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSValueRefUnsafe.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSHeapPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSTypedArrayAPI.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSErrorRef.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSLRProcessor.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSSamplerPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSBytecodePrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSProfilerPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-=======
     <ClInclude Include="..\jit\PolymorphicCallStubRoutine.h">
       <Filter>jit</Filter>
     </ClInclude>
@@ -4264,7 +4241,6 @@
     <ClInclude Include="..\runtime\JSCatchScope.h" />
     <ClInclude Include="..\runtime\JSFunctionNameScope.h" />
     <ClInclude Include="..\runtime\MathCommon.h" />
->>>>>>> 632f8d1... Windows X86-64 should use the fixed executable allocator
   </ItemGroup>
   <ItemGroup>
     <None Include="JavaScriptCorePreLink.cmd" />

@@ -1,3 +1,130 @@
+2015-03-24  Saam Barati  <saambarati1@gmail.com>
+
+        Improve error messages in JSC
+        https://bugs.webkit.org/show_bug.cgi?id=141869
+
+        Reviewed by Geoffrey Garen.
+
+        * fast/dom/NodeList/nodelist-item-call-as-function-expected.txt:
+        * fast/dom/call-a-constructor-as-a-function-expected.txt:
+        * fast/regex/dom/cross-frame-callable-expected.txt:
+        * fast/selectors/closest-general-expected.txt:
+        * http/tests/security/xss-DENIED-window-index-assign-expected.txt:
+        * js/dom/exception-thrown-from-new-expected.txt:
+        * js/exception-for-nonobject-expected.txt:
+        * js/exception-function-apply-expected.txt: Added.
+        * js/exception-function-apply.html: Added.
+        * js/exception-in-expected.txt: Added.
+        * js/exception-in.html: Added.
+        * js/exception-instanceof-expected.txt: Added.
+        * js/exception-instanceof.html: Added.
+        * js/instance-of-immediates-expected.txt:
+        * js/script-tests/exception-function-apply.js: Added.
+        * js/script-tests/exception-in.js: Added.
+        * js/script-tests/exception-instanceof.js: Added.
+        * js/typedarray-constructors-expected.txt:
+        * platform/mac-wk2/plugins/npruntime/object-from-destroyed-plugin-expected.txt:
+        * platform/mac-wk2/plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt:
+        * platform/mac/css3/selectors3/xhtml/css3-modsel-15c-expected.txt:
+        * platform/mac/css3/selectors3/xml/css3-modsel-15c-expected.txt:
+        * plugins/npruntime/object-from-destroyed-plugin-expected.txt:
+        * plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt:
+        * plugins/npruntime/plugin-scriptable-object-invoke-default-expected.txt:
+        * sputnik/Conformance/12_Statement/12.1_Block/S12.1_A4_T1-expected.txt:
+        * sputnik/Conformance/13_Function_Definition/S13_A17_T2-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.1_The_Global_Object/S15.1_A2_T1-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/S15.2.4_A3-expected.txt:
+        * svg/dom/svgpath-out-of-bounds-getPathSeg-expected.txt:
+
+2015-03-23  Yoav Weiss  <yoav@yoav.ws>
+
+        Update empty image canvas tests and fix a related bug
+        https://bugs.webkit.org/show_bug.cgi?id=142694
+
+        Reviewed by Chris Dumez.
+
+        Tests below imported from https://github.com/w3c/web-platform-tests/tree/master/2dcontext/drawing-images-to-the-canvas
+        * canvas/philip/tests/2d.drawImage.incomplete-expected.txt: Removed.
+        * canvas/philip/tests/2d.drawImage.incomplete.emptysrc-expected.txt: Added.
+        * canvas/philip/tests/2d.drawImage.incomplete.emptysrc.html: Added.
+        * canvas/philip/tests/2d.drawImage.incomplete.html: Removed.
+        * canvas/philip/tests/2d.drawImage.incomplete.nosrc-expected.txt: Added.
+        * canvas/philip/tests/2d.drawImage.incomplete.nosrc.html: Added.
+        * canvas/philip/tests/2d.drawImage.incomplete.removedsrc-expected.txt: Added.
+        * canvas/philip/tests/2d.drawImage.incomplete.removedsrc.html: Added.
+
+        Tests below imported from https://github.com/w3c/web-platform-tests/tree/master/2dcontext/fill-and-stroke-styles
+        * canvas/philip/tests/2d.pattern.image.incomplete-expected.txt: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.empty-expected.txt: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.empty.html: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.emptysrc-expected.txt: Added.
+        * canvas/philip/tests/2d.pattern.image.incomplete.emptysrc.html: Added.
+        * canvas/philip/tests/2d.pattern.image.incomplete.html: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.omitted-expected.txt: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.omitted.html: Removed.
+        * canvas/philip/tests/2d.pattern.image.incomplete.removedsrc-expected.txt: Added.
+        This test currently fails and will be fixed in https://bugs.webkit.org/show_bug.cgi?id=142677
+        * canvas/philip/tests/2d.pattern.image.incomplete.removedsrc.html: Added.
+
+        Test below imported from https://chromium.googlesource.com/chromium/blink/+/master/LayoutTests/fast/canvas/
+        * fast/canvas/canvas-empty-image-pattern.html: Aligned with spec/Chrome.
+        * fast/canvas/canvas-empty-image-pattern-expected.txt: Aligned with spec/Chrome.
+        * TestExpectations: Added 2d.pattern.image.incomplete.removedsrc.html as an expected failure.
+
+2015-03-23  Filip Pizlo  <fpizlo@apple.com>
+
+        Move the bulk of the js/dom/const test into js/const, so that run-jsc-stress-tests runs it.
+
+        Rubber stamped by Andreas Kling and Michael Saboff.
+
+        * js/const-expected.txt: Copied from LayoutTests/js/dom/const-expected.txt.
+        * js/const.html: Copied from LayoutTests/js/dom/const.html.
+        * js/dom/const-expected.txt: Replaced.
+        * js/dom/const.html: Replaced.
+        * js/resources/const.js: Removed.
+        * js/script-tests/const.js: Copied from LayoutTests/js/resources/const.js.
+
+2015-03-23  Andy Estes  <aestes@apple.com>
+
+        [Content Filtering] Fix up a few mistakes in LayoutTests/contentfiltering/
+        https://bugs.webkit.org/show_bug.cgi?id=142991
+
+        Reviewed by Andreas Kling.
+
+        * contentfiltering/allow-after-add-data-expected.html: Added HTML5 doctype.
+        * contentfiltering/allow-after-finished-adding-data-expected.html: Ditto.
+        * contentfiltering/allow-after-response-expected.html: Ditto.
+        * contentfiltering/allow-after-unblock-request-expected.html: Ditto.
+        * contentfiltering/block-after-add-data-expected.html: Ditto.
+        * contentfiltering/block-after-finished-adding-data-expected.html: Ditto.
+        * contentfiltering/block-after-response-expected.html: Ditto.
+        * contentfiltering/block-after-unblock-request-expected.html: Ditto.
+        * contentfiltering/resources/contentfiltering.js: Added a newline at the end of the file.
+
+2015-03-23  Brady Eidson  <beidson@apple.com>
+
+        Content extensions should apply css selectors
+        https://bugs.webkit.org/show_bug.cgi?id=142604
+
+        Reviewed by Alex Christensen.
+
+        * http/tests/contentextensions/css-display-none-expected.txt:
+        * http/tests/contentextensions/css-display-none.html:
+        * http/tests/contentextensions/css-display-none.html.json:
+
+2015-03-23  Dean Jackson  <dino@apple.com>
+
+        ES7: Implement Array.prototype.includes
+        https://bugs.webkit.org/show_bug.cgi?id=142707
+
+        Reviewed by Geoffrey Garen.
+
+        * js/array-includes-expected.txt: Added.
+        * js/array-includes.html: Added.
+        * js/script-tests/array-includes.js: Added.
+        * js/script-tests/Object-getOwnPropertyNames.js: Add 'includes'.
+        * js/Object-getOwnPropertyNames-expected.txt: Add 'includes'.
+
 2015-03-23  Joseph Pecoraro  <pecoraro@apple.com>
 
         __defineGetter__/__defineSetter__ should throw exceptions

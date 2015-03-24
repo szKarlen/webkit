@@ -811,6 +811,7 @@
     <ClCompile Include="..\runtime\RegExpMatchesArray.cpp" />
     <ClCompile Include="..\runtime\RegExpObject.cpp" />
     <ClCompile Include="..\runtime\RegExpPrototype.cpp" />
+    <ClCompile Include="..\runtime\RuntimeType.cpp" />
     <ClCompile Include="..\runtime\SamplingCounter.cpp" />
     <ClCompile Include="..\runtime\SetConstructor.cpp" />
     <ClCompile Include="..\runtime\SetIteratorConstructor.cpp" />
@@ -1624,6 +1625,8 @@
     <ClInclude Include="..\runtime\RegExpObject.h" />
     <ClInclude Include="..\runtime\RegExpPrototype.h" />
     <ClInclude Include="..\runtime\Reject.h" />
+    <ClInclude Include="..\runtime\RuntimeFlags.h" />
+    <ClInclude Include="..\runtime\RuntimeType.h" />
     <ClInclude Include="..\runtime\SamplingCounter.h" />
     <ClInclude Include="..\runtime\SetConstructor.h" />
     <ClInclude Include="..\runtime\SetIteratorConstructor.h" />
