@@ -119,94 +119,92 @@ typedef const char* optionString;
     v(bool, enableFunctionDotArguments, true, nullptr) \
     \
     /* showDisassembly implies showDFGDisassembly. */ \
-    v(bool, showDisassembly, false, "dumps disassembly of all JIT compiled code upon compilation") \
-    v(bool, asyncDisassembly, false, nullptr) \
-    v(bool, showDFGDisassembly, false, "dumps disassembly of DFG function upon compilation") \
-    v(bool, showFTLDisassembly, false, "dumps disassembly of FTL function upon compilation") \
-    v(bool, showAllDFGNodes, false, nullptr) \
-    v(optionRange, bytecodeRangeToDFGCompile, 0, "bytecode size range to allow DFG compilation on, e.g. 1:100") \
-    v(optionString, dfgWhitelist, nullptr, "file with list of function signatures to allow DFG compilation on") \
-    v(bool, dumpSourceAtDFGTime, false, "dumps source code of JS function being DFG compiled") \
-    v(bool, dumpBytecodeAtDFGTime, false, "dumps bytecode of JS function being DFG compiled") \
-    v(bool, dumpGraphAfterParsing, false, nullptr) \
-    v(bool, dumpGraphAtEachPhase, false, nullptr) \
-    v(bool, verboseDFGByteCodeParsing, false, nullptr) \
-    v(bool, verboseCompilation, false, nullptr) \
-    v(bool, verboseFTLCompilation, false, nullptr) \
-    v(bool, logCompilationChanges, false, nullptr) \
-    v(bool, printEachOSRExit, false, nullptr) \
-    v(bool, validateGraph, false, nullptr) \
-    v(bool, validateGraphAtEachPhase, false, nullptr) \
-    v(bool, verboseValidationFailure, false, nullptr) \
-    v(bool, verboseOSR, false, nullptr) \
-    v(bool, verboseFTLOSRExit, false, nullptr) \
-    v(bool, verboseCallLink, false, nullptr) \
-    v(bool, verboseCompilationQueue, false, nullptr) \
-    v(bool, reportCompileTimes, false, "dumps JS function signature and the time it took to compile") \
-    v(bool, reportFTLCompileTimes, false, "dumps JS function signature and the time it took to FTL compile") \
-    v(bool, verboseCFA, false, nullptr) \
-    v(bool, verboseFTLToJSThunk, false, nullptr) \
-    v(bool, verboseFTLFailure, false, nullptr) \
-    v(bool, alwaysComputeHash, false, nullptr) \
-    v(bool, testTheFTL, false, nullptr) \
-    v(bool, verboseSanitizeStack, false, nullptr) \
-    v(bool, alwaysDoFullCollection, false, nullptr) \
-    v(bool, eagerlyUpdateTopCallFrame, false, nullptr) \
+    v(bool, showDisassembly, false) \
+    v(bool, asyncDisassembly, false) \
+    v(bool, showDFGDisassembly, false) \
+    v(bool, showFTLDisassembly, false) \
+    v(bool, showAllDFGNodes, false) \
+    v(optionRange, bytecodeRangeToDFGCompile, 0) \
+    v(optionString, dfgFunctionWhitelistFile, nullptr) \
+    v(bool, dumpBytecodeAtDFGTime, false) \
+    v(bool, dumpGraphAtEachPhase, false) \
+    v(bool, verboseDFGByteCodeParsing, false) \
+    v(bool, verboseCompilation, false) \
+    v(bool, verboseFTLCompilation, false) \
+    v(bool, logCompilationChanges, false) \
+    v(bool, printEachOSRExit, false) \
+    v(bool, validateGraph, false) \
+    v(bool, validateGraphAtEachPhase, false) \
+    v(bool, verboseValidationFailure, false) \
+    v(bool, verboseOSR, false) \
+    v(bool, verboseFTLOSRExit, false) \
+    v(bool, verboseCallLink, false) \
+    v(bool, verboseCompilationQueue, false) \
+    v(bool, reportCompileTimes, false) \
+    v(bool, reportFTLCompileTimes, false) \
+    v(bool, verboseCFA, false) \
+    v(bool, verboseFTLToJSThunk, false) \
+    v(bool, verboseFTLFailure, false) \
+    v(bool, alwaysComputeHash, false) \
+    v(bool, testTheFTL, false) \
+    v(bool, verboseSanitizeStack, false) \
+    v(bool, alwaysDoFullCollection, false) \
+    v(bool, eagerlyUpdateTopCallFrame, false) \
     \
-    v(bool, enableOSREntryToDFG, true, nullptr) \
-    v(bool, enableOSREntryToFTL, true, nullptr) \
+    v(bool, enableOSREntryToDFG, true) \
+    v(bool, enableOSREntryToFTL, true) \
     \
-    v(bool, useFTLJIT, true, "allows the FTL JIT to be used if true") \
-    v(bool, useFTLTBAA, true, nullptr) \
-    v(bool, enableLLVMFastISel, false, nullptr) \
-    v(bool, useLLVMSmallCodeModel, false, nullptr) \
-    v(bool, dumpLLVMIR, false, nullptr) \
-    v(bool, validateFTLOSRExitLiveness, false, nullptr) \
-    v(bool, llvmAlwaysFailsBeforeCompile, false, nullptr) \
-    v(bool, llvmAlwaysFailsBeforeLink, false, nullptr) \
-    v(bool, llvmSimpleOpt, true, nullptr) \
-    v(unsigned, llvmBackendOptimizationLevel, 2, nullptr) \
-    v(unsigned, llvmOptimizationLevel, 2, nullptr) \
-    v(unsigned, llvmSizeLevel, 0, nullptr) \
-    v(unsigned, llvmMaxStackSize, 128 * KB, nullptr) \
-    v(bool, llvmDisallowAVX, true, nullptr) \
-    v(bool, ftlCrashes, false, nullptr) /* fool-proof way of checking that you ended up in the FTL. ;-) */\
-    v(bool, clobberAllRegsInFTLICSlowPath, !ASSERT_DISABLED, nullptr) \
-    v(bool, assumeAllRegsInFTLICAreLive, false, nullptr) \
-    v(bool, enableAccessInlining, true, nullptr) \
-    v(bool, enablePolyvariantDevirtualization, true, nullptr) \
-    v(bool, enablePolymorphicAccessInlining, true, nullptr) \
-    v(bool, enablePolymorphicCallInlining, true, nullptr) \
-    v(unsigned, maxPolymorphicCallVariantListSize, 15, nullptr) \
-    v(unsigned, maxPolymorphicCallVariantListSizeForTopTier, 5, nullptr) \
-    v(unsigned, maxPolymorphicCallVariantsForInlining, 5, nullptr) \
-    v(unsigned, frequentCallThreshold, 2, nullptr) \
-    v(double, minimumCallToKnownRate, 0.51, nullptr) \
-    v(bool, optimizeNativeCalls, false, nullptr) \
-    v(bool, enableObjectAllocationSinking, true, nullptr) \
+    v(bool, useFTLJIT, true) \
+    v(bool, useFTLTBAA, true) \
+    v(bool, enableLLVMFastISel, false) \
+    v(bool, useLLVMSmallCodeModel, false) \
+    v(bool, dumpLLVMIR, false) \
+    v(bool, validateFTLOSRExitLiveness, false) \
+    v(bool, llvmAlwaysFailsBeforeCompile, false) \
+    v(bool, llvmAlwaysFailsBeforeLink, false) \
+    v(bool, llvmSimpleOpt, true) \
+    v(unsigned, llvmBackendOptimizationLevel, 2) \
+    v(unsigned, llvmOptimizationLevel, 2) \
+    v(unsigned, llvmSizeLevel, 0) \
+    v(unsigned, llvmMaxStackSize, 128 * KB) \
+    v(bool, llvmDisallowAVX, true) \
+    v(bool, ftlCrashes, false) /* fool-proof way of checking that you ended up in the FTL. ;-) */\
+    v(bool, clobberAllRegsInFTLICSlowPath, !ASSERT_DISABLED) \
+    v(bool, assumeAllRegsInFTLICAreLive, false) \
+    v(bool, enableAccessInlining, true) \
+    v(bool, enablePolyvariantDevirtualization, true) \
+    v(bool, enablePolymorphicAccessInlining, true) \
+    v(bool, enablePolymorphicCallInlining, true) \
+    v(unsigned, maxPolymorphicCallVariantListSize, 15) \
+    v(unsigned, maxPolymorphicCallVariantListSizeForTopTier, 5) \
+    v(unsigned, maxPolymorphicCallVariantsForInlining, 5) \
+    v(unsigned, frequentCallThreshold, 2) \
+    v(double, minimumCallToKnownRate, 0.51) \
+    v(bool, optimizeNativeCalls, false) \
+    v(bool, enableObjectAllocationSinking, true) \
     \
-    v(bool, enableConcurrentJIT, true, "allows the DFG / FTL compilation in threads other than the executing JS thread") \
-    v(unsigned, numberOfDFGCompilerThreads, computeNumberOfWorkerThreads(2, 2) - 1, nullptr) \
-    v(unsigned, numberOfFTLCompilerThreads, computeNumberOfWorkerThreads(8, 2) - 1, nullptr) \
-    v(int32, priorityDeltaOfDFGCompilerThreads, computePriorityDeltaOfWorkerThreads(-1, 0), nullptr) \
-    v(int32, priorityDeltaOfFTLCompilerThreads, computePriorityDeltaOfWorkerThreads(-2, 0), nullptr) \
+    v(bool, enableConcurrentJIT, true) \
+    v(unsigned, numberOfDFGCompilerThreads, computeNumberOfWorkerThreads(2, 2) - 1) \
+    v(unsigned, numberOfFTLCompilerThreads, computeNumberOfWorkerThreads(8, 2) - 1) \
+    v(int32, priorityDeltaOfDFGCompilerThreads, computePriorityDeltaOfWorkerThreads(-1, 0)) \
+    v(int32, priorityDeltaOfFTLCompilerThreads, computePriorityDeltaOfWorkerThreads(-2, 0)) \
     \
-    v(bool, enableProfiler, false, nullptr) \
+    v(bool, enableProfiler, false) \
     \
-    v(bool, forceUDis86Disassembler, false, nullptr) \
-    v(bool, forceLLVMDisassembler, false, nullptr) \
+    v(bool, forceUDis86Disassembler, false) \
+    v(bool, forceLLVMDisassembler, false) \
     \
-    v(bool, enableArchitectureSpecificOptimizations, true, nullptr) \
+    v(bool, enableArchitectureSpecificOptimizations, true) \
     \
-    v(bool, breakOnThrow, false, nullptr) \
+    v(bool, breakOnThrow, false) \
     \
-    v(unsigned, maximumOptimizationCandidateInstructionCount, 100000, nullptr) \
+    v(unsigned, maximumOptimizationCandidateInstructionCount, 100000) \
     \
-    v(unsigned, maximumFunctionForCallInlineCandidateInstructionCount, 180, nullptr) \
-    v(unsigned, maximumFunctionForClosureCallInlineCandidateInstructionCount, 100, nullptr) \
-    v(unsigned, maximumFunctionForConstructInlineCandidateInstructionCount, 100, nullptr) \
+    v(unsigned, maximumFunctionForCallInlineCandidateInstructionCount, 180) \
+    v(unsigned, maximumFunctionForClosureCallInlineCandidateInstructionCount, 100) \
+    v(unsigned, maximumFunctionForConstructInlineCandidateInstructionCount, 100) \
     \
-    v(unsigned, maximumFTLCandidateInstructionCount, 20000, nullptr) \
+    v(unsigned, maximumFTLCandidateInstructionCount, 20000) \
     \
     /* Depth of inline stack, so 1 = no inlining, 2 = one level, etc. */ \
     v(unsigned, maximumInliningDepth, 5, "maximum allowed inlining depth.  Depth of 1 means no inlining") \
