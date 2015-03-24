@@ -1825,7 +1825,7 @@ int main(int argc, char* argv[])
     }
 
 #if OS(DARWIN)
-    failed = testExecutionTimeLimit(&context) || failed;
+    failed = testExecutionTimeLimit() || failed;
 #endif /* OS(DARWIN) */
 
     // Clear out local variables pointing at JSObjectRefs to allow their values to be collected
