@@ -15266,8 +15266,8 @@
     <ClInclude Include="..\rendering\RenderLayerMaskImageInfo.h">
       <Filter>rendering</Filter>
     </ClInclude>
-    <ClInclude Include="..\css\WebKitCSSResourceValue.h">
-      <Filter>css</Filter>
+    <ClInclude Include="..\html\canvas\WebGLVertexArrayObjectBase.h">
+      <Filter>html\canvas</Filter>
     </ClInclude>
     <ClInclude Include="..\loader\cache\CacheValidation.h" />
     <ClInclude Include="..\html\HTMLWBRElement.h" />
