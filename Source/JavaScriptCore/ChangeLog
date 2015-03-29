@@ -1,3 +1,190 @@
+2015-03-29  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        [Win] Allow building JavaScriptCore without Cygwin
+        https://bugs.webkit.org/show_bug.cgi?id=143189
+
+        Reviewed by Brent Fulgham.
+
+        Paths like /usr/bin/ don't exist on Windows.
+        Hashbangs don't work on Windows. Instead we must explicitly call the executable.
+        Prefixing commands with environment variables doesn't work on Windows.
+        Windows doesn't have 'cmp'
+        Windows uses 'del' instead of 'rm'
+        Windows uses 'type NUL' intead of 'touch'
+
+        * DerivedSources.make:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.pl:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.pl:
+        * JavaScriptCore.vcxproj/build-generated-files.pl:
+        * UpdateContents.py: Copied from Source/JavaScriptCore/JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.pl.
+
+2015-03-28  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Clean up JavaScriptCore/builtins
+        https://bugs.webkit.org/show_bug.cgi?id=143177
+
+        Reviewed by Ryosuke Niwa.
+
+        * builtins/ArrayConstructor.js:
+        (from):
+        - We can compare to undefined instead of using a typeof undefined check.
+        - Converge on double quoted strings everywhere.
+
+        * builtins/ArrayIterator.prototype.js:
+        (next):
+        * builtins/StringIterator.prototype.js:
+        (next):
+        - Use shorthand object construction to avoid duplication.
+        - Improve grammar in error messages.
+
+        * tests/stress/array-iterators-next-with-call.js:
+        * tests/stress/string-iterators.js:
+        - Update for new error message strings.
+
+2015-03-28  Saam Barati  <saambarati1@gmail.com>
+
+        Web Inspector: ES6: Better support for Symbol types in Type Profiler
+        https://bugs.webkit.org/show_bug.cgi?id=141257
+
+        Reviewed by Joseph Pecoraro.
+
+        ES6 introduces the new primitive type Symbol. This patch makes JSC's 
+        type profiler support this new primitive type.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * inspector/protocol/Runtime.json:
+        * runtime/RuntimeType.cpp:
+        (JSC::runtimeTypeForValue):
+        * runtime/RuntimeType.h:
+        (JSC::runtimeTypeIsPrimitive):
+        * runtime/TypeSet.cpp:
+        (JSC::TypeSet::addTypeInformation):
+        (JSC::TypeSet::dumpTypes):
+        (JSC::TypeSet::doesTypeConformTo):
+        (JSC::TypeSet::displayName):
+        (JSC::TypeSet::inspectorTypeSet):
+        (JSC::TypeSet::toJSONString):
+        * runtime/TypeSet.h:
+        (JSC::TypeSet::seenTypes):
+        * tests/typeProfiler/driver/driver.js:
+        * tests/typeProfiler/symbol.js: Added.
+        (wrapper.foo):
+        (wrapper.bar):
+        (wrapper.bar.bar.baz):
+        (wrapper):
+
+2015-03-27  Saam Barati  <saambarati1@gmail.com>
+
+        Deconstruction parameters are bound too late
+        https://bugs.webkit.org/show_bug.cgi?id=143148
+
+        Reviewed by Filip Pizlo.
+
+        Currently, a deconstruction pattern named with the same
+        name as a function will shadow the function. This is
+        wrong. It should be the other way around.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::generate):
+
+2015-03-27  Ryosuke Niwa  <rniwa@webkit.org>
+
+        parse doesn't initialize the 16-bit version of the JSC parser with defaultConstructorKind
+        https://bugs.webkit.org/show_bug.cgi?id=143170
+
+        Reviewed by Benjamin Poulain.
+
+        Assert that we never use 16-bit version of the parser to parse a default constructor
+        since both base and derived default constructors should be using a 8-bit string.
+
+        * parser/Parser.h:
+        (JSC::parse):
+
+2015-03-27  Ryosuke Niwa  <rniwa@webkit.org>
+
+        ES6 Classes: Runtime error in JIT'd class calling super() with arguments and superclass has default constructor
+        https://bugs.webkit.org/show_bug.cgi?id=142862
+
+        Reviewed by Benjamin Poulain.
+
+        Add a test that used to fail in DFG now that the bug has been fixed by r181993.
+
+        * tests/stress/class-syntax-derived-default-constructor.js: Added.
+
+2015-03-27  Michael Saboff  <msaboff@apple.com>
+
+        load8Signed() and load16Signed() should be renamed to avoid confusion
+        https://bugs.webkit.org/show_bug.cgi?id=143168
+
+        Reviewed by Benjamin Poulain.
+
+        Renamed load8Signed() to load8SignedExtendTo32() and load16Signed() to load16SignedExtendTo32().
+
+        * assembler/MacroAssemblerARM.h:
+        (JSC::MacroAssemblerARM::load8SignedExtendTo32):
+        (JSC::MacroAssemblerARM::load16SignedExtendTo32):
+        (JSC::MacroAssemblerARM::load8Signed): Deleted.
+        (JSC::MacroAssemblerARM::load16Signed): Deleted.
+        * assembler/MacroAssemblerARM64.h:
+        (JSC::MacroAssemblerARM64::load16SignedExtendTo32):
+        (JSC::MacroAssemblerARM64::load8SignedExtendTo32):
+        (JSC::MacroAssemblerARM64::load16Signed): Deleted.
+        (JSC::MacroAssemblerARM64::load8Signed): Deleted.
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::load16SignedExtendTo32):
+        (JSC::MacroAssemblerARMv7::load8SignedExtendTo32):
+        (JSC::MacroAssemblerARMv7::load16Signed): Deleted.
+        (JSC::MacroAssemblerARMv7::load8Signed): Deleted.
+        * assembler/MacroAssemblerMIPS.h:
+        (JSC::MacroAssemblerMIPS::load8SignedExtendTo32):
+        (JSC::MacroAssemblerMIPS::load16SignedExtendTo32):
+        (JSC::MacroAssemblerMIPS::load8Signed): Deleted.
+        (JSC::MacroAssemblerMIPS::load16Signed): Deleted.
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::load8SignedExtendTo32):
+        (JSC::MacroAssemblerSH4::load8):
+        (JSC::MacroAssemblerSH4::load16SignedExtendTo32):
+        (JSC::MacroAssemblerSH4::load16):
+        (JSC::MacroAssemblerSH4::load8Signed): Deleted.
+        (JSC::MacroAssemblerSH4::load16Signed): Deleted.
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::load8SignedExtendTo32):
+        (JSC::MacroAssemblerX86Common::load16SignedExtendTo32):
+        (JSC::MacroAssemblerX86Common::load8Signed): Deleted.
+        (JSC::MacroAssemblerX86Common::load16Signed): Deleted.
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnIntTypedArray):
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitIntTypedArrayGetByVal):
+
+2015-03-27  Michael Saboff  <msaboff@apple.com>
+
+        Fix flakey dfg-int8array.js and dfg-int16array.js tests for ARM64
+        https://bugs.webkit.org/show_bug.cgi?id=138390
+
+        Reviewed by Mark Lam.
+
+        Changed load8Signed() and load16Signed() to only sign extend the loaded value to 32 bits
+        instead of 64 bits.  This is what X86-64 does.
+
+        * assembler/MacroAssemblerARM64.h:
+        (JSC::MacroAssemblerARM64::load16Signed):
+        (JSC::MacroAssemblerARM64::load8Signed):
+
+2015-03-27  Saam Barati  <saambarati1@gmail.com>
+
+        Add back previously broken assert from bug 141869
+        https://bugs.webkit.org/show_bug.cgi?id=143005
+
+        Reviewed by Michael Saboff.
+
+        * runtime/ExceptionHelpers.cpp:
+        (JSC::invalidParameterInSourceAppender):
+
 2015-03-26  Geoffrey Garen  <ggaren@apple.com>
 
         Make some more objects use FastMalloc

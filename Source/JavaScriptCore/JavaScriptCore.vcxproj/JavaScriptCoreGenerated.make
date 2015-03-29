@@ -1,7 +1,7 @@
 all:
-    touch "%ConfigurationBuildDir%\buildfailed"
-    perl build-generated-files.pl "%ConfigurationBuildDir%" "$(WEBKIT_LIBRARIES)" "%PlatformArchitecture%"
-    copy-files.cmd
+    @type NUL > "%ConfigurationBuildDir%\buildfailed"
+    @perl build-generated-files.pl "%ConfigurationBuildDir%" "$(WEBKIT_LIBRARIES)" "%PlatformArchitecture%"
+    @copy-files.cmd
 
     -del "%ConfigurationBuildDir%\include\private\JavaScriptCore\stdbool.h" "%ConfigurationBuildDir%\include\private\JavaScriptCore\stdint.h"
     -del "%ConfigurationBuildDir%\buildfailed"
