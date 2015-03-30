@@ -78,6 +78,8 @@ MediaPlayerPrivateMediaFoundation::~MediaPlayerPrivateMediaFoundation()
     notifyDeleted();
     destroyVideoWindow();
     endSession();
+    cancelCallOnMainThread(onTopologySetCallback, this);
+    cancelCallOnMainThread(onCreatedMediaSourceCallback, this);
 }
 
 PassOwnPtr<MediaPlayerPrivateInterface> MediaPlayerPrivateMediaFoundation::create(MediaPlayer* player)
@@ -344,9 +346,7 @@ bool MediaPlayerPrivateMediaFoundation::endCreatedMediaSource(IMFAsyncResult* as
     hr = asyncResult->GetStatus();
     m_loadingProgress = SUCCEEDED(hr);
 
-    callOnMainThread([this] {
-        onCreatedMediaSource();
-    });
+    callOnMainThread(onCreatedMediaSourceCallback, this);
 
     return true;
 }
@@ -371,9 +371,7 @@ bool MediaPlayerPrivateMediaFoundation::endGetEvent(IMFAsyncResult* asyncResult)
 
     switch (mediaEventType) {
     case MESessionTopologySet:
-        callOnMainThread([this] {
-            onTopologySet();
-        });
+        callOnMainThread(onTopologySetCallback, this);
         break;
 
     case MESessionClosed:
@@ -647,6 +645,18 @@ void MediaPlayerPrivateMediaFoundation::onTopologySet()
 
     play();
     m_player->playbackStateChanged();
+}
+
+void MediaPlayerPrivateMediaFoundation::onCreatedMediaSourceCallback(void* context)
+{
+    MediaPlayerPrivateMediaFoundation* mediaPlayer = static_cast<MediaPlayerPrivateMediaFoundation*>(context);
+    mediaPlayer->onCreatedMediaSource();
+}
+
+void MediaPlayerPrivateMediaFoundation::onTopologySetCallback(void* context)
+{
+    MediaPlayerPrivateMediaFoundation* mediaPlayer = static_cast<MediaPlayerPrivateMediaFoundation*>(context);
+    mediaPlayer->onTopologySet();
 }
 
 MediaPlayerPrivateMediaFoundation::AsyncCallback::AsyncCallback(MediaPlayerPrivateMediaFoundation* mediaPlayer, bool event)

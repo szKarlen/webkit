@@ -111,6 +111,8 @@ private:
 
     void onCreatedMediaSource();
     void onTopologySet();
+    static void onCreatedMediaSourceCallback(void* context);
+    static void onTopologySetCallback(void* context);
 
     LPCWSTR registerVideoWindowClass();
     void createVideoWindow();
