@@ -341,7 +341,7 @@ JSObject* ScriptExecutable::prepareForExecutionImpl(
 
 const ClassInfo EvalExecutable::s_info = { "EvalExecutable", &ScriptExecutable::s_info, 0, CREATE_METHOD_TABLE(EvalExecutable) };
 
-EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source, bool isInStrictContext) 
+EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source, bool isInStrictContext, ThisTDZMode thisTDZMode)
 {
     JSGlobalObject* globalObject = exec->lexicalGlobalObject();
     if (!globalObject->evalEnabled()) {
@@ -352,7 +352,7 @@ EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source
     EvalExecutable* executable = new (NotNull, allocateCell<EvalExecutable>(*exec->heap())) EvalExecutable(exec, source, isInStrictContext);
     executable->finishCreation(exec->vm());
 
-    UnlinkedEvalCodeBlock* unlinkedEvalCode = globalObject->createEvalCodeBlock(exec, executable);
+    UnlinkedEvalCodeBlock* unlinkedEvalCode = globalObject->createEvalCodeBlock(exec, executable, thisTDZMode);
     if (!unlinkedEvalCode)
         return 0;
 

@@ -190,7 +190,11 @@ void Parser<LexerType>::logError(bool shouldPrintToken, const A& value1, const B
 }
 
 template <typename LexerType>
-Parser<LexerType>::Parser(VM* vm, const SourceCode& source, FunctionParameters* parameters, const Identifier& name, JSParserStrictness strictness, JSParserMode parserMode, ConstructorKind defaultConstructorKind)
+Parser<LexerType>::Parser(
+    VM* vm, const SourceCode& source, FunctionParameters* parameters, 
+    const Identifier& name, JSParserBuiltinMode builtinMode, 
+    JSParserStrictMode strictMode, JSParserCodeType codeType, 
+    ConstructorKind defaultConstructorKind, ThisTDZMode thisTDZMode)
     : m_vm(vm)
     , m_source(&source)
     , m_hasStackOverflow(false)
@@ -205,6 +209,7 @@ Parser<LexerType>::Parser(VM* vm, const SourceCode& source, FunctionParameters* 
     , m_sourceElements(0)
     , m_parsingBuiltin(strictness == JSParseBuiltin)
     , m_defaultConstructorKind(defaultConstructorKind)
+    , m_thisTDZMode(thisTDZMode)
 {
     m_lexer = std::make_unique<LexerType>(vm, strictness);
     m_lexer->setCode(source, &m_parserArena);
@@ -1304,12 +1309,6 @@ template <class TreeBuilder> bool Parser<LexerType>::parseFunctionInfo(TreeBuild
     }
     consumeOrFail(CLOSEPAREN, "Expected a ')' or a ',' after a parameter declaration");
     matchOrFail(OPENBRACE, "Expected an opening '{' at the start of a ", stringForFunctionMode(mode), " body");
-<<<<<<< HEAD
-    
-    openBraceOffset = m_token.m_data.offset;
-    bodyStartLine = tokenLine();
-    bodyStartColumn = m_token.m_data.offset - m_token.m_data.lineStartOffset;
-=======
 
     // BytecodeGenerator emits code to throw TypeError when a class constructor is "call"ed.
     // Set ConstructorKind to None for non-constructor methods of classes.
@@ -1323,7 +1322,6 @@ template <class TreeBuilder> bool Parser<LexerType>::parseFunctionInfo(TreeBuild
     info.openBraceOffset = m_token.m_data.offset;
     info.bodyStartLine = tokenLine();
     info.bodyStartColumn = m_token.m_data.offset - m_token.m_data.lineStartOffset;
->>>>>>> d81805e... Source/JavaScriptCore:
     JSTokenLocation startLocation(tokenLocation());
     
     // If we know about this function already, we can use the cached info and skip the parser to the end of the function.
@@ -2184,7 +2182,7 @@ template <class TreeBuilder> TreeExpression Parser<LexerType>::parsePrimaryExpre
     case THISTOKEN: {
         JSTokenLocation location(tokenLocation());
         next();
-        return context.thisExpr(location);
+        return context.thisExpr(location, m_thisTDZMode);
     }
     case IDENT: {
         JSTextPosition start = tokenStartPosition();

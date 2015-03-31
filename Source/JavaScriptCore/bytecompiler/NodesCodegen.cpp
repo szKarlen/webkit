@@ -135,6 +135,9 @@ RegisterID* RegExpNode::emitBytecode(BytecodeGenerator& generator, RegisterID* d
 
 RegisterID* ThisNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)
 {
+    if (m_shouldAlwaysEmitTDZCheck || generator.constructorKind() == ConstructorKind::Derived)
+        generator.emitTDZCheck(generator.thisRegister());
+    
     if (dst == generator.ignoredResult())
         return 0;
 

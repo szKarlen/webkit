@@ -397,8 +397,10 @@ class Parser {
     WTF_MAKE_FAST_ALLOCATED;
 
 public:
-    Parser(VM*, const SourceCode&, FunctionParameters*, const Identifier&, JSParserStrictness, JSParserMode,
-        ConstructorKind defaultConstructorKind = ConstructorKind::None);
+    Parser(
+        VM*, const SourceCode&, FunctionParameters*, const Identifier&, 
+        JSParserBuiltinMode, JSParserStrictMode, JSParserCodeType,
+        ConstructorKind defaultConstructorKind = ConstructorKind::None, ThisTDZMode = ThisTDZMode::CheckIfNeeded);
     ~Parser();
 
     template <class ParsedNode>
@@ -834,6 +836,7 @@ private:
     SourceElements* m_sourceElements;
     bool m_parsingBuiltin;
     ConstructorKind m_defaultConstructorKind;
+    ThisTDZMode m_thisTDZMode;
     DeclarationStacks::VarStack m_varDeclarations;
     DeclarationStacks::FunctionStack m_funcDeclarations;
     IdentifierSet m_capturedVariables;
@@ -946,13 +949,13 @@ std::unique_ptr<ParsedNode> parse(
     const Identifier& name, JSParserBuiltinMode builtinMode,
     JSParserStrictMode strictMode, JSParserCodeType codeType,
     ParserError& error, JSTextPosition* positionBeforeLastNewline = 0,
-    ConstructorKind defaultConstructorKind = ConstructorKind::None)
+    ConstructorKind defaultConstructorKind = ConstructorKind::None, ThisTDZMode thisTDZMode = ThisTDZMode::CheckIfNeeded)
 {
     SamplingRegion samplingRegion("Parsing");
 
     ASSERT(!source.provider()->source().isNull());
     if (source.provider()->source().is8Bit()) {
-        Parser<Lexer<LChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType, defaultConstructorKind);
+        Parser<Lexer<LChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType, defaultConstructorKind, thisTDZMode);
         std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error);
         if (positionBeforeLastNewline)
             *positionBeforeLastNewline = parser.positionBeforeLastNewline();
@@ -964,7 +967,8 @@ std::unique_ptr<ParsedNode> parse(
         }
         return result;
     }
-    Parser<Lexer<UChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType);
+    ASSERT_WITH_MESSAGE(defaultConstructorKind == ConstructorKind::None, "BuiltinExecutables::createDefaultConstructor should always use a 8-bit string");
+    Parser<Lexer<UChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType, defaultConstructorKind, thisTDZMode);
     std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error);
     if (positionBeforeLastNewline)
         *positionBeforeLastNewline = parser.positionBeforeLastNewline();

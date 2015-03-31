@@ -1,3 +1,139 @@
+2015-03-31  Ryosuke Niwa  <rniwa@webkit.org>
+
+        eval("this.foo") causes a crash if this had not been initialized in a derived class's constructor
+        https://bugs.webkit.org/show_bug.cgi?id=142883
+
+        Reviewed by Filip Pizlo.
+
+        The crash was caused by eval inside the constructor of a derived class not checking TDZ.
+
+        Fixed the bug by adding a parser flag that forces the TDZ check to be always emitted when accessing "this"
+        in eval inside a derived class' constructor.
+
+        * bytecode/EvalCodeCache.h:
+        (JSC::EvalCodeCache::getSlow):
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ThisNode::emitBytecode):
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::evaluate):
+        * interpreter/Interpreter.cpp:
+        (JSC::eval):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::thisExpr):
+        * parser/NodeConstructors.h:
+        (JSC::ThisNode::ThisNode):
+        * parser/Nodes.h:
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::Parser):
+        (JSC::Parser<LexerType>::parsePrimaryExpression):
+        * parser/Parser.h:
+        (JSC::parse):
+        * parser/ParserModes.h:
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::thisExpr):
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::getGlobalCodeBlock):
+        (JSC::CodeCache::getProgramCodeBlock):
+        (JSC::CodeCache::getEvalCodeBlock):
+        * runtime/CodeCache.h:
+        (JSC::SourceCodeKey::SourceCodeKey):
+        * runtime/Executable.cpp:
+        (JSC::EvalExecutable::create):
+        * runtime/Executable.h:
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::createEvalCodeBlock):
+        * runtime/JSGlobalObject.h:
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalFuncEval):
+        * tests/stress/class-syntax-no-tdz-in-eval.js: Added.
+        * tests/stress/class-syntax-tdz-in-eval.js: Added.
+
+2015-03-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r182186.
+        https://bugs.webkit.org/show_bug.cgi?id=143270
+
+        it crashes all the WebGL tests on the Debug bots (Requested by
+        dino on #webkit).
+
+        Reverted changeset:
+
+        "Web Inspector: add 2D/WebGL canvas instrumentation
+        infrastructure"
+        https://bugs.webkit.org/show_bug.cgi?id=137278
+        http://trac.webkit.org/changeset/182186
+
+2015-03-31  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Object type restrictions on a first parameter of several Object.* functions are relaxed
+        https://bugs.webkit.org/show_bug.cgi?id=142937
+
+        Reviewed by Darin Adler.
+
+        In ES6, Object type restrictions on a first parameter of several Object.* functions are relaxed.
+        In ES5 or prior, when a first parameter is not object type, these functions raise TypeError.
+        But now, several functions perform ToObject onto a non-object parameter.
+        And others behaves as if a parameter is a non-extensible ordinary object with no own properties.
+        It is described in ES6 Annex E.
+        Functions different from ES5 are following.
+
+        1. An attempt is make to coerce the argument using ToObject.
+            Object.getOwnPropertyDescriptor
+            Object.getOwnPropertyNames
+            Object.getPrototypeOf
+            Object.keys
+
+        2. Treated as if it was a non-extensible ordinary object with no own properties.
+            Object.freeze
+            Object.isExtensible
+            Object.isFrozen
+            Object.isSealed
+            Object.preventExtensions
+            Object.seal
+
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructorGetPrototypeOfFunctor::operator()):
+        (JSC::objectConstructorGetPrototypeOf):
+        (JSC::objectConstructorGetOwnPropertyDescriptor):
+        (JSC::objectConstructorGetOwnPropertyNames):
+        (JSC::objectConstructorKeys):
+        (JSC::objectConstructorSeal):
+        (JSC::objectConstructorFreeze):
+        (JSC::objectConstructorPreventExtensions):
+        (JSC::objectConstructorIsSealed):
+        (JSC::objectConstructorIsFrozen):
+        (JSC::objectConstructorIsExtensible):
+        * tests/stress/object-freeze-accept-non-object.js: Added.
+        * tests/stress/object-get-own-property-descriptor-perform-to-object.js: Added.
+        (canary):
+        * tests/stress/object-get-own-property-names-perform-to-object.js: Added.
+        (compare):
+        * tests/stress/object-get-prototype-of-perform-to-object.js: Added.
+        * tests/stress/object-is-extensible-accept-non-object.js: Added.
+        * tests/stress/object-is-frozen-accept-non-object.js: Added.
+        * tests/stress/object-is-sealed-accept-non-object.js: Added.
+        * tests/stress/object-keys-perform-to-object.js: Added.
+        (compare):
+        * tests/stress/object-prevent-extensions-accept-non-object.js: Added.
+        * tests/stress/object-seal-accept-non-object.js: Added.
+
+2015-03-31  Matt Baker  <mattbaker@apple.com>
+
+        Web Inspector: add 2D/WebGL canvas instrumentation infrastructure
+        https://bugs.webkit.org/show_bug.cgi?id=137278
+
+        Reviewed by Timothy Hatcher.
+
+        Added Canvas protocol which defines types used by InspectorCanvasAgent.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * inspector/protocol/Canvas.json: Added.
+
+        * inspector/scripts/codegen/generator.py:
+        (Generator.stylized_name_for_enum_value):
+        Added special handling for 2D (always uppercase) and WebGL (rename mapping) enum strings.
+
 2015-03-30  Ryosuke Niwa  <rniwa@webkit.org>
 
         Extending null should set __proto__ to null
