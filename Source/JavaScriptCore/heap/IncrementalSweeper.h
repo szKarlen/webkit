@@ -47,7 +47,7 @@ public:
     void addBlocksAndContinueSweeping(Vector<MarkedBlock*>&&);
 
     JS_EXPORT_PRIVATE virtual void doWork() override;
-    void sweepNextBlock();
+    bool sweepNextBlock();
     void willFinishSweeping();
 
 #if USE(CF)

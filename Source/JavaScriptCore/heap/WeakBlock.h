@@ -48,11 +48,11 @@ public:
     };
 
     struct SweepResult {
-        SweepResult();
         bool isNull() const;
 
-        bool blockIsFree;
-        FreeCell* freeList;
+        bool blockIsFree { true };
+        bool blockIsLogicallyEmpty { true };
+        FreeCell* freeList { nullptr };
     };
 
     static WeakBlock* create();
@@ -62,6 +62,7 @@ public:
     static WeakImpl* asWeakImpl(FreeCell*);
 
     bool isEmpty();
+    bool isLogicallyEmptyButNotFree() const;
 
     void sweep();
     SweepResult takeSweepResult();
@@ -85,13 +86,6 @@ private:
     WeakBlock* m_next;
     SweepResult m_sweepResult;
 };
-
-inline WeakBlock::SweepResult::SweepResult()
-    : blockIsFree(true)
-    , freeList(0)
-{
-    ASSERT(isNull());
-}
 
 inline bool WeakBlock::SweepResult::isNull() const
 {
@@ -139,6 +133,11 @@ inline void WeakBlock::addToFreeList(FreeCell** freeList, WeakImpl* weakImpl)
 inline bool WeakBlock::isEmpty()
 {
     return !m_sweepResult.isNull() && m_sweepResult.blockIsFree;
+}
+
+inline bool WeakBlock::isLogicallyEmptyButNotFree() const
+{
+    return !m_sweepResult.isNull() && !m_sweepResult.blockIsFree && m_sweepResult.blockIsLogicallyEmpty;
 }
 
 } // namespace JSC

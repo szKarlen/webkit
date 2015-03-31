@@ -238,6 +238,8 @@ public:
     void registerWeakGCMap(void* weakGCMap, std::function<void()> pruningCallback);
     void unregisterWeakGCMap(void* weakGCMap);
 
+    void addLogicallyEmptyWeakBlock(WeakBlock*);
+
 private:
     friend class CodeBlock;
     friend class CopiedBlock;
@@ -329,6 +331,9 @@ private:
     void zombifyDeadObjects();
     void markDeadObjects();
 
+    void sweepAllLogicallyEmptyWeakBlocks();
+    bool sweepNextLogicallyEmptyWeakBlock();
+
     bool shouldDoFullCollection(HeapOperation requestedCollectionType) const;
     size_t sizeAfterCollect();
 
@@ -390,7 +395,10 @@ private:
     double m_lastEdenGCLength;
     double m_lastCodeDiscardTime;
 
-    DoublyLinkedList<ExecutableBase> m_compiledCode;
+    Vector<ExecutableBase*> m_compiledCode;
+
+    Vector<WeakBlock*> m_logicallyEmptyWeakBlocks;
+    size_t m_indexOfNextLogicallyEmptyWeakBlockToSweep { WTF::notFound };
     
     RefPtr<GCActivityCallback> m_fullActivityCallback;
     RefPtr<GCActivityCallback> m_edenActivityCallback;
