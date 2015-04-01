@@ -124,7 +124,7 @@ enum RuleMatchingBehavior {
 
 class PseudoStyleRequest {
 public:
-    PseudoStyleRequest(PseudoId pseudoId, RenderScrollbar* scrollbar = 0, ScrollbarPart scrollbarPart = NoPart)
+    PseudoStyleRequest(PseudoId pseudoId, RenderScrollbar* scrollbar = nullptr, ScrollbarPart scrollbarPart = NoPart)
         : pseudoId(pseudoId)
         , scrollbarPart(scrollbarPart)
         , scrollbar(scrollbar)
@@ -586,7 +586,7 @@ class StyleResolverParentPusher {
 public:
     StyleResolverParentPusher(Element* parent)
         : m_parent(parent)
-        , m_pushedStyleResolver(0)
+        , m_pushedStyleResolver(nullptr)
     { }
     void push()
     {
