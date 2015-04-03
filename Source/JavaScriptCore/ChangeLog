@@ -1,3 +1,459 @@
+2015-04-02  Geoffrey Garen  <ggaren@apple.com>
+
+        JavaScriptCore API should support type checking for Array and Date
+        https://bugs.webkit.org/show_bug.cgi?id=143324
+
+        Reviewed by Darin Adler, Sam Weinig, Dan Bernstein.
+
+        * API/JSValue.h:
+        * API/JSValue.mm:
+        (-[JSValue isArray]):
+        (-[JSValue isDate]): Added an ObjC API.
+
+        * API/JSValueRef.cpp:
+        (JSValueIsArray):
+        (JSValueIsDate):
+        * API/JSValueRef.h: Added a C API.
+
+        * API/WebKitAvailability.h: Brought our availability macros up to date
+        and fixed a harmless bug where "10_10" translated to "10.0".
+
+        * API/tests/testapi.c:
+        (main): Added a test and corrected a pre-existing leak.
+
+        * API/tests/testapi.mm:
+        (testObjectiveCAPI): Added a test.
+
+2015-04-02  Mark Lam  <mark.lam@apple.com>
+
+        Add Options::dumpSourceAtDFGTime().
+        <https://webkit.org/b/143349>
+
+        Reviewed by Oliver Hunt, and Michael Saboff.
+
+        Sometimes, we will want to see the JS source code that we're compiling, and it
+        would be nice to be able to do this without having to jump thru a lot of hoops.
+        So, let's add a Options::dumpSourceAtDFGTime() option just like we have a
+        Options::dumpBytecodeAtDFGTime() option.
+
+        Also added versions of CodeBlock::dumpSource() and CodeBlock::dumpBytecode()
+        that explicitly take no arguments (instead of relying on the version that takes
+        the default argument).  These versions are friendlier to use when we want to call
+        them from an interactive debugging session.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpSource):
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/CodeBlock.h:
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseCodeBlock):
+        * runtime/Options.h:
+
+2015-04-02  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Clean up EnumerationMode to easily extend
+        https://bugs.webkit.org/show_bug.cgi?id=143276
+
+        Reviewed by Geoffrey Garen.
+
+        To make the followings easily,
+        1. Adding new flag Include/ExcludeSymbols in the Object.getOwnPropertySymbols patch
+        2. Make ExcludeSymbols implicitly default for the existing flags
+        we encapsulate EnumerationMode flags into EnumerationMode class.
+
+        And this class manages 2 flags. Later it will be extended to 3.
+        1. DontEnumPropertiesMode (default is Exclude)
+        2. JSObjectPropertiesMode (default is Include)
+        3. SymbolPropertiesMode (default is Exclude)
+            SymbolPropertiesMode will be added in Object.getOwnPropertySymbols patch.
+
+        This patch replaces places using ExcludeDontEnumProperties
+        to EnumerationMode() value which represents default mode.
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::JSCallbackObject<Parent>::getOwnNonIndexPropertyNames):
+        * API/JSObjectRef.cpp:
+        (JSObjectCopyPropertyNames):
+        * bindings/ScriptValue.cpp:
+        (Deprecated::jsToInspectorValue):
+        * bytecode/ObjectAllocationProfile.h:
+        (JSC::ObjectAllocationProfile::possibleDefaultPropertyCount):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+        * runtime/EnumerationMode.h:
+        (JSC::EnumerationMode::EnumerationMode):
+        (JSC::EnumerationMode::includeDontEnumProperties):
+        (JSC::EnumerationMode::includeJSObjectProperties):
+        (JSC::shouldIncludeDontEnumProperties): Deleted.
+        (JSC::shouldExcludeDontEnumProperties): Deleted.
+        (JSC::shouldIncludeJSObjectPropertyNames): Deleted.
+        (JSC::modeThatSkipsJSObject): Deleted.
+        * runtime/GenericArgumentsInlines.h:
+        (JSC::GenericArguments<Type>::getOwnPropertyNames):
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::getOwnNonIndexPropertyNames):
+        * runtime/JSArrayBuffer.cpp:
+        (JSC::JSArrayBuffer::getOwnNonIndexPropertyNames):
+        * runtime/JSArrayBufferView.cpp:
+        (JSC::JSArrayBufferView::getOwnNonIndexPropertyNames):
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::getOwnNonIndexPropertyNames):
+        * runtime/JSFunction.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::JSGenericTypedArrayView<Adaptor>::getOwnNonIndexPropertyNames):
+        * runtime/JSLexicalEnvironment.cpp:
+        (JSC::JSLexicalEnvironment::getOwnNonIndexPropertyNames):
+        * runtime/JSONObject.cpp:
+        (JSC::Stringifier::Holder::appendNextProperty):
+        (JSC::Walker::walk):
+        * runtime/JSObject.cpp:
+        (JSC::getClassPropertyNames):
+        (JSC::JSObject::getOwnPropertyNames):
+        (JSC::JSObject::getOwnNonIndexPropertyNames):
+        (JSC::JSObject::getGenericPropertyNames):
+        * runtime/JSPropertyNameEnumerator.h:
+        (JSC::propertyNameEnumerator):
+        * runtime/JSSymbolTableObject.cpp:
+        (JSC::JSSymbolTableObject::getOwnNonIndexPropertyNames):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::objectConstructorGetOwnPropertyNames):
+        (JSC::objectConstructorKeys):
+        (JSC::defineProperties):
+        (JSC::objectConstructorSeal):
+        (JSC::objectConstructorFreeze):
+        (JSC::objectConstructorIsSealed):
+        (JSC::objectConstructorIsFrozen):
+        * runtime/RegExpObject.cpp:
+        (JSC::RegExpObject::getOwnNonIndexPropertyNames):
+        (JSC::RegExpObject::getPropertyNames):
+        (JSC::RegExpObject::getGenericPropertyNames):
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::getOwnPropertyNames):
+        * runtime/Structure.cpp:
+        (JSC::Structure::getPropertyNamesFromStructure):
+
+2015-04-01  Alex Christensen  <achristensen@webkit.org>
+
+        Progress towards CMake on Windows and Mac.
+        https://bugs.webkit.org/show_bug.cgi?id=143293
+
+        Reviewed by Filip Pizlo.
+
+        * CMakeLists.txt:
+        Enabled using assembly on Windows.
+        Replaced unix commands with CMake commands.
+        * PlatformMac.cmake:
+        Tell open source builders where to find unicode headers.
+
+2015-04-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        IteratorClose should be called when jumping over the target for-of loop
+        https://bugs.webkit.org/show_bug.cgi?id=143140
+
+        Reviewed by Geoffrey Garen.
+
+        This patch fixes labeled break/continue behaviors with for-of and iterators.
+
+        1. Support IteratorClose beyond multiple loop contexts
+        Previously, IteratorClose is only executed in for-of's breakTarget().
+        However, this misses IteratorClose execution when statement roll-ups multiple control flow contexts.
+        For example,
+        outer: for (var e1 of outer) {
+            inner: for (var e2 of inner) {
+                break outer;
+            }
+        }
+        In this case, return method of inner should be called.
+        We leverage the existing system for `finally` to execute inner.return method correctly.
+        Leveraging `finally` system fixes `break`, `continue` and `return` cases.
+        `throw` case is already supported by emitting try-catch handlers in for-of.
+
+        2. Incorrect LabelScope creation is done in ForOfNode
+        ForOfNode creates duplicated LabelScope.
+        It causes infinite loop when executing the following program that contains
+        explicitly labeled for-of loop.
+        For example,
+        inner: for (var elm of array) {
+            continue inner;
+        }
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::pushFinallyContext):
+        (JSC::BytecodeGenerator::pushIteratorCloseContext):
+        (JSC::BytecodeGenerator::popFinallyContext):
+        (JSC::BytecodeGenerator::popIteratorCloseContext):
+        (JSC::BytecodeGenerator::emitComplexPopScopes):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        (JSC::BytecodeGenerator::emitIteratorClose):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForOfNode::emitBytecode):
+        * tests/stress/iterator-return-beyond-multiple-iteration-scopes.js: Added.
+        (createIterator.iterator.return):
+        (createIterator):
+        * tests/stress/raise-error-in-iterator-close.js: Added.
+        (createIterator.iterator.return):
+        (createIterator):
+
+2015-04-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement Symbol.unscopables
+        https://bugs.webkit.org/show_bug.cgi?id=142829
+
+        Reviewed by Geoffrey Garen.
+
+        This patch introduces Symbol.unscopables functionality.
+        In ES6, some generic names (like keys, values) are introduced
+        as Array's method name. And this breaks the web since some web sites
+        use like the following code.
+
+        var values = ...;
+        with (array) {
+            values;  // This values is trapped by array's method "values".
+        }
+
+        To fix this, Symbol.unscopables introduces blacklist
+        for with scope's trapping. When resolving scope,
+        if name is found in the target scope and the target scope is with scope,
+        we check Symbol.unscopables object to filter generic names.
+
+        This functionality is only active for with scopes.
+        Global scope does not have unscopables functionality.
+
+        And since
+        1) op_resolve_scope for with scope always return Dynamic resolve type,
+        2) in that case, JSScope::resolve is always used in JIT and LLInt,
+        3) the code which contains op_resolve_scope that returns Dynamic cannot be compiled with DFG and FTL,
+        to implement this functionality, we just change JSScope::resolve and no need to change JIT code.
+        So performance regression is only visible in Dynamic resolving case, and it is already much slow.
+
+        * runtime/ArrayPrototype.cpp:
+        (JSC::ArrayPrototype::finishCreation):
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::runtimeFlags):
+        * runtime/JSScope.cpp:
+        (JSC::isUnscopable):
+        (JSC::JSScope::resolve):
+        * runtime/JSScope.h:
+        (JSC::ScopeChainIterator::scope):
+        * tests/stress/global-environment-does-not-trap-unscopables.js: Added.
+        (test):
+        * tests/stress/unscopables.js: Added.
+        (test):
+        (.):
+
+2015-03-31  Ryosuke Niwa  <rniwa@webkit.org>
+
+        ES6 class syntax should allow static setters and getters
+        https://bugs.webkit.org/show_bug.cgi?id=143180
+
+        Reviewed by Filip Pizlo
+
+        Apparently I misread the spec when I initially implemented parseClass.
+        ES6 class syntax allows static getters and setters so just allow that.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseClass):
+
+2015-03-31  Filip Pizlo  <fpizlo@apple.com>
+
+        PutClosureVar CSE def() rule has a wrong base
+        https://bugs.webkit.org/show_bug.cgi?id=143280
+
+        Reviewed by Michael Saboff.
+        
+        I think that this code was incorrect in a benign way, since the base of a
+        PutClosureVar is not a JS-visible object. But it was preventing some optimizations.
+
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+
+2015-03-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r182200.
+        https://bugs.webkit.org/show_bug.cgi?id=143279
+
+        Probably causing assertion extravaganza on bots. (Requested by
+        kling on #webkit).
+
+        Reverted changeset:
+
+        "Logically empty WeakBlocks should not pin down their
+        MarkedBlocks indefinitely."
+        https://bugs.webkit.org/show_bug.cgi?id=143210
+        http://trac.webkit.org/changeset/182200
+
+2015-03-31  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Clean up Identifier factories to clarify the meaning of StringImpl*
+        https://bugs.webkit.org/show_bug.cgi?id=143146
+
+        Reviewed by Filip Pizlo.
+
+        In the a lot of places, `Identifier(VM*/ExecState*, StringImpl*)` constructor is used.
+        However, it's ambiguous because `StringImpl*` has 2 different meanings.
+        1) normal string, it is replacable with `WTFString` and
+        2) `uid`, which holds `isSymbol` information to represent Symbols.
+        So we dropped Identifier constructors for strings and instead, introduced 2 factory functions.
+        + `Identifier::fromString(VM*/ExecState*, const String&)`.
+        Just construct Identifier from strings. The symbol-ness of StringImpl* is not kept.
+        + `Identifier::fromUid(VM*/ExecState*, StringImpl*)`.
+        This function is used for 2) `uid`. So symbol-ness of `StringImpl*` is kept.
+
+        And to clean up `StringImpl` which is used as uid,
+        we introduce `StringKind` into `StringImpl`. There's 3 kinds
+        1. StringNormal (non-atomic, non-symbol)
+        2. StringAtomic (atomic, non-symbol)
+        3. StringSymbol (non-atomic, symbol)
+        They are mutually exclusive. And (atomic, symbol) case should not exist.
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::JSCallbackObject<Parent>::getOwnNonIndexPropertyNames):
+        * API/JSObjectRef.cpp:
+        (JSObjectMakeFunction):
+        * API/OpaqueJSString.cpp:
+        (OpaqueJSString::identifier):
+        * bindings/ScriptFunctionCall.cpp:
+        (Deprecated::ScriptFunctionCall::call):
+        * builtins/BuiltinExecutables.cpp:
+        (JSC::BuiltinExecutables::createExecutableInternal):
+        * builtins/BuiltinNames.h:
+        (JSC::BuiltinNames::BuiltinNames):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::emitThrowReferenceError):
+        (JSC::BytecodeGenerator::emitThrowTypeError):
+        (JSC::BytecodeGenerator::emitReadOnlyExceptionIfNeeded):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        * dfg/DFGDesiredIdentifiers.cpp:
+        (JSC::DFG::DesiredIdentifiers::reallyAdd):
+        * inspector/JSInjectedScriptHost.cpp:
+        (Inspector::JSInjectedScriptHost::functionDetails):
+        (Inspector::constructInternalProperty):
+        (Inspector::JSInjectedScriptHost::weakMapEntries):
+        (Inspector::JSInjectedScriptHost::iteratorEntries):
+        * inspector/JSInjectedScriptHostPrototype.cpp:
+        (Inspector::JSInjectedScriptHostPrototype::finishCreation):
+        * inspector/JSJavaScriptCallFramePrototype.cpp:
+        * inspector/ScriptCallStackFactory.cpp:
+        (Inspector::extractSourceInformationFromException):
+        * jit/JITOperations.cpp:
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (GlobalObject::addFunction):
+        (GlobalObject::addConstructableFunction):
+        (functionRun):
+        (runWithScripts):
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LowLevelInterpreter.asm:
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::addVar):
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseInner):
+        (JSC::Parser<LexerType>::createBindingPattern):
+        * parser/ParserArena.h:
+        (JSC::IdentifierArena::makeIdentifier):
+        (JSC::IdentifierArena::makeIdentifierLCharFromUChar):
+        (JSC::IdentifierArena::makeNumericIdentifier):
+        * runtime/ArgumentsIteratorPrototype.cpp:
+        (JSC::ArgumentsIteratorPrototype::finishCreation):
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::ArrayPrototype::finishCreation):
+        (JSC::arrayProtoFuncPush):
+        * runtime/ClonedArguments.cpp:
+        (JSC::ClonedArguments::getOwnPropertySlot):
+        * runtime/CommonIdentifiers.cpp:
+        (JSC::CommonIdentifiers::CommonIdentifiers):
+        * runtime/CommonIdentifiers.h:
+        * runtime/Error.cpp:
+        (JSC::addErrorInfo):
+        (JSC::hasErrorInfo):
+        * runtime/ExceptionHelpers.cpp:
+        (JSC::createUndefinedVariableError):
+        * runtime/GenericArgumentsInlines.h:
+        (JSC::GenericArguments<Type>::getOwnPropertySlot):
+        * runtime/Identifier.h:
+        (JSC::Identifier::isSymbol):
+        (JSC::Identifier::Identifier):
+        (JSC::Identifier::from): Deleted.
+        * runtime/IdentifierInlines.h:
+        (JSC::Identifier::Identifier):
+        (JSC::Identifier::fromUid):
+        (JSC::Identifier::fromString):
+        * runtime/JSCJSValue.cpp:
+        (JSC::JSValue::dumpInContextAssumingStructure):
+        * runtime/JSCJSValueInlines.h:
+        (JSC::JSValue::toPropertyKey):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSLexicalEnvironment.cpp:
+        (JSC::JSLexicalEnvironment::getOwnNonIndexPropertyNames):
+        * runtime/JSObject.cpp:
+        (JSC::getClassPropertyNames):
+        (JSC::JSObject::reifyStaticFunctionsForDelete):
+        * runtime/JSObject.h:
+        (JSC::makeIdentifier):
+        * runtime/JSPromiseConstructor.cpp:
+        (JSC::JSPromiseConstructorFuncRace):
+        (JSC::JSPromiseConstructorFuncAll):
+        * runtime/JSString.h:
+        (JSC::JSString::toIdentifier):
+        * runtime/JSSymbolTableObject.cpp:
+        (JSC::JSSymbolTableObject::getOwnNonIndexPropertyNames):
+        * runtime/LiteralParser.cpp:
+        (JSC::LiteralParser<CharType>::tryJSONPParse):
+        (JSC::LiteralParser<CharType>::makeIdentifier):
+        * runtime/Lookup.h:
+        (JSC::reifyStaticProperties):
+        * runtime/MapConstructor.cpp:
+        (JSC::constructMap):
+        * runtime/MapIteratorPrototype.cpp:
+        (JSC::MapIteratorPrototype::finishCreation):
+        * runtime/MapPrototype.cpp:
+        (JSC::MapPrototype::finishCreation):
+        * runtime/MathObject.cpp:
+        (JSC::MathObject::finishCreation):
+        * runtime/NumberConstructor.cpp:
+        (JSC::NumberConstructor::finishCreation):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructor::finishCreation):
+        * runtime/PrivateName.h:
+        (JSC::PrivateName::PrivateName):
+        * runtime/PropertyMapHashTable.h:
+        (JSC::PropertyTable::find):
+        (JSC::PropertyTable::get):
+        * runtime/PropertyName.h:
+        (JSC::PropertyName::PropertyName):
+        (JSC::PropertyName::publicName):
+        (JSC::PropertyName::asIndex):
+        * runtime/PropertyNameArray.cpp:
+        (JSC::PropertyNameArray::add):
+        * runtime/PropertyNameArray.h:
+        (JSC::PropertyNameArray::addKnownUnique):
+        * runtime/RegExpConstructor.cpp:
+        (JSC::RegExpConstructor::finishCreation):
+        * runtime/SetConstructor.cpp:
+        (JSC::constructSet):
+        * runtime/SetIteratorPrototype.cpp:
+        (JSC::SetIteratorPrototype::finishCreation):
+        * runtime/SetPrototype.cpp:
+        (JSC::SetPrototype::finishCreation):
+        * runtime/StringIteratorPrototype.cpp:
+        (JSC::StringIteratorPrototype::finishCreation):
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+        * runtime/Structure.cpp:
+        (JSC::Structure::getPropertyNamesFromStructure):
+        * runtime/SymbolConstructor.cpp:
+        * runtime/VM.cpp:
+        (JSC::VM::throwException):
+        * runtime/WeakMapConstructor.cpp:
+        (JSC::constructWeakMap):
+
 2015-03-31  Andreas Kling  <akling@apple.com>
 
         Logically empty WeakBlocks should not pin down their MarkedBlocks indefinitely.
