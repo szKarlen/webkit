@@ -59,6 +59,10 @@ JS_EXPORT JSValueRef JSObjectGetPropertyDirect(JSContextRef ctx, JSObjectRef obj
 
 JS_EXPORT JSValueRef JSObjectGetPropertyUnsafe(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
 
+JS_EXPORT bool JSObjectIsDate(JSContextRef ctx, JSObjectRef object);
+
+JS_EXPORT bool JSObjectIsDateUnsafe(JSContextRef ctx, JSObjectRef object);
+
 /*!
 @function
 @abstract Gets the names of an object's enumerable properties.

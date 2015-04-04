@@ -219,3 +219,23 @@ JSPropertyNameArrayRef JSObjectCopyPropertyNamesUnsafe(JSContextRef ctx, JSObjec
 
 	return propertyNames;
 }
+
+bool JSObjectIsDate(JSContextRef ctx, JSObjectRef object)
+{
+	ExecState* exec = toJS(ctx);
+	JSLockHolder locker(exec);
+
+	JSObject* jsObject = toJS(object);
+
+	auto jsGlobal = exec->lexicalGlobalObject();
+	return jsObject->inherits(jsGlobal->dateStructure()->classInfo());
+}
+
+bool JSObjectIsDateUnsafe(JSContextRef ctx, JSObjectRef object)
+{
+	ExecState* exec = toJS(ctx);
+	JSObject* jsObject = toJS(object);
+
+	auto jsGlobal = exec->lexicalGlobalObject();
+	return jsObject->inherits(jsGlobal->dateStructure()->classInfo());
+}
