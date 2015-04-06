@@ -1,3 +1,186 @@
+2015-04-06  Mark Lam  <mark.lam@apple.com>
+
+        In the 64-bit DFG and FTL, Array::Double case for HasIndexedProperty should set its result to true when all is well.
+        <https://webkit.org/b/143396>
+
+        Reviewed by Filip Pizlo.
+
+        The DFG was neglecting to set the result boolean.  The FTL was setting it with
+        an inverted value.  Both of these are now resolved.
+
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileHasIndexedProperty):
+        * tests/stress/for-in-array-mode.js: Added.
+        (.):
+        (test):
+
+2015-04-06  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] DFG and FTL should be aware of that StringConstructor behavior for symbols becomes different from ToString
+        https://bugs.webkit.org/show_bug.cgi?id=143424
+
+        Reviewed by Geoffrey Garen.
+
+        In ES6, StringConstructor behavior becomes different from ToString abstract operations in the spec. (and JSValue::toString).
+
+        ToString(symbol) throws a type error.
+        However, String(symbol) produces SymbolDescriptiveString(symbol).
+
+        So, in DFG and FTL phase, they should not inline StringConstructor to ToString.
+
+        Now, in the template literals patch, ToString DFG operation is planned to be used.
+        And current ToString behavior is aligned to the spec (and JSValue::toString) and it's better.
+        So intead of changing ToString behavior, this patch adds CallStringConstructor operation into DFG and FTL.
+        In CallStringConstructor, all behavior in DFG analysis is the same.
+        Only the difference from ToString is, when calling DFG operation functions, it calls
+        operationCallStringConstructorOnCell and operationCallStringConstructor instead of
+        operationToStringOnCell and operationToString.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGBackwardsPropagationPhase.cpp:
+        (JSC::DFG::BackwardsPropagationPhase::propagate):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleConstantInternalFunction):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        (JSC::DFG::FixupPhase::fixupToStringOrCallStringConstructor):
+        (JSC::DFG::FixupPhase::attemptToMakeFastStringAdd):
+        (JSC::DFG::FixupPhase::fixupToString): Deleted.
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileToStringOrCallStringConstructorOnCell):
+        (JSC::DFG::SpeculativeJIT::compileToStringOnCell): Deleted.
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGStructureRegistrationPhase.cpp:
+        (JSC::DFG::StructureRegistrationPhase::run):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileToStringOrCallStringConstructor):
+        (JSC::FTL::LowerDFGToLLVM::compileToString): Deleted.
+        * runtime/StringConstructor.cpp:
+        (JSC::stringConstructor):
+        (JSC::callStringConstructor):
+        * runtime/StringConstructor.h:
+        * tests/stress/symbol-and-string-constructor.js: Added.
+        (performString):
+
+2015-04-06  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Return Optional<uint32_t> from PropertyName::asIndex
+        https://bugs.webkit.org/show_bug.cgi?id=143422
+
+        Reviewed by Darin Adler.
+
+        PropertyName::asIndex returns uint32_t and use UINT_MAX as NotAnIndex.
+        But it's not obvious to callers.
+
+        This patch changes
+        1. PropertyName::asIndex() to return Optional<uint32_t> and
+        2. function name `asIndex()` to `parseIndex()`.
+        It forces callers to check the value is index or not explicitly.
+
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeFor):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitDirectPutById):
+        * jit/Repatch.cpp:
+        (JSC::emitPutTransitionStubAndGetOldStructure):
+        * jsc.cpp:
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+        * runtime/GenericArgumentsInlines.h:
+        (JSC::GenericArguments<Type>::getOwnPropertySlot):
+        (JSC::GenericArguments<Type>::put):
+        (JSC::GenericArguments<Type>::deleteProperty):
+        (JSC::GenericArguments<Type>::defineOwnProperty):
+        * runtime/Identifier.h:
+        (JSC::parseIndex):
+        (JSC::Identifier::isSymbol):
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::defineOwnProperty):
+        * runtime/JSCJSValue.cpp:
+        (JSC::JSValue::putToPrimitive):
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::JSGenericTypedArrayView<Adaptor>::getOwnPropertySlot):
+        (JSC::JSGenericTypedArrayView<Adaptor>::put):
+        (JSC::JSGenericTypedArrayView<Adaptor>::defineOwnProperty):
+        (JSC::JSGenericTypedArrayView<Adaptor>::deleteProperty):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::put):
+        (JSC::JSObject::putDirectAccessor):
+        (JSC::JSObject::putDirectCustomAccessor):
+        (JSC::JSObject::deleteProperty):
+        (JSC::JSObject::putDirectMayBeIndex):
+        (JSC::JSObject::defineOwnProperty):
+        * runtime/JSObject.h:
+        (JSC::JSObject::getOwnPropertySlot):
+        (JSC::JSObject::getPropertySlot):
+        (JSC::JSObject::putDirectInternal):
+        * runtime/JSString.cpp:
+        (JSC::JSString::getStringPropertyDescriptor):
+        * runtime/JSString.h:
+        (JSC::JSString::getStringPropertySlot):
+        * runtime/LiteralParser.cpp:
+        (JSC::LiteralParser<CharType>::parse):
+        * runtime/PropertyName.h:
+        (JSC::parseIndex):
+        (JSC::toUInt32FromCharacters): Deleted.
+        (JSC::toUInt32FromStringImpl): Deleted.
+        (JSC::PropertyName::asIndex): Deleted.
+        * runtime/PropertyNameArray.cpp:
+        (JSC::PropertyNameArray::add):
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::deleteProperty):
+        * runtime/Structure.cpp:
+        (JSC::Structure::prototypeChainMayInterceptStoreTo):
+
+2015-04-05  Andreas Kling  <akling@apple.com>
+
+        URI encoding/escaping should use efficient string building instead of calling snprintf().
+        <https://webkit.org/b/143426>
+
+        Reviewed by Gavin Barraclough.
+
+        I saw 0.5% of main thread time in snprintf() on <http://polymerlabs.github.io/benchmarks/>
+        which seemed pretty silly. This change gets that down to nothing in favor of using our
+        existing JSStringBuilder and HexNumber.h facilities.
+
+        These APIs are well-exercised by our existing test suite.
+
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::encode):
+        (JSC::globalFuncEscape):
+
+2015-04-05  Masataka Yakura  <masataka.yakura@gmail.com>
+
+        documentation for ES Promises points to the wrong one
+        https://bugs.webkit.org/show_bug.cgi?id=143263
+
+        Reviewed by Darin Adler.
+
+        * features.json:
+
 2015-04-05  Simon Fraser  <simon.fraser@apple.com>
 
         Remove "go ahead and" from comments
