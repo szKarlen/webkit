@@ -34,9 +34,10 @@
 
 namespace JSC {
 
-class WeakMapData : public JSCell {
+class WeakMapData final : public JSCell {
 public:
     typedef JSCell Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
 
     static WeakMapData* create(VM& vm)
     {
@@ -51,7 +52,6 @@ public:
     }
 
     static const bool needsDestruction = true;
-    static const bool hasImmortalStructure = true;
 
     void set(VM&, JSObject*, JSValue);
     JSValue get(JSObject*);
@@ -61,7 +61,11 @@ public:
 
     DECLARE_INFO;
 
-    static const unsigned StructureFlags = StructureIsImmortal | Base::StructureFlags;
+    typedef HashMap<JSObject*, WriteBarrier<Unknown>> MapType;
+    MapType::const_iterator begin() const { return m_map.begin(); }
+    MapType::const_iterator end() const { return m_map.end(); }
+
+    int size() const { return m_map.size(); }
 
 private:
     WeakMapData(VM&);

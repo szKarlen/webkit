@@ -41,6 +41,7 @@ class JSSymbolTableObject;
 class JSSymbolTableObject : public JSScope {
 public:
     typedef JSScope Base;
+    static const unsigned StructureFlags = Base::StructureFlags | IsEnvironmentRecord | OverridesGetPropertyNames;
     
     SymbolTable* symbolTable() const { return m_symbolTable.get(); }
     
@@ -48,9 +49,7 @@ public:
     JS_EXPORT_PRIVATE static void getOwnNonIndexPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
     
 protected:
-    static const unsigned StructureFlags = IsEnvironmentRecord | OverridesGetPropertyNames | Base::StructureFlags;
-    
-    JSSymbolTableObject(VM& vm, Structure* structure, JSScope* scope, SymbolTable* symbolTable = 0)
+    JSSymbolTableObject(VM& vm, Structure* structure, JSScope* scope)
         : Base(vm, structure, scope)
     {
         if (symbolTable)

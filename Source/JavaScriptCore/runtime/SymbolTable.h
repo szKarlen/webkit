@@ -332,9 +332,10 @@ struct SymbolTableIndexHashTraits : HashTraits<SymbolTableEntry> {
     static const bool needsDestruction = true;
 };
 
-class SymbolTable : public JSCell {
+class SymbolTable final : public JSCell {
 public:
     typedef JSCell Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
 
     typedef HashMap<RefPtr<StringImpl>, SymbolTableEntry, IdentifierRepHash, HashTraits<RefPtr<StringImpl>>, SymbolTableIndexHashTraits> Map;
     typedef HashMap<RefPtr<StringImpl>, GlobalVariableID> UniqueIDMap;
@@ -349,7 +350,6 @@ public:
         return symbolTable;
     }
     static const bool needsDestruction = true;
-    static const bool hasImmortalStructure = true;
     static void destroy(JSCell*);
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
@@ -490,9 +490,6 @@ public:
     static void visitChildren(JSCell*, SlotVisitor&);
 
     DECLARE_EXPORT_INFO;
-
-protected:
-    static const unsigned StructureFlags = StructureIsImmortal | Base::StructureFlags;
 
 private:
     class WatchpointCleanup : public UnconditionalFinalizer {

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Yusuke Suzuki <utatane.tea@gmail.com>.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,48 +24,42 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSPromiseReaction_h
-#define JSPromiseReaction_h
+#ifndef SymbolPrototype_h
+#define SymbolPrototype_h
 
-#if ENABLE(PROMISES)
-
-#include "JSCell.h"
-#include "Structure.h"
+#include "Symbol.h"
+#include "SymbolObject.h"
 
 namespace JSC {
 
-class JSPromiseDeferred;
-class Microtask;
-
-class JSPromiseReaction final : public JSCell {
+// In the ES6 spec, Symbol.prototype object is an ordinary JS object, not one of the symbol wrapper object instance.
+class SymbolPrototype : public JSDestructibleObject {
 public:
-    typedef JSCell Base;
-    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
+    typedef JSDestructibleObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot;
 
-    static JSPromiseReaction* create(VM&, JSPromiseDeferred*, JSValue);
-    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
+    static SymbolPrototype* create(VM& vm, JSGlobalObject*, Structure* structure)
     {
-        return Structure::create(vm, globalObject, prototype, TypeInfo(CellType, StructureFlags), info());
+        SymbolPrototype* prototype = new (NotNull, allocateCell<SymbolPrototype>(vm.heap)) SymbolPrototype(vm, structure);
+        prototype->finishCreation(vm);
+        return prototype;
     }
 
     DECLARE_INFO;
 
-    JSPromiseDeferred* deferred() const { return m_deferred.get(); }
-    JSValue handler() const { return m_handler.get(); }
+    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
+    {
+        return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info());
+    }
+
+protected:
+    SymbolPrototype(VM&, Structure*);
+    void finishCreation(VM&);
 
 private:
-    JSPromiseReaction(VM&);
-    void finishCreation(VM&, JSPromiseDeferred*, JSValue);
-    static void visitChildren(JSCell*, SlotVisitor&);
-
-    WriteBarrier<JSPromiseDeferred> m_deferred;
-    WriteBarrier<Unknown> m_handler;
+    static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
 };
-
-PassRefPtr<Microtask> createExecutePromiseReactionMicrotask(VM&, JSPromiseReaction*, JSValue);
 
 } // namespace JSC
 
-#endif // ENABLE(PROMISES)
-
-#endif // JSPromiseReaction_h
+#endif // SymbolPrototype_h

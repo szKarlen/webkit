@@ -85,12 +85,15 @@ enum UnlinkedFunctionKind {
     UnlinkedBuiltinFunction,
 };
 
-class UnlinkedFunctionExecutable : public JSCell {
+class UnlinkedFunctionExecutable final : public JSCell {
 public:
     friend class BuiltinExecutables;
     friend class CodeCache;
     friend class VM;
+
     typedef JSCell Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
+
     static UnlinkedFunctionExecutable* create(VM* vm, const SourceCode& source, FunctionBodyNode* node, UnlinkedFunctionKind unlinkedFunctionKind, RefPtr<SourceProvider>&& sourceOverride = nullptr)
     {
         UnlinkedFunctionExecutable* instance = new (NotNull, allocateCell<UnlinkedFunctionExecutable>(vm->heap))
@@ -154,7 +157,6 @@ public:
     bool hasCapturedVariables() const { return m_hasCapturedVariables; }
 
     static const bool needsDestruction = true;
-    static const bool hasImmortalStructure = true;
     static void destroy(JSCell*);
 
     bool isBuiltinFunction() const { return m_isBuiltinFunction; }
@@ -203,8 +205,6 @@ public:
     {
         return Structure::create(vm, globalObject, proto, TypeInfo(UnlinkedFunctionExecutableType, StructureFlags), info());
     }
-
-    static const unsigned StructureFlags = StructureIsImmortal | JSCell::StructureFlags;
 
     DECLARE_EXPORT_INFO;
 };
@@ -257,8 +257,9 @@ struct UnlinkedInstruction {
 class UnlinkedCodeBlock : public JSCell {
 public:
     typedef JSCell Base;
+    static const unsigned StructureFlags = Base::StructureFlags;
+
     static const bool needsDestruction = true;
-    static const bool hasImmortalStructure = true;
 
     enum { CallFunction, ApplyFunction };
 
@@ -592,8 +593,6 @@ private:
     Vector<size_t> m_opProfileControlFlowBytecodeOffsets;
 
 protected:
-
-    static const unsigned StructureFlags = StructureIsImmortal | Base::StructureFlags;
     static void visitChildren(JSCell*, SlotVisitor&);
 
 public:
@@ -613,7 +612,7 @@ protected:
     DECLARE_INFO;
 };
 
-class UnlinkedProgramCodeBlock : public UnlinkedGlobalCodeBlock {
+class UnlinkedProgramCodeBlock final : public UnlinkedGlobalCodeBlock {
 private:
     friend class CodeCache;
     static UnlinkedProgramCodeBlock* create(VM* vm, const ExecutableInfo& info)
@@ -625,6 +624,8 @@ private:
 
 public:
     typedef UnlinkedGlobalCodeBlock Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
+
     static void destroy(JSCell*);
 
     void addFunctionDeclaration(VM& vm, const Identifier& name, UnlinkedFunctionExecutable* functionExecutable)
@@ -663,7 +664,7 @@ public:
     DECLARE_INFO;
 };
 
-class UnlinkedEvalCodeBlock : public UnlinkedGlobalCodeBlock {
+class UnlinkedEvalCodeBlock final : public UnlinkedGlobalCodeBlock {
 private:
     friend class CodeCache;
 
@@ -676,6 +677,8 @@ private:
 
 public:
     typedef UnlinkedGlobalCodeBlock Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
+
     static void destroy(JSCell*);
 
     const Identifier& variable(unsigned index) { return m_variables[index]; }
@@ -703,8 +706,11 @@ public:
     DECLARE_INFO;
 };
 
-class UnlinkedFunctionCodeBlock : public UnlinkedCodeBlock {
+class UnlinkedFunctionCodeBlock final : public UnlinkedCodeBlock {
 public:
+    typedef UnlinkedCodeBlock Base;
+    static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
+
     static UnlinkedFunctionCodeBlock* create(VM* vm, CodeType codeType, const ExecutableInfo& info)
     {
         UnlinkedFunctionCodeBlock* instance = new (NotNull, allocateCell<UnlinkedFunctionCodeBlock>(vm->heap)) UnlinkedFunctionCodeBlock(vm, vm->unlinkedFunctionCodeBlockStructure.get(), codeType, info);
@@ -712,7 +718,6 @@ public:
         return instance;
     }
 
-    typedef UnlinkedCodeBlock Base;
     static void destroy(JSCell*);
 
 private:

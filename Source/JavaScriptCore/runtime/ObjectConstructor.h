@@ -32,6 +32,7 @@ class ObjectPrototype;
 class ObjectConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot;
 
     static ObjectConstructor* create(VM& vm, Structure* structure, ObjectPrototype* objectPrototype)
     {
@@ -50,8 +51,7 @@ public:
     }
 
 protected:
-    void finishCreation(VM&, ObjectPrototype*);
-    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | InternalFunction::StructureFlags;
+    void finishCreation(VM&, JSGlobalObject*, ObjectPrototype*);
 
 private:
     ObjectConstructor(VM&, Structure*);

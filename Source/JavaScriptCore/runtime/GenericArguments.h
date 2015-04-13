@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,53 +23,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef JSArrayBuffer_h
-#define JSArrayBuffer_h
+#ifndef GenericArguments_h
+#define GenericArguments_h
 
-#include "ArrayBuffer.h"
 #include "JSObject.h"
 
 namespace JSC {
 
-class JSArrayBuffer : public JSNonFinalObject {
+// This is a mixin for the two kinds of Arguments-class objects that arise when you say
+// "arguments" inside a function. This class doesn't show up in the JSCell inheritance hierarchy.
+template<typename Type>
+class GenericArguments : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
-    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetPropertyNames | OverridesGetOwnPropertySlot;
-    
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames;
+
 protected:
-    JSArrayBuffer(VM&, Structure*, PassRefPtr<ArrayBuffer>);
-    void finishCreation(VM&);
-    
-public:
-    JS_EXPORT_PRIVATE static JSArrayBuffer* create(VM&, Structure*, PassRefPtr<ArrayBuffer>);
-    
-    ArrayBuffer* impl() const { return m_impl; }
-    
-    static Structure* createStructure(VM&, JSGlobalObject*, JSValue prototype);
-    
-    DECLARE_EXPORT_INFO;
-    
-protected:
+    GenericArguments(VM& vm, Structure* structure)
+        : Base(vm, structure)
+    {
+    }
+
     static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
+    static bool getOwnPropertySlotByIndex(JSObject*, ExecState*, unsigned propertyName, PropertySlot&);
+    static void getOwnPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
     static void put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&);
-    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
+    static void putByIndex(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
     static bool deleteProperty(JSCell*, ExecState*, PropertyName);
+    static bool deletePropertyByIndex(JSCell*, ExecState*, unsigned propertyName);
+    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
     
-    static void getOwnNonIndexPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
-
-private:
-    ArrayBuffer* m_impl;
+    void copyToArguments(ExecState*, VirtualRegister firstElementDest, unsigned offset, unsigned length);
 };
-
-inline ArrayBuffer* toArrayBuffer(JSValue value)
-{
-    JSArrayBuffer* wrapper = jsDynamicCast<JSArrayBuffer*>(value);
-    if (!wrapper)
-        return 0;
-    return wrapper->impl();
-}
 
 } // namespace JSC
 
-#endif // JSArrayBuffer_h
+#endif // GenericArguments_h
 

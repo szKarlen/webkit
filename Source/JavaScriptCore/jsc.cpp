@@ -178,6 +178,7 @@ public:
     }
 
     typedef JSNonFinalObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags | JSC::MasqueradesAsUndefined;
 
     static Masquerader* create(VM& vm, JSGlobalObject* globalObject)
     {
@@ -194,9 +195,6 @@ public:
     }
 
     DECLARE_INFO;
-
-protected:
-    static const unsigned StructureFlags = JSC::MasqueradesAsUndefined | Base::StructureFlags;
 };
 
 class Root : public JSDestructibleObject {
@@ -254,6 +252,7 @@ public:
 
     DECLARE_INFO;
     typedef JSNonFinalObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags | JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot;
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
     {
@@ -273,8 +272,6 @@ public:
         if (delegate)
             m_delegate.set(vm, this, delegate);
     }
-
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 
     static bool getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName name, PropertySlot& slot)
     {
@@ -305,6 +302,7 @@ private:
 class RuntimeArray : public JSArray {
 public:
     typedef JSArray Base;
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames;
 
     static RuntimeArray* create(ExecState* exec)
     {
@@ -391,8 +389,6 @@ protected:
         for (size_t i = 0; i < exec->argumentCount(); i++)
             m_vector.append(exec->argument(i).toInt32(exec));
     }
-
-    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames | JSArray::StructureFlags;
 
 private:
     RuntimeArray(ExecState* exec, Structure* structure)
