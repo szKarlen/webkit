@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 2015-05-17  Benjamin Poulain  <benjamin@webkit.org>
 
         [JSC] Make StringRecursionChecker faster in the simple cases without any recursion
@@ -4602,6 +4603,8 @@
         * svg/as-list-image/svg-list-image-intrinsic-size-1-expected.html: Added.
         * svg/as-list-image/svg-list-image-intrinsic-size-1.html: Added.
 
+=======
+>>>>>>> 835e4a5... Canvas drawImage() has a security hole when the image isn't yet fully loaded.
 2015-04-13  Said Abou-Hallawa  <sabouhallawa@apple.com>
 
         Canvas drawImage() has a security hole when the image isn't yet fully loaded.
