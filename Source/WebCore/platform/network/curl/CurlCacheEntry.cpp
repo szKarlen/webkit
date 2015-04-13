@@ -271,35 +271,23 @@ void CurlCacheEntry::invalidate()
 
 bool CurlCacheEntry::parseResponseHeaders(const ResourceResponse& response)
 {
+    using namespace std::chrono;
+
+    if (response.cacheControlContainsNoCache() || response.cacheControlContainsNoStore() || !response.hasCacheValidatorFields())
+        return false;
+
     double fileTime;
     time_t fileModificationDate;
 
-    if (getFileModificationTime(m_headerFilename, fileModificationDate)) {
-        fileTime = difftime(fileModificationDate, 0);
-        fileTime *= 1000.0;
-    } else
+    if (getFileModificationTime(m_headerFilename, fileModificationDate))
+        fileTime = difftime(fileModificationDate, 0) * 1000.0;
+    else
         fileTime = currentTimeMS(); // GMT
 
-    if (response.cacheControlContainsNoCache() || response.cacheControlContainsNoStore())
-        return false;
-
-
-    double maxAge = 0;
-    bool maxAgeIsValid = false;
-
-    if (response.cacheControlContainsMustRevalidate())
-        maxAge = 0;
-    else {
-        maxAge = response.cacheControlMaxAge();
-        if (std::isnan(maxAge))
-            maxAge = 0;
-        else
-            maxAgeIsValid = true;
-    }
-
-    if (!response.hasCacheValidatorFields())
-        return false;
-
+    auto maxAge = response.cacheControlMaxAge();
+    auto lastModificationDate = response.lastModified();
+    auto responseDate = response.date();
+    auto expirationDate = response.expires();
 
     double lastModificationDate = 0;
     double responseDate = 0;
