@@ -33,7 +33,6 @@
 #include "JSCInlines.h"
 #include "SlotVisitorInlines.h"
 #include "TypeProfiler.h"
-#include "VariableWatchpointSetInlines.h"
 
 namespace JSC {
 
@@ -60,33 +59,17 @@ void SymbolTableEntry::freeFatEntrySlow()
     delete fatEntry();
 }
 
-JSValue SymbolTableEntry::inferredValue()
-{
-    if (!isFat())
-        return JSValue();
-    return fatEntry()->m_watchpoints->inferredValue();
-}
-
-void SymbolTableEntry::prepareToWatch(SymbolTable* symbolTable)
+void SymbolTableEntry::prepareToWatch()
 {
     FatEntry* entry = inflate();
     if (entry->m_watchpoints)
         return;
-    entry->m_watchpoints = adoptRef(new VariableWatchpointSet(*symbolTable));
+    entry->m_watchpoints = adoptRef(new WatchpointSet(ClearWatchpoint));
 }
 
 void SymbolTableEntry::addWatchpoint(Watchpoint* watchpoint)
 {
     fatEntry()->m_watchpoints->add(watchpoint);
-}
-
-void SymbolTableEntry::notifyWriteSlow(VM& vm, JSValue value, const FireDetail& detail)
-{
-    VariableWatchpointSet* watchpoints = fatEntry()->m_watchpoints.get();
-    if (!watchpoints)
-        return;
-    
-    watchpoints->notifyWrite(vm, value, detail);
 }
 
 SymbolTableEntry::FatEntry* SymbolTableEntry::inflateSlow()
@@ -100,45 +83,27 @@ SymbolTable::SymbolTable(VM& vm)
     : JSCell(vm, vm.symbolTableStructure.get())
     , m_parameterCountIncludingThis(0)
     , m_usesNonStrictEval(false)
-    , m_captureStart(0)
-    , m_captureEnd(0)
-    , m_functionEnteredOnce(ClearWatchpoint)
 {
 }
 
 SymbolTable::~SymbolTable() { }
 
+void SymbolTable::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    m_singletonScope.set(vm, this, InferredValue::create(vm));
+}
+
 void SymbolTable::visitChildren(JSCell* thisCell, SlotVisitor& visitor)
 {
     SymbolTable* thisSymbolTable = jsCast<SymbolTable*>(thisCell);
-    if (!thisSymbolTable->m_watchpointCleanup) {
-        thisSymbolTable->m_watchpointCleanup =
-            std::make_unique<WatchpointCleanup>(thisSymbolTable);
-    }
     
-    visitor.addUnconditionalFinalizer(thisSymbolTable->m_watchpointCleanup.get());
+    visitor.append(&thisSymbolTable->m_arguments);
+    visitor.append(&thisSymbolTable->m_singletonScope);
     
     // Save some memory. This is O(n) to rebuild and we do so on the fly.
     ConcurrentJITLocker locker(thisSymbolTable->m_lock);
     thisSymbolTable->m_localToEntry = nullptr;
-}
-
-SymbolTable::WatchpointCleanup::WatchpointCleanup(SymbolTable* symbolTable)
-    : m_symbolTable(symbolTable)
-{
-}
-
-SymbolTable::WatchpointCleanup::~WatchpointCleanup() { }
-
-void SymbolTable::WatchpointCleanup::finalizeUnconditionally()
-{
-    StringFireDetail detail("Symbol table clean-up during GC");
-    Map::iterator iter = m_symbolTable->m_map.begin();
-    Map::iterator end = m_symbolTable->m_map.end();
-    for (; iter != end; ++iter) {
-        if (VariableWatchpointSet* set = iter->value.watchpointSet())
-            set->finalizeUnconditionally(detail);
-    }
 }
 
 const SymbolTable::LocalToEntryVec& SymbolTable::localToEntry(const ConcurrentJITLocker&)

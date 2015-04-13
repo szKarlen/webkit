@@ -2774,6 +2774,188 @@ private:
         }
     }
     
+    void compileCreateActivation()
+    {
+        LValue scope = lowCell(m_node->child1());
+        SymbolTable* table = m_graph.symbolTableFor(m_node->origin.semantic);
+        Structure* structure = m_graph.globalObjectFor(m_node->origin.semantic)->activationStructure();
+        
+        if (table->singletonScope()->isStillValid()) {
+            LValue callResult = vmCall(
+                m_out.operation(operationCreateActivationDirect), m_callFrame, weakPointer(structure),
+                scope, weakPointer(table));
+            setJSValue(callResult);
+            return;
+        }
+        
+        LBasicBlock slowPath = FTL_NEW_BLOCK(m_out, ("CreateActivation slow path"));
+        LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("CreateActivation continuation"));
+        
+        LBasicBlock lastNext = m_out.insertNewBlocksBefore(slowPath);
+        
+        LValue fastObject = allocateObject<JSLexicalEnvironment>(
+            JSLexicalEnvironment::allocationSize(table), structure, m_out.intPtrZero, slowPath);
+        
+        // We don't need memory barriers since we just fast-created the activation, so the
+        // activation must be young.
+        m_out.storePtr(scope, fastObject, m_heaps.JSScope_next);
+        m_out.storePtr(weakPointer(table), fastObject, m_heaps.JSSymbolTableObject_symbolTable);
+        
+        for (unsigned i = 0; i < table->scopeSize(); ++i) {
+            m_out.store64(
+                m_out.constInt64(JSValue::encode(jsUndefined())),
+                fastObject, m_heaps.JSEnvironmentRecord_variables[i]);
+        }
+        
+        ValueFromBlock fastResult = m_out.anchor(fastObject);
+        m_out.jump(continuation);
+        
+        m_out.appendTo(slowPath, continuation);
+        LValue callResult = vmCall(
+            m_out.operation(operationCreateActivationDirect), m_callFrame, weakPointer(structure),
+            scope, weakPointer(table));
+        ValueFromBlock slowResult = m_out.anchor(callResult);
+        m_out.jump(continuation);
+        
+        m_out.appendTo(continuation, lastNext);
+        setJSValue(m_out.phi(m_out.intPtr, fastResult, slowResult));
+    }
+    
+    void compileNewFunction()
+    {
+        FunctionExecutable* executable = m_node->castOperand<FunctionExecutable*>();
+        J_JITOperation_EJscC function;
+        if (executable->singletonFunction()->isStillValid())
+            function = operationNewFunction;
+        else
+            function = operationNewFunctionWithInvalidatedReallocationWatchpoint;
+        
+        LValue result = vmCall(
+            m_out.operation(function), m_callFrame, lowCell(m_node->child1()),
+            weakPointer(executable));
+        setJSValue(result);
+    }
+    
+    void compileCreateDirectArguments()
+    {
+        // FIXME: A more effective way of dealing with the argument count and callee is to have
+        // them be explicit arguments to this node.
+        // https://bugs.webkit.org/show_bug.cgi?id=142207
+        
+        Structure* structure =
+            m_graph.globalObjectFor(m_node->origin.semantic)->directArgumentsStructure();
+        
+        unsigned minCapacity = m_graph.baselineCodeBlockFor(m_node->origin.semantic)->numParameters() - 1;
+        
+        LBasicBlock slowPath = FTL_NEW_BLOCK(m_out, ("CreateDirectArguments slow path"));
+        LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("CreateDirectArguments continuation"));
+        
+        LBasicBlock lastNext = m_out.insertNewBlocksBefore(slowPath);
+        
+        ArgumentsLength length = getArgumentsLength();
+        
+        LValue fastObject;
+        if (length.isKnown) {
+            fastObject = allocateObject<DirectArguments>(
+                DirectArguments::allocationSize(std::max(length.known, minCapacity)), structure,
+                m_out.intPtrZero, slowPath);
+        } else {
+            LValue size = m_out.add(
+                m_out.shl(length.value, m_out.constInt32(3)),
+                m_out.constInt32(DirectArguments::storageOffset()));
+            
+            size = m_out.select(
+                m_out.aboveOrEqual(length.value, m_out.constInt32(minCapacity)),
+                size, m_out.constInt32(DirectArguments::allocationSize(minCapacity)));
+            
+            fastObject = allocateVariableSizedObject<DirectArguments>(
+                size, structure, m_out.intPtrZero, slowPath);
+        }
+        
+        m_out.store32(length.value, fastObject, m_heaps.DirectArguments_length);
+        m_out.store32(m_out.constInt32(minCapacity), fastObject, m_heaps.DirectArguments_minCapacity);
+        m_out.storePtr(m_out.intPtrZero, fastObject, m_heaps.DirectArguments_overrides);
+        m_out.storePtr(getCurrentCallee(), fastObject, m_heaps.DirectArguments_callee);
+        
+        ValueFromBlock fastResult = m_out.anchor(fastObject);
+        m_out.jump(continuation);
+        
+        m_out.appendTo(slowPath, continuation);
+        LValue callResult = vmCall(
+            m_out.operation(operationCreateDirectArguments), m_callFrame, weakPointer(structure),
+            length.value, m_out.constInt32(minCapacity));
+        ValueFromBlock slowResult = m_out.anchor(callResult);
+        m_out.jump(continuation);
+        
+        m_out.appendTo(continuation, lastNext);
+        LValue result = m_out.phi(m_out.intPtr, fastResult, slowResult);
+        
+        if (length.isKnown) {
+            VirtualRegister start = AssemblyHelpers::argumentsStart(m_node->origin.semantic);
+            for (unsigned i = 0; i < std::max(length.known, minCapacity); ++i) {
+                m_out.store64(
+                    m_out.load64(addressFor(start + i)),
+                    result, m_heaps.DirectArguments_storage[i]);
+            }
+        } else {
+            LValue stackBase = getArgumentsStart();
+            
+            LBasicBlock loop = FTL_NEW_BLOCK(m_out, ("CreateDirectArguments loop body"));
+            LBasicBlock end = FTL_NEW_BLOCK(m_out, ("CreateDirectArguments loop end"));
+            
+            ValueFromBlock originalLength;
+            if (minCapacity) {
+                LValue capacity = m_out.select(
+                    m_out.aboveOrEqual(length.value, m_out.constInt32(minCapacity)),
+                    length.value,
+                    m_out.constInt32(minCapacity));
+                originalLength = m_out.anchor(m_out.zeroExtPtr(capacity));
+                m_out.jump(loop);
+            } else {
+                originalLength = m_out.anchor(m_out.zeroExtPtr(length.value));
+                m_out.branch(m_out.isNull(originalLength.value()), unsure(end), unsure(loop));
+            }
+            
+            lastNext = m_out.appendTo(loop, end);
+            LValue previousIndex = m_out.phi(m_out.intPtr, originalLength);
+            LValue index = m_out.sub(previousIndex, m_out.intPtrOne);
+            m_out.store64(
+                m_out.load64(m_out.baseIndex(m_heaps.variables, stackBase, index)),
+                m_out.baseIndex(m_heaps.DirectArguments_storage, result, index));
+            ValueFromBlock nextIndex = m_out.anchor(index);
+            addIncoming(previousIndex, nextIndex);
+            m_out.branch(m_out.isNull(index), unsure(end), unsure(loop));
+            
+            m_out.appendTo(end, lastNext);
+        }
+        
+        setJSValue(result);
+    }
+    
+    void compileCreateScopedArguments()
+    {
+        LValue scope = lowCell(m_node->child1());
+        
+        LValue result = vmCall(
+            m_out.operation(operationCreateScopedArguments), m_callFrame,
+            weakPointer(
+                m_graph.globalObjectFor(m_node->origin.semantic)->scopedArgumentsStructure()),
+            getArgumentsStart(), getArgumentsLength().value, getCurrentCallee(), scope);
+        
+        setJSValue(result);
+    }
+    
+    void compileCreateClonedArguments()
+    {
+        LValue result = vmCall(
+            m_out.operation(operationCreateClonedArguments), m_callFrame,
+            weakPointer(
+                m_graph.globalObjectFor(m_node->origin.semantic)->outOfBandArgumentsStructure()),
+            getArgumentsStart(), getArgumentsLength().value, getCurrentCallee());
+        
+        setJSValue(result);
+    }
+    
     void compileNewObject()
     {
         setJSValue(allocateObject(m_node->structure()));
@@ -3526,29 +3708,19 @@ private:
     
     void compileNotifyWrite()
     {
-        VariableWatchpointSet* set = m_node->variableWatchpointSet();
-        
-        LValue value = lowJSValue(m_node->child1());
+        WatchpointSet* set = m_node->watchpointSet();
         
         LBasicBlock isNotInvalidated = FTL_NEW_BLOCK(m_out, ("NotifyWrite not invalidated case"));
-        LBasicBlock notifySlow = FTL_NEW_BLOCK(m_out, ("NotifyWrite notify slow case"));
         LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("NotifyWrite continuation"));
         
         LValue state = m_out.load8(m_out.absolute(set->addressOfState()));
-        
         m_out.branch(
             m_out.equal(state, m_out.constInt8(IsInvalidated)),
             usually(continuation), rarely(isNotInvalidated));
         
-        LBasicBlock lastNext = m_out.appendTo(isNotInvalidated, notifySlow);
+        LBasicBlock lastNext = m_out.appendTo(isNotInvalidated, continuation);
 
-        m_out.branch(
-            m_out.equal(value, m_out.load64(m_out.absolute(set->addressOfInferredValue()))),
-            unsure(continuation), unsure(notifySlow));
-
-        m_out.appendTo(notifySlow, continuation);
-
-        vmCall(m_out.operation(operationNotifyWrite), m_callFrame, m_out.constIntPtr(set), value);
+        vmCall(m_out.operation(operationNotifyWrite), m_callFrame, m_out.constIntPtr(set));
         m_out.jump(continuation);
         
         m_out.appendTo(continuation, lastNext);

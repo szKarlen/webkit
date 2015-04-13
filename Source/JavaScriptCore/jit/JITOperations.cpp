@@ -930,6 +930,14 @@ EncodedJSValue JIT_OPERATION operationNewFunction(ExecState* exec, JSScope* scop
     return JSValue::encode(JSFunction::create(vm, static_cast<FunctionExecutable*>(functionExecutable), scope));
 }
 
+EncodedJSValue JIT_OPERATION operationNewFunctionWithInvalidatedReallocationWatchpoint(ExecState* exec, JSScope* scope, JSCell* functionExecutable)
+{
+    ASSERT(functionExecutable->inherits(FunctionExecutable::info()));
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    return JSValue::encode(JSFunction::createWithInvalidatedReallocationWatchpoint(vm, static_cast<FunctionExecutable*>(functionExecutable), scope));
+}
+
 JSCell* JIT_OPERATION operationNewObject(ExecState* exec, Structure* structure)
 {
     VM* vm = &exec->vm();
@@ -2156,9 +2164,9 @@ void JIT_OPERATION operationPutToScope(ExecState* exec, Instruction* bytecodePC)
     ResolveModeAndType modeAndType = ResolveModeAndType(pc[4].u.operand);
     if (modeAndType.type() == LocalClosureVar) {
         JSLexicalEnvironment* environment = jsCast<JSLexicalEnvironment*>(scope);
-        environment->registerAt(pc[6].u.operand).set(vm, environment, value);
-        if (VariableWatchpointSet* set = pc[5].u.watchpointSet)
-            set->notifyWrite(vm, value, "Executed op_put_scope<LocalClosureVar>");
+        environment->variableAt(ScopeOffset(pc[6].u.operand)).set(vm, environment, value);
+        if (WatchpointSet* set = pc[5].u.watchpointSet)
+            set->touch("Executed op_put_scope<LocalClosureVar>");
         return;
     }
     if (modeAndType.mode() == ThrowIfNotFound && !scope->hasProperty(exec, ident)) {

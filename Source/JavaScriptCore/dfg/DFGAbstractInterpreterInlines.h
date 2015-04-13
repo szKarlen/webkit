@@ -1279,6 +1279,7 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     }
 
     case CreateThis: {
+        // FIXME: We can fold this to NewObject if the incoming callee is a constant.
         forNode(node).setType(SpecFinalObject);
         break;
     }
@@ -1408,6 +1409,15 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
         break;
         
     case GetCallee:
+        if (FunctionExecutable* executable = jsDynamicCast<FunctionExecutable*>(m_codeBlock->ownerExecutable())) {
+            InferredValue* singleton = executable->singletonFunction();
+            if (JSValue value = singleton->inferredValue()) {
+                m_graph.watchpoints().addLazily(singleton);
+                JSFunction* function = jsCast<JSFunction*>(value);
+                setConstant(node, *m_graph.freeze(function));
+                break;
+            }
+        }
         forNode(node).setType(SpecFunction);
         break;
         

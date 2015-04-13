@@ -271,6 +271,7 @@ public:
     Strong<Structure> propertyTableStructure;
     Strong<Structure> mapDataStructure;
     Strong<Structure> weakMapDataStructure;
+    Strong<Structure> inferredValueStructure;
 #if ENABLE(PROMISES)
     Strong<Structure> promiseDeferredStructure;
     Strong<Structure> promiseReactionStructure;

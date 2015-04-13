@@ -33,8 +33,7 @@
 #include "CompilationResult.h"
 #include "DFGPlan.h"
 #include "HandlerInfo.h"
-#include "JSFunction.h"
-#include "Interpreter.h"
+#include "InferredValue.h"
 #include "JITCode.h"
 #include "JSGlobalObject.h"
 #include "RegisterPreservationMode.h"
@@ -648,15 +647,15 @@ public:
     void unlinkCalls();
 
     void clearCode();
+    
+    InferredValue* singletonFunction() { return m_singletonFunction.get(); }
 
 private:
-<<<<<<< HEAD
-    FunctionExecutable(VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces);
-=======
     FunctionExecutable(
         VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, 
         unsigned lastLine, unsigned startColumn, unsigned endColumn);
->>>>>>> 32bac81... Function bodies should always include braces
+    
+    void finishCreation(VM&);
 
     bool isCompiling()
     {
@@ -670,16 +669,14 @@ private:
     }
 
     friend class ScriptExecutable;
-
+    
     WriteBarrier<UnlinkedFunctionExecutable> m_unlinkedExecutable;
     RefPtr<FunctionCodeBlock> m_codeBlockForCall;
     RefPtr<FunctionCodeBlock> m_codeBlockForConstruct;
-<<<<<<< HEAD
-    bool m_bodyIncludesBraces;
-    bool m_didParseForTheFirstTime;
-=======
->>>>>>> 32bac81... Function bodies should always include braces
     RefPtr<TypeSet> m_returnStatementTypeSet;
+
+    unsigned m_parametersStartOffset;
+    WriteBarrier<InferredValue> m_singletonFunction;
 };
 
 inline void ExecutableBase::clearCodeVirtual(ExecutableBase* executable)

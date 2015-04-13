@@ -402,41 +402,7 @@ BytecodeGenerator::BytecodeGenerator(VM& vm, FunctionNode* functionNode, Unlinke
                 addVar(ident, (varStack[i].second & DeclarationStacks::IsConstant) ? IsConstant : IsVariable, NotWatchable);
         }
     }
-
-    if (m_symbolTable->captureCount())
-        emitOpcode(op_touch_entry);
     
-    m_parameters.grow(parameters.size() + 1); // reserve space for "this"
-
-    // Add "this" as a parameter
-    int nextParameterIndex = CallFrame::thisArgumentOffset();
-    m_thisRegister.setIndex(nextParameterIndex++);
-    m_codeBlock->addParameter();
-
-    for (size_t i = 0; i < parameters.size(); ++i, ++nextParameterIndex) {
-        int index = nextParameterIndex;
-        auto pattern = parameters.at(i);
-        if (!pattern->isBindingNode()) {
-            m_codeBlock->addParameter();
-            RegisterID& parameter = registerFor(index);
-            parameter.setIndex(index);
-            m_deconstructedParameters.append(std::make_pair(&parameter, pattern));
-            continue;
-        }
-        auto simpleParameter = static_cast<const BindingNode*>(pattern);
-        if (capturedArguments.size() && capturedArguments[i] && !m_functions.contains(simpleParameter->boundProperty().impl())) {
-            ASSERT((functionNode->hasCapturedVariables() && functionNode->captures(simpleParameter->boundProperty())) || shouldCaptureAllTheThings);
-            index = capturedArguments[i]->index();
-            RegisterID original(nextParameterIndex);
-            initializeCapturedVariable(capturedArguments[i], simpleParameter->boundProperty(), &original);
-        }
-        addParameter(simpleParameter->boundProperty(), index);
-    }
-    preserveLastVar();
-
-    // We declare the callee's name last because it should lose to a var, function, and/or parameter declaration.
-    addCallee(functionNode, calleeRegister);
-
     if (isConstructor()) {
         emitCreateThis(&m_thisRegister);
     } else if (functionNode->usesThis() || codeBlock->usesEval()) {

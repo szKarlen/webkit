@@ -4275,8 +4275,129 @@ void SpeculativeJIT::compileNewFunctionNoCheck(Node* node)
     SpeculateCellOperand scope(this, node->child1());
     GPRReg scopeGPR = scope.gpr();
     flushRegisters();
-    callOperation(
-        operationNewFunctionNoCheck, resultGPR, scopeGPR, m_jit.codeBlock()->functionDecl(node->functionDeclIndex()));
+    FunctionExecutable* executable = node->castOperand<FunctionExecutable*>();
+    J_JITOperation_EJscC function;
+    if (executable->singletonFunction()->isStillValid())
+        function = operationNewFunction;
+    else
+        function = operationNewFunctionWithInvalidatedReallocationWatchpoint;
+    callOperation(function, resultGPR, scopeGPR, executable);
+    cellResult(resultGPR, node);
+}
+
+void SpeculativeJIT::compileForwardVarargs(Node* node)
+{
+    LoadVarargsData* data = node->loadVarargsData();
+    InlineCallFrame* inlineCallFrame = node->child1()->origin.semantic.inlineCallFrame;
+        
+    GPRTemporary length(this);
+    JSValueRegsTemporary temp(this);
+    GPRReg lengthGPR = length.gpr();
+    JSValueRegs tempRegs = temp.regs();
+        
+    emitGetLength(inlineCallFrame, lengthGPR, /* includeThis = */ true);
+    if (data->offset)
+        m_jit.sub32(TrustedImm32(data->offset), lengthGPR);
+        
+    speculationCheck(
+        VarargsOverflow, JSValueSource(), Edge(), m_jit.branch32(
+            MacroAssembler::Above,
+            lengthGPR, TrustedImm32(data->limit)));
+        
+    m_jit.store32(lengthGPR, JITCompiler::payloadFor(data->machineCount));
+        
+    VirtualRegister sourceStart = JITCompiler::argumentsStart(inlineCallFrame) + data->offset;
+    VirtualRegister targetStart = data->machineStart;
+
+    m_jit.sub32(TrustedImm32(1), lengthGPR);
+        
+    // First have a loop that fills in the undefined slots in case of an arity check failure.
+    m_jit.move(TrustedImm32(data->mandatoryMinimum), tempRegs.payloadGPR());
+    JITCompiler::Jump done = m_jit.branch32(JITCompiler::BelowOrEqual, tempRegs.payloadGPR(), lengthGPR);
+        
+    JITCompiler::Label loop = m_jit.label();
+    m_jit.sub32(TrustedImm32(1), tempRegs.payloadGPR());
+    m_jit.storeTrustedValue(
+        jsUndefined(),
+        JITCompiler::BaseIndex(
+            GPRInfo::callFrameRegister, tempRegs.payloadGPR(), JITCompiler::TimesEight,
+            targetStart.offset() * sizeof(EncodedJSValue)));
+    m_jit.branch32(JITCompiler::Above, tempRegs.payloadGPR(), lengthGPR).linkTo(loop, &m_jit);
+    done.link(&m_jit);
+        
+    // And then fill in the actual argument values.
+    done = m_jit.branchTest32(JITCompiler::Zero, lengthGPR);
+        
+    loop = m_jit.label();
+    m_jit.sub32(TrustedImm32(1), lengthGPR);
+    m_jit.loadValue(
+        JITCompiler::BaseIndex(
+            GPRInfo::callFrameRegister, lengthGPR, JITCompiler::TimesEight,
+            sourceStart.offset() * sizeof(EncodedJSValue)),
+        tempRegs);
+    m_jit.storeValue(
+        tempRegs,
+        JITCompiler::BaseIndex(
+            GPRInfo::callFrameRegister, lengthGPR, JITCompiler::TimesEight,
+            targetStart.offset() * sizeof(EncodedJSValue)));
+    m_jit.branchTest32(JITCompiler::NonZero, lengthGPR).linkTo(loop, &m_jit);
+        
+    done.link(&m_jit);
+        
+    noResult(node);
+}
+
+void SpeculativeJIT::compileCreateActivation(Node* node)
+{
+    SymbolTable* table = m_jit.graph().symbolTableFor(node->origin.semantic);
+    Structure* structure = m_jit.graph().globalObjectFor(
+        node->origin.semantic)->activationStructure();
+        
+    SpeculateCellOperand scope(this, node->child1());
+    GPRReg scopeGPR = scope.gpr();
+    
+    if (table->singletonScope()->isStillValid()) {
+        GPRFlushedCallResult result(this);
+        GPRReg resultGPR = result.gpr();
+        
+        flushRegisters();
+        
+        callOperation(operationCreateActivationDirect, resultGPR, structure, scopeGPR, table);
+        cellResult(resultGPR, node);
+        return;
+    }
+    
+    GPRTemporary result(this);
+    GPRTemporary scratch1(this);
+    GPRTemporary scratch2(this);
+    GPRReg resultGPR = result.gpr();
+    GPRReg scratch1GPR = scratch1.gpr();
+    GPRReg scratch2GPR = scratch2.gpr();
+        
+    JITCompiler::JumpList slowPath;
+    emitAllocateJSObjectWithKnownSize<JSLexicalEnvironment>(
+        resultGPR, TrustedImmPtr(structure), TrustedImmPtr(0), scratch1GPR, scratch2GPR,
+        slowPath, JSLexicalEnvironment::allocationSize(table));
+        
+    // Don't need a memory barriers since we just fast-created the activation, so the
+    // activation must be young.
+    m_jit.storePtr(scopeGPR, JITCompiler::Address(resultGPR, JSScope::offsetOfNext()));
+    m_jit.storePtr(
+        TrustedImmPtr(table),
+        JITCompiler::Address(resultGPR, JSLexicalEnvironment::offsetOfSymbolTable()));
+        
+    // Must initialize all members to undefined.
+    for (unsigned i = 0; i < table->scopeSize(); ++i) {
+        m_jit.storeTrustedValue(
+            jsUndefined(),
+            JITCompiler::Address(
+                resultGPR, JSLexicalEnvironment::offsetOfVariable(ScopeOffset(i))));
+    }
+
+    addSlowPathGenerator(
+        slowPathCall(
+            slowPath, this, operationCreateActivationDirect, resultGPR, structure, scopeGPR, table));
+
     cellResult(resultGPR, node);
 }
 
@@ -4292,6 +4413,21 @@ void SpeculativeJIT::compileNewFunctionExpression(Node* node)
         resultGPR, scopeGPR, 
         m_jit.codeBlock()->functionExpr(node->functionExprIndex()));
     cellResult(resultGPR, node);
+}
+
+void SpeculativeJIT::compileNotifyWrite(Node* node)
+{
+    WatchpointSet* set = node->watchpointSet();
+    
+    JITCompiler::Jump slowCase = m_jit.branch8(
+        JITCompiler::NotEqual,
+        JITCompiler::AbsoluteAddress(set->addressOfState()),
+        TrustedImm32(IsInvalidated));
+    
+    addSlowPathGenerator(
+        slowPathCall(slowCase, this, operationNotifyWrite, NoResult, set));
+    
+    noResult(node);
 }
 
 bool SpeculativeJIT::compileRegExpExec(Node* node)

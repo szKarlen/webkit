@@ -513,6 +513,10 @@ macro skipIfIsRememberedOrInEden(cell, scratch1, scratch2, continuation)
     continuation(scratch1)
 end
 
+macro notifyWrite(set, slow)
+    bbneq WatchpointSet::m_state[set], IsInvalidated, slow
+end
+
 macro checkSwitchToJIT(increment, action)
     loadp CodeBlock[cfr], t0
     baddis increment, CodeBlock::m_llintExecuteCounter + BaselineExecutionCounter::m_counter[t0], .continue
@@ -914,11 +918,28 @@ end
 
 
 # Value-representation-agnostic code.
-_llint_op_touch_entry:
+_llint_op_create_direct_arguments:
     traceExecution()
-    callSlowPath(_slow_path_touch_entry)
-    dispatch(1)
+    callSlowPath(_slow_path_create_direct_arguments)
+    dispatch(2)
 
+
+_llint_op_create_scoped_arguments:
+    traceExecution()
+    callSlowPath(_slow_path_create_scoped_arguments)
+    dispatch(3)
+
+
+_llint_op_create_out_of_band_arguments:
+    traceExecution()
+    callSlowPath(_slow_path_create_out_of_band_arguments)
+    dispatch(2)
+
+
+_llint_op_new_func:
+    traceExecution()
+    callSlowPath(_llint_slow_path_new_func)
+    dispatch(4)
 
 _llint_op_new_array:
     traceExecution()

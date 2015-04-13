@@ -104,7 +104,8 @@ set(JavaScriptCore_SOURCES
     bytecode/UnlinkedCodeBlock.cpp
     bytecode/UnlinkedInstructionStream.cpp
     bytecode/ValueRecovery.cpp
-    bytecode/VariableWatchpointSet.cpp
+    bytecode/VariableWriteFireDetail.cpp
+    bytecode/VirtualRegister.cpp
     bytecode/Watchpoint.cpp
 
     bytecompiler/BytecodeGenerator.cpp
@@ -444,6 +445,7 @@ set(JavaScriptCore_RUNTIME_SOURCES
     runtime/GetterSetter.cpp
     runtime/Identifier.cpp
     runtime/IndexingType.cpp
+    runtime/InferredValue.cpp
     runtime/InitializeThreading.cpp
     runtime/IntendedStructureChain.cpp
     runtime/InternalFunction.cpp

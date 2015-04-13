@@ -1432,9 +1432,13 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     ResolveModeAndType modeAndType = ResolveModeAndType(pc[4].u.operand);
     if (modeAndType.type() == LocalClosureVar) {
         JSLexicalEnvironment* environment = jsCast<JSLexicalEnvironment*>(scope);
-        environment->registerAt(pc[6].u.operand).set(vm, environment, value);
-        if (VariableWatchpointSet* set = pc[5].u.watchpointSet)
-            set->notifyWrite(vm, value, "Executed op_put_scope<LocalClosureVar>");
+        environment->variableAt(ScopeOffset(pc[6].u.operand)).set(vm, environment, value);
+        
+        // Have to do this *after* the write, because if this puts the set into IsWatched, then we need
+        // to have already changed the value of the variable. Otherwise we might watch and constant-fold
+        // to the Undefined value from before the assignment.
+        if (WatchpointSet* set = pc[5].u.watchpointSet)
+            set->touch("Executed op_put_scope<LocalClosureVar>");
         LLINT_END();
     }
 

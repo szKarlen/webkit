@@ -726,31 +726,19 @@ void JIT::emitPutGlobalProperty(uintptr_t* operandSlot, int value)
     storePtr(regT2, BaseIndex(regT0, regT1, TimesEight, (firstOutOfLineOffset - 2) * sizeof(EncodedJSValue)));
 }
 
-void JIT::emitNotifyWrite(RegisterID value, RegisterID scratch, VariableWatchpointSet* set)
-{
-    if (!set || set->state() == IsInvalidated)
-        return;
-    
-    load8(set->addressOfState(), scratch);
-    Jump isDone = branch32(Equal, scratch, TrustedImm32(IsInvalidated));
-    addSlowCase(branch64(NotEqual, AbsoluteAddress(set->addressOfInferredValue()), value));
-    isDone.link(this);
-}
-
-void JIT::emitPutGlobalVar(uintptr_t operand, int value, VariableWatchpointSet* set)
+void JIT::emitPutGlobalVar(uintptr_t operand, int value, WatchpointSet* set)
 {
     emitGetVirtualRegister(value, regT0);
-    emitNotifyWrite(regT0, regT1, set);
+    emitNotifyWrite(set);
     storePtr(regT0, reinterpret_cast<void*>(operand));
 }
 
-void JIT::emitPutClosureVar(int scope, uintptr_t operand, int value, VariableWatchpointSet* set)
+void JIT::emitPutClosureVar(int scope, uintptr_t operand, int value, WatchpointSet* set)
 {
     emitGetVirtualRegister(value, regT1);
     emitGetVirtualRegister(scope, regT0);
-    loadPtr(Address(regT0, JSEnvironmentRecord::offsetOfRegisters()), regT0);
-    emitNotifyWrite(regT1, regT2, set);
-    storePtr(regT1, Address(regT0, operand * sizeof(Register)));
+    emitNotifyWrite(set);
+    storePtr(regT1, Address(regT0, JSEnvironmentRecord::offsetOfVariables() + operand * sizeof(Register)));
 }
 
 void JIT::emit_op_put_to_scope(Instruction* currentInstruction)
