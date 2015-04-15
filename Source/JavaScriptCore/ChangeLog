@@ -1,3 +1,111 @@
+2015-04-14  Michael Saboff  <msaboff@apple.com>
+
+        Remove JavaScriptCoreUseJIT default from JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=143746
+
+        Reviewed by Mark Lam.
+
+        * runtime/VM.cpp:
+        (JSC::enableAssembler):
+
+2015-04-14  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r180020): Web Inspector crashes on pages that have a stylesheet with an invalid MIME type
+        https://bugs.webkit.org/show_bug.cgi?id=143745
+        <rdar://problem/20243916>
+
+        Reviewed by Joseph Pecoraro.
+
+        Add assertion in ContentSearchUtilities::findMagicComment() to make
+        sure the content String is not null or we would crash in
+        JSC::Yarr::interpret() later.
+
+        * inspector/ContentSearchUtilities.cpp:
+        (Inspector::ContentSearchUtilities::findMagicComment):
+
+2015-04-14  Michael Saboff  <msaboff@apple.com>
+
+        DFG register fillSpeculate*() functions should validate incoming spill format is compatible with requested fill format
+        https://bugs.webkit.org/show_bug.cgi?id=143727
+
+        Reviewed by Geoffrey Garen.
+
+        Used the result of AbstractInterpreter<>::filter() to check that the current spill format is compatible
+        with the requested fill format.  If filter() reports a contradiction, then we force an OSR exit.
+        Removed individual checks made redundant by the new check.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateBoolean):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt52):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateBoolean):
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Replace JavaScriptCoreOutputConsoleMessagesToSystemConsole default with an SPI
+        https://bugs.webkit.org/show_bug.cgi?id=143691
+
+        Reviewed by Geoffrey Garen.
+
+        * API/JSRemoteInspector.h:
+        * API/JSRemoteInspector.cpp:
+        (JSRemoteInspectorSetLogToSystemConsole):
+        Add SPI to enable/disable logging to the system console.
+        This only affects JSContext `console` logs and warnings.
+
+        * inspector/JSGlobalObjectConsoleClient.h:
+        * inspector/JSGlobalObjectConsoleClient.cpp:
+        (Inspector::JSGlobalObjectConsoleClient::logToSystemConsole):
+        (Inspector::JSGlobalObjectConsoleClient::setLogToSystemConsole):
+        (Inspector::JSGlobalObjectConsoleClient::messageWithTypeAndLevel):
+        (Inspector::JSGlobalObjectConsoleClient::initializeLogToSystemConsole): Deleted.
+        Simplify access to the setting now that it doesn't need to
+        initialize its value from preferences.
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Auto-attach fails after r179562, initialization too late after dispatch
+        https://bugs.webkit.org/show_bug.cgi?id=143682
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/remote/RemoteInspector.mm:
+        (Inspector::RemoteInspector::singleton):
+        If we are on the main thread, run the initialization immediately.
+        Otherwise dispatch to the main thread. This way if the first JSContext
+        was created on the main thread it can get auto-attached if applicable.
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Unreviewed build fix for Mavericks.
+
+        Mavericks includes this file but does not enable ENABLE_REMOTE_INSPECTOR
+        so the Inspector namespace is not available when compiling this file.
+
+        * API/JSRemoteInspector.cpp:
+
+2015-04-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Expose private APIs to interact with RemoteInspector instead of going through WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=143729
+
+        Reviewed by Timothy Hatcher.
+
+        * API/JSRemoteInspector.h: Added.
+        * API/JSRemoteInspector.cpp: Added.
+        (JSRemoteInspectorDisableAutoStart):
+        (JSRemoteInspectorStart):
+        (JSRemoteInspectorSetParentProcessInformation):
+        Add the new SPIs for basic remote inspection behavior.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Add the new files to Mac only, since remote inspection is only
+        enabled there anyways.
+
 2015-04-14  Mark Lam  <mark.lam@apple.com>
 
         Rename JSC_dfgFunctionWhitelistFile to JSC_dfgWhitelist.
