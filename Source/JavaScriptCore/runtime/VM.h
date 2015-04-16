@@ -272,6 +272,7 @@ public:
     Strong<Structure> mapDataStructure;
     Strong<Structure> weakMapDataStructure;
     Strong<Structure> inferredValueStructure;
+    Strong<Structure> functionRareDataStructure;
 #if ENABLE(PROMISES)
     Strong<Structure> promiseDeferredStructure;
     Strong<Structure> promiseReactionStructure;

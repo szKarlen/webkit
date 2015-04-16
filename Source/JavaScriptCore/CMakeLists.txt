@@ -442,6 +442,7 @@ set(JavaScriptCore_RUNTIME_SOURCES
     runtime/FunctionExecutableDump.cpp
     runtime/FunctionHasExecutedCache.cpp
     runtime/FunctionPrototype.cpp
+    runtime/FunctionRareData.cpp
     runtime/GetterSetter.cpp
     runtime/Identifier.cpp
     runtime/IndexingType.cpp
