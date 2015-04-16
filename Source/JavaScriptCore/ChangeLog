@@ -1,3 +1,124 @@
+2015-04-15  Andreas Kling  <akling@apple.com>
+
+        Make MarkedBlock and WeakBlock 4x smaller.
+        <https://webkit.org/b/143802>
+
+        Reviewed by Mark Hahnenberg.
+
+        To reduce GC heap fragmentation and generally use less memory, reduce the size of MarkedBlock
+        and its buddy WeakBlock by 4x, bringing them from 64kB+4kB to 16kB+1kB.
+
+        In a sampling of cool web sites, I'm seeing ~8% average reduction in overall GC heap size.
+        Some examples:
+
+                   apple.com:  6.3MB ->  5.5MB (14.5% smaller)
+                  reddit.com:  4.5MB ->  4.1MB ( 9.7% smaller)
+                 twitter.com: 23.2MB -> 21.4MB ( 8.4% smaller)
+            cuteoverload.com: 24.5MB -> 23.6MB ( 3.8% smaller)
+
+        Benchmarks look mostly neutral.
+        Some small slowdowns on Octane, some slightly bigger speedups on Kraken and SunSpider.
+
+        * heap/MarkedBlock.h:
+        * heap/WeakBlock.h:
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LowLevelInterpreter.asm:
+
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        String.prototype.startsWith/endsWith/includes have wrong length in r182673
+        https://bugs.webkit.org/show_bug.cgi?id=143659
+
+        Reviewed by Benjamin Poulain.
+
+        Fix lengths of String.prototype.{includes,startsWith,endsWith} per spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.includes
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.startswith
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-string.prototype.endswith
+
+        * runtime/StringPrototype.cpp:
+        (JSC::StringPrototype::finishCreation):
+
+2015-04-15  Mark Lam  <mark.lam@apple.com>
+
+        Remove obsolete VMInspector debugging tool.
+        https://bugs.webkit.org/show_bug.cgi?id=143798
+
+        Reviewed by Michael Saboff.
+
+        I added the VMInspector tool 3 years ago to aid in VM hacking work.  Some of it
+        has bit rotted, and now the VM also has better ways to achieve its functionality.
+        Hence this code is now obsolete and should be removed.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * interpreter/CallFrame.h:
+        * interpreter/VMInspector.cpp: Removed.
+        * interpreter/VMInspector.h: Removed.
+        * llint/LowLevelInterpreter.cpp:
+
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        Math.imul has wrong length in Safari 8.0.4
+        https://bugs.webkit.org/show_bug.cgi?id=143658
+
+        Reviewed by Benjamin Poulain.
+
+        Correcting function length from 1, to 2, to match spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.imul
+
+        * runtime/MathObject.cpp:
+        (JSC::MathObject::finishCreation):
+
+2015-04-15  Jordan Harband  <ljharb@gmail.com>
+
+        Number.parseInt in nightly r182673 has wrong length
+        https://bugs.webkit.org/show_bug.cgi?id=143657
+
+        Reviewed by Benjamin Poulain.
+
+        Correcting function length from 1, to 2, to match spec
+        https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.parseint
+
+        * runtime/NumberConstructor.cpp:
+        (JSC::NumberConstructor::finishCreation):
+
+2015-04-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Harden DFGForAllKills
+        https://bugs.webkit.org/show_bug.cgi?id=143792
+
+        Reviewed by Geoffrey Garen.
+        
+        Unfortunately, we don't have a good way to test this yet - but it will be needed to prevent
+        bugs in https://bugs.webkit.org/show_bug.cgi?id=143734.
+        
+        Previously ForAllKills used the bytecode kill analysis. That seemed like a good idea because
+        that analysis is cheaper than the full liveness analysis. Unfortunately, it's probably wrong:
+        
+        - It looks for kill sites at forExit origin boundaries. But, something might have been killed
+          by an operation that was logically in between the forExit origins at the boundary, but was
+          removed from the DFG for whatever reason. The DFG is allowed to have bytecode instruction
+          gaps.
+        
+        - It overlooked the fact that a MovHint that addresses a local that is always live kills that
+          local. For example, storing to an argument means that the prior value of the argument is
+          killed.
+        
+        This fixes the analysis by making it handle MovHints directly, and making it define kills in
+        the most conservative way possible: it asks if you were live before but dead after. If we
+        have the compile time budget to afford this more direct approach, then it's definitel a good
+        idea since it's so fool-proof.
+
+        * dfg/DFGArgumentsEliminationPhase.cpp:
+        * dfg/DFGForAllKills.h:
+        (JSC::DFG::forAllKilledOperands):
+        (JSC::DFG::forAllKilledNodesAtNodeIndex):
+        (JSC::DFG::forAllDirectlyKilledOperands): Deleted.
+
 2015-04-15  Joseph Pecoraro  <pecoraro@apple.com>
 
         Provide SPI to allow changing whether JSContexts are remote debuggable by default
