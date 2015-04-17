@@ -140,6 +140,7 @@
     macro(osrExitSites) \
     macro(osrExits) \
     macro(parse) \
+    macro(parseInt) \
     macro(postMessage) \
     macro(profiledBytecodes) \
     macro(propertyIsEnumerable) \
