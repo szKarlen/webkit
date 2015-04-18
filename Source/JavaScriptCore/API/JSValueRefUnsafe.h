@@ -94,7 +94,7 @@ JS_EXPORT JSValueRef JSMakeStringForProperty(JSContextRef ctx, JSStringRef strin
 @param value    The JSValue whose type you want to obtain.
 @result         A value of type JSType that identifies value's type.
 */
-JS_EXPORT JSType JSParameterGetType(JSContextRef ctx, JSValueRef value);
+JS_EXPORT ::JSType JSParameterGetType(JSContextRef ctx, JSValueRef value);
 
 /*!
 @function

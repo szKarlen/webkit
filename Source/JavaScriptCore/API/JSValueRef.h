@@ -51,7 +51,11 @@ typedef enum {
     kJSTypeNumber,
 	kJSTypeIntNumber,
     kJSTypeString,
-    kJSTypeObject
+    kJSTypeObject,
+	kJSTypeFunction,
+	kJSError,
+	kJSTypeArray,
+	kJSTypeDate
 } JSType;
 
 #ifdef __cplusplus
@@ -65,7 +69,7 @@ extern "C" {
 @param value    The JSValue whose type you want to obtain.
 @result         A value of type JSType that identifies value's type.
 */
-JS_EXPORT JSType JSValueGetType(JSContextRef ctx, JSValueRef);
+JS_EXPORT ::JSType JSValueGetType(JSContextRef ctx, JSValueRef);
 
 /*!
 @function

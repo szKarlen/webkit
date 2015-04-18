@@ -63,6 +63,8 @@ JS_EXPORT bool JSObjectIsDate(JSContextRef ctx, JSObjectRef object);
 
 JS_EXPORT bool JSObjectIsDateUnsafe(JSContextRef ctx, JSObjectRef object);
 
+JS_EXPORT bool JSObjectIsFunctionUnsafe(JSContextRef ctx, JSObjectRef object);
+
 /*!
 @function
 @abstract Gets the names of an object's enumerable properties.

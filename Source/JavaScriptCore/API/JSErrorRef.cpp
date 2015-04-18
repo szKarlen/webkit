@@ -112,32 +112,32 @@ JSObjectRef JSThrowError(JSContextRef ctx, JSObjectRef error)
 		auto jsStructure = jsError->structure();
 		if (jsGlobal->evalErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSEvalError;
+			return ::kJSEvalError;
 		}
 		else if (jsGlobal->rangeErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSRangeError;
+			return ::kJSRangeError;
 		}
 		else if (jsGlobal->referenceErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSReferenceError;
+			return ::kJSReferenceError;
 		}
 		else if (jsGlobal->syntaxErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSSyntaxError;
+			return ::kJSSyntaxError;
 		}
 		else if (jsGlobal->typeErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSTypeError;
+			return ::JSErrorType::kJSTypeError;
 		}
 		else if (jsGlobal->URIErrorConstructor()->hasInstance(exec, jsValue))
 		{
-			return kJSURIError;
+			return ::kJSURIError;
 		}
 		else
 		{
-			return kJSDefaultError;
+			return ::kJSDefaultError;
 		}
 	}
-	return kJSObjectError;
+	return ::kJSObjectError;
 }

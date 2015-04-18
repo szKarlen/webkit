@@ -239,3 +239,13 @@ bool JSObjectIsDateUnsafe(JSContextRef ctx, JSObjectRef object)
 	auto jsGlobal = exec->lexicalGlobalObject();
 	return jsObject->inherits(jsGlobal->dateStructure()->classInfo());
 }
+
+bool JSObjectIsFunctionUnsafe(JSContextRef ctx, JSObjectRef object)
+{
+	if (!object)
+		return false;
+	
+	CallData callData;
+	JSCell* cell = toJS(object);
+	return cell->methodTable()->getCallData(cell, callData) != CallTypeNone;
+}
