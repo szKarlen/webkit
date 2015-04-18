@@ -252,6 +252,7 @@
     <ClCompile Include="..\wtf\gobject\GThreadSafeMainLoopSource.cpp">
       <Filter>wtf\gobject</Filter>
     </ClCompile>
+    <ClCompile Include="..\wtf\RefCounter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\wtf\dtoa\utils.h">
@@ -723,6 +724,7 @@
     <ClInclude Include="..\wtf\gobject\GThreadSafeMainLoopSource.h">
       <Filter>wtf\gobject</Filter>
     </ClInclude>
+    <ClInclude Include="..\wtf\RefCounter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WTFPostBuild.cmd" />

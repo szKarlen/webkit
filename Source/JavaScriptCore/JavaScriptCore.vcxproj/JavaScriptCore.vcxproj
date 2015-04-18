@@ -258,6 +258,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
+      <AdditionalOptions>/Qvec-report:2 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link />
     <Link />
@@ -297,6 +298,7 @@
     <ClCompile Include="..\API\JSDebuggerRef.cpp" />
     <ClCompile Include="..\API\JSErrorRef.cpp" />
     <ClCompile Include="..\API\JSHeapPrivate.cpp" />
+    <ClCompile Include="..\API\JSLRProcessor.cpp" />
     <ClCompile Include="..\API\JSObjectRef.cpp" />
     <ClCompile Include="..\API\JSObjectRefUnsafe.cpp" />
     <ClCompile Include="..\API\JSScriptRef.cpp" />
@@ -902,6 +904,7 @@
     <ClInclude Include="..\API\JSErrorRef.h" />
     <ClInclude Include="..\API\JSExport.h" />
     <ClInclude Include="..\API\JSHeapPrivate.h" />
+    <ClInclude Include="..\API\JSLRProcessor.h" />
     <ClInclude Include="..\API\JSObjectRef.h" />
     <ClInclude Include="..\API\JSObjectRefPrivate.h" />
     <ClInclude Include="..\API\JSObjectRefUnsafe.h" />
