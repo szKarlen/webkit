@@ -1,3 +1,252 @@
+2015-04-19  Darin Adler  <darin@apple.com>
+
+        Remove all the remaining uses of OwnPtr and PassOwnPtr in JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=143941
+
+        Reviewed by Gyuyoung Kim.
+
+        * API/JSCallbackObject.h: Use unique_ptr for m_callbackObjectData.
+        * API/JSCallbackObjectFunctions.h: Ditto.
+
+        * API/ObjCCallbackFunction.h: Use unique_ptr for the arguments to the
+        create function and the constructor and for m_impl.
+        * API/ObjCCallbackFunction.mm:
+        (CallbackArgumentOfClass::CallbackArgumentOfClass): Streamline this
+        class by using RetainPtr<Class>.
+        (ArgumentTypeDelegate::typeInteger): Use make_unique.
+        (ArgumentTypeDelegate::typeDouble): Ditto.
+        (ArgumentTypeDelegate::typeBool): Ditto.
+        (ArgumentTypeDelegate::typeVoid): Ditto.
+        (ArgumentTypeDelegate::typeId): Ditto.
+        (ArgumentTypeDelegate::typeOfClass): Ditto.
+        (ArgumentTypeDelegate::typeBlock): Ditto.
+        (ArgumentTypeDelegate::typeStruct): Ditto.
+        (ResultTypeDelegate::typeInteger): Ditto.
+        (ResultTypeDelegate::typeDouble): Ditto.
+        (ResultTypeDelegate::typeBool): Ditto.
+        (ResultTypeDelegate::typeVoid): Ditto.
+        (ResultTypeDelegate::typeId): Ditto.
+        (ResultTypeDelegate::typeOfClass): Ditto.
+        (ResultTypeDelegate::typeBlock): Ditto.
+        (ResultTypeDelegate::typeStruct): Ditto.
+        (JSC::ObjCCallbackFunctionImpl::ObjCCallbackFunctionImpl): Use
+        unique_ptr for the arguments to the constructor, m_arguments, and m_result.
+        Use RetainPtr<Class> for m_instanceClass.
+        (JSC::objCCallbackFunctionCallAsConstructor): Use nullptr instead of nil or 0
+        for non-Objective-C object pointer null.
+        (JSC::ObjCCallbackFunction::ObjCCallbackFunction): Use unique_ptr for
+        the arguments to the constructor and for m_impl.
+        (JSC::ObjCCallbackFunction::create): Use unique_ptr for arguments.
+        (skipNumber): Mark this static since it's local to this source file.
+        (objCCallbackFunctionForInvocation): Call parseObjCType without doing any
+        explicit adoptPtr since the types in the traits are now unique_ptr. Also use
+        nullptr instead of nil for JSObjectRef values.
+        (objCCallbackFunctionForMethod): Tweaked comment.
+        (objCCallbackFunctionForBlock): Use nullptr instead of 0 for JSObjectRef.
+
+        * bytecode/CallLinkInfo.h: Removed unneeded include of OwnPtr.h.
+
+        * heap/GCThread.cpp:
+        (JSC::GCThread::GCThread): Use unique_ptr.
+        * heap/GCThread.h: Use unique_ptr for arguments to the constructor and for
+        m_slotVisitor and m_copyVisitor.
+        * heap/GCThreadSharedData.cpp:
+        (JSC::GCThreadSharedData::GCThreadSharedData): Ditto.
+
+        * parser/SourceProvider.h: Removed unneeded include of PassOwnPtr.h.
+
+2015-04-19  Benjamin Poulain  <benjamin@webkit.org>
+
+        Improve the feature.json files
+
+        * features.json:
+
+2015-04-19  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Introduce bytecode intrinsics
+        https://bugs.webkit.org/show_bug.cgi?id=143926
+
+        Reviewed by Filip Pizlo.
+
+        This patch introduces bytecode level intrinsics into builtins/*.js JS code.
+        When implementing functions in builtins/*.js,
+        sometimes we require lower level functionality.
+
+        For example, in the current Array.from, we use `result[k] = value`.
+        The spec requires `[[DefineOwnProperty]]` operation here.
+        However, usual `result[k] = value` is evaluated as `[[Set]]`. (`PutValue` => `[[Set]]`)
+        So if we implement `Array.prototype[k]` getter/setter, the difference is observable.
+
+        Ideally, reaching here, we would like to use put_by_val_direct bytecode.
+        However, there's no syntax to generate it directly.
+
+        This patch introduces bytecode level intrinsics into JSC BytecodeCompiler.
+        Like @call, @apply, we introduce a new node, Intrinsic.
+        These are generated when calling appropriate private symbols in privileged code.
+        AST parser detects them and generates Intrinsic nodes and
+        BytecodeCompiler detects them and generate required bytecodes.
+
+        Currently, Array.from implementation works fine without this patch.
+        This is because when the target code is builtin JS,
+        BytecodeGenerator emits put_by_val_direct instead of put_by_val.
+        This solves the above issue. However, instead of solving this issue,
+        it raises another issue; There's no way to emit `[[Set]]` operation.
+        `[[Set]]` operation is actually used in the spec (Array.from's "length" is set by `[[Set]]`).
+        So to implement it precisely, introducing bytecode level intrinsics is necessary.
+
+        In the subsequent fixes, we'll remove that special path emitting put_by_val_direct
+        for `result[k] = value` under builtin JS environment. Instead of that special handling,
+        use bytecode intrinsics instead. It solves problems and it is more intuitive
+        because written JS code in builtin works as the same to the usual JS code.
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * builtins/ArrayConstructor.js:
+        (from):
+        * bytecode/BytecodeIntrinsicRegistry.cpp: Added.
+        (JSC::BytecodeIntrinsicRegistry::BytecodeIntrinsicRegistry):
+        (JSC::BytecodeIntrinsicRegistry::lookup):
+        * bytecode/BytecodeIntrinsicRegistry.h: Added.
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::BytecodeIntrinsicNode::emitBytecode):
+        (JSC::BytecodeIntrinsicNode::emit_intrinsic_putByValDirect):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::makeFunctionCallNode):
+        * parser/NodeConstructors.h:
+        (JSC::BytecodeIntrinsicNode::BytecodeIntrinsicNode):
+        * parser/Nodes.h:
+        (JSC::BytecodeIntrinsicNode::identifier):
+        * runtime/CommonIdentifiers.cpp:
+        (JSC::CommonIdentifiers::CommonIdentifiers):
+        * runtime/CommonIdentifiers.h:
+        (JSC::CommonIdentifiers::bytecodeIntrinsicRegistry):
+        * tests/stress/array-from-with-accessors.js: Added.
+        (shouldBe):
+
+2015-04-19  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Make Builtin functions non constructible
+        https://bugs.webkit.org/show_bug.cgi?id=143923
+
+        Reviewed by Darin Adler.
+
+        Builtin functions defined by builtins/*.js accidentally have [[Construct]].
+        According to the spec, these functions except for explicitly defined as a constructor do not have [[Construct]].
+        This patch fixes it. When the JS function used for a construction is builtin function, throw not a constructor error.
+
+        Ideally, returning ConstructTypeNone in JSFunction::getConstructData is enough.
+        However, to avoid calling getConstructData (it involves indirect call of function pointer of getConstructData), some places do not check ConstructType.
+        In these places, they only check the target function is JSFunction because previously JSFunction always has [[Construct]].
+        So in this patch, we check `isBuiltinFunction()` in those places.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::inliningCost):
+        * jit/JITOperations.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::setUpCall):
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::getConstructData):
+        * tests/stress/builtin-function-is-construct-type-none.js: Added.
+        (shouldThrow):
+
+2015-04-19  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement WeakSet
+        https://bugs.webkit.org/show_bug.cgi?id=142408
+
+        Reviewed by Darin Adler.
+
+        This patch implements ES6 WeakSet.
+        Current implementation simply leverages WeakMapData with undefined value.
+        This WeakMapData should be optimized in the same manner as MapData/SetData in the subsequent patch[1].
+
+        And in this patch, we also fix WeakMap/WeakSet behavior to conform the ES6 spec.
+        Except for adders (WeakMap.prototype.set/WeakSet.prototype.add),
+        methods return false (or undefined for WeakMap.prototype.get)
+        when a key is not Object instead of throwing a type error.
+
+        [1]: https://bugs.webkit.org/show_bug.cgi?id=143919
+
+        * CMakeLists.txt:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/CommonIdentifiers.h:
+        * runtime/JSGlobalObject.cpp:
+        * runtime/JSGlobalObject.h:
+        * runtime/JSWeakSet.cpp: Added.
+        (JSC::JSWeakSet::finishCreation):
+        (JSC::JSWeakSet::visitChildren):
+        * runtime/JSWeakSet.h: Added.
+        (JSC::JSWeakSet::createStructure):
+        (JSC::JSWeakSet::create):
+        (JSC::JSWeakSet::weakMapData):
+        (JSC::JSWeakSet::JSWeakSet):
+        * runtime/WeakMapPrototype.cpp:
+        (JSC::getWeakMapData):
+        (JSC::protoFuncWeakMapDelete):
+        (JSC::protoFuncWeakMapGet):
+        (JSC::protoFuncWeakMapHas):
+        * runtime/WeakSetConstructor.cpp: Added.
+        (JSC::WeakSetConstructor::finishCreation):
+        (JSC::callWeakSet):
+        (JSC::constructWeakSet):
+        (JSC::WeakSetConstructor::getConstructData):
+        (JSC::WeakSetConstructor::getCallData):
+        * runtime/WeakSetConstructor.h: Added.
+        (JSC::WeakSetConstructor::create):
+        (JSC::WeakSetConstructor::createStructure):
+        (JSC::WeakSetConstructor::WeakSetConstructor):
+        * runtime/WeakSetPrototype.cpp: Added.
+        (JSC::WeakSetPrototype::finishCreation):
+        (JSC::getWeakMapData):
+        (JSC::protoFuncWeakSetDelete):
+        (JSC::protoFuncWeakSetHas):
+        (JSC::protoFuncWeakSetAdd):
+        * runtime/WeakSetPrototype.h: Added.
+        (JSC::WeakSetPrototype::create):
+        (JSC::WeakSetPrototype::createStructure):
+        (JSC::WeakSetPrototype::WeakSetPrototype):
+        * tests/stress/weak-set-constructor-adder.js: Added.
+        (WeakSet.prototype.add):
+        * tests/stress/weak-set-constructor.js: Added.
+
+2015-04-17  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove unused BoundsCheckedPointer
+        https://bugs.webkit.org/show_bug.cgi?id=143896
+
+        Reviewed by Geoffrey Garen.
+
+        * bytecode/SpeculatedType.cpp: The header was included here.
+
+2015-04-17  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Fix name enumeration of static functions for Symbol constructor
+        https://bugs.webkit.org/show_bug.cgi?id=143891
+
+        Reviewed by Geoffrey Garen.
+
+        Fix missing symbolPrototypeTable registration to the js class object.
+        This patch fixes name enumeration of static functions (Symbol.key, Symbol.keyFor) for Symbol constructor.
+
+        * runtime/SymbolConstructor.cpp:
+
+2015-04-17  Basile Clement  <basile_clement@apple.com>
+
+        Inline JSFunction allocation in DFG
+        https://bugs.webkit.org/show_bug.cgi?id=143858
+
+        Reviewed by Filip Pizlo.
+
+        Followup to my previous patch which inlines JSFunction allocation when
+        using FTL, now also enabled in DFG.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileNewFunction):
+
 2015-04-16  Jordan Harband  <ljharb@gmail.com>
 
         Number.parseInt is not === global parseInt in nightly r182673
