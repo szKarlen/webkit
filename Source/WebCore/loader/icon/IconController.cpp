@@ -61,20 +61,31 @@ IconController::~IconController()
 {
 }
 
-URL IconController::url()
+static URL iconFromLinkElements(Frame& frame)
 {
-    IconURLs iconURLs = urlsForTypes(Favicon);
-    return iconURLs.isEmpty() ? URL() : iconURLs[0].m_iconURL;
-}
+    // This function returns the first icon with a mime type.
+    // If no icon with mime type exists, the last icon is returned.
+    // It may make more sense to always return the last icon,
+    // but this implementation is consistent with previous behavior.
 
-IconURL IconController::iconURL(IconType iconType) const
-{
-    IconURL result;
-    const Vector<IconURL>& iconURLs = m_frame.document()->iconURLs(iconType);
-    Vector<IconURL>::const_iterator iter(iconURLs.begin());
-    for (; iter != iconURLs.end(); ++iter) {
-        if (result.m_iconURL.isEmpty() || !iter->m_mimeType.isEmpty())
-            result = *iter;
+    URL result;
+
+    auto* document = frame.document();
+    if (!document)
+        return result;
+
+    auto* head = document->head();
+    if (!head)
+        return result;
+
+    for (auto& linkElement : childrenOfType<HTMLLinkElement>(*head)) {
+        if (!(linkElement.iconType() & Favicon))
+            continue;
+        if (linkElement.href().isEmpty())
+            continue;
+        result = linkElement.href();
+        if (!linkElement.type().isEmpty())
+            break;
     }
 
     return result;
@@ -82,6 +93,7 @@ IconURL IconController::iconURL(IconType iconType) const
 
 IconURLs IconController::urlsForTypes(int iconTypesMask)
 {
+<<<<<<< HEAD
     IconURLs iconURLs;
     if (m_frame.tree().parent())
         return iconURLs;
@@ -118,6 +130,25 @@ IconURLs IconController::urlsForTypes(int iconTypesMask)
     }
 
     return iconURLs;
+=======
+    if (!m_frame.isMainFrame())
+        return URL();
+
+    auto icon = iconFromLinkElements(m_frame);
+    if (!icon.isEmpty())
+        return icon;
+
+    icon = m_frame.document()->completeURL(ASCIILiteral("/favicon.ico"));
+    if (icon.protocolIsInHTTPFamily()) {
+        // FIXME: Not sure we need to remove credentials like this.
+        // However this preserves behavior this code path has historically had.
+        icon.setUser(String());
+        icon.setPass(String());
+        return icon;
+    }
+
+    return URL();
+>>>>>>> ef66d9a... Favicons are not always loaded.
 }
 
 void IconController::commitToDatabase(const URL& icon)
