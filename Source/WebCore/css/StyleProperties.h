@@ -22,6 +22,7 @@
 #ifndef StyleProperties_h
 #define StyleProperties_h
 
+#include "CSSParser.h"
 #include "CSSParserMode.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSProperty.h"
@@ -193,8 +194,8 @@ public:
 
     PropertySetCSSStyleDeclaration* cssStyleDeclaration();
 
-    void addParsedProperties(const Vector<CSSProperty>&);
-    void addParsedProperty(const CSSProperty&);
+    bool addParsedProperties(const CSSParser::ParsedPropertyVector&);
+    bool addParsedProperty(const CSSProperty&);
 
     // These expand shorthand properties into multiple properties.
     bool setProperty(CSSPropertyID, const String& value, bool important = false, StyleSheetContents* contextStyleSheet = 0);

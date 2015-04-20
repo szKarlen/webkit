@@ -1,3 +1,125 @@
+2015-04-20  Chris Dumez  <cdumez@apple.com>
+
+        CSSParser::parseValue() copies the m_parsedProperties vector at addParsedProperties()
+        https://bugs.webkit.org/show_bug.cgi?id=143925
+
+        Reviewed by Simon Fraser.
+
+        Update MutableStyleProperties::addParsedProperties() to use
+        CSSParser::ParsedPropertyVector type (i.e. Vector<CSSProperty, 256>)
+        instead of Vector<CSSProperty> so that the properties vector is no
+        longer copied unnecessarily to convert one type to the other.
+
+        * css/CSSParser.h:
+        * css/StyleProperties.cpp:
+        (WebCore::MutableStyleProperties::addParsedProperties):
+        * css/StyleProperties.h:
+
+2015-04-20  Beth Dakin  <bdakin@apple.com>
+
+        Should remove mouseForceClick and mouseForceCancelled from DOM force events
+        https://bugs.webkit.org/show_bug.cgi?id=143904
+        -and corresponding-
+        rdar://problem/20578842
+
+        Reviewed by Dan Bernstein.
+
+        After more thought and discussion, we decided to remove mouseForceClick and 
+        mouseForceCancelled from DOM force events. mouseForceClick is confusing and 
+        redundant. mouseForceCancelled is confusing as it is currently implemented, and 
+        all of its functionality can be filled by exisiting events such as mouseup, 
+        mouseout, etc.
+
+        * dom/Document.cpp:
+        (WebCore::Document::addListenerTypeIfNeeded):
+        * dom/Document.h:
+        * dom/Document.idl:
+        * dom/Element.cpp:
+        (WebCore::Element::dispatchMouseForceWillBegin):
+        (WebCore::Element::dispatchMouseForceClick): Deleted.
+        (WebCore::Element::dispatchMouseForceCancelled): Deleted.
+        * dom/Element.h:
+        * dom/Element.idl:
+        * dom/EventNames.h:
+        * html/HTMLAttributeNames.in:
+        * html/HTMLBodyElement.cpp:
+        (WebCore::HTMLBodyElement::createWindowEventHandlerNameMap):
+        * html/HTMLBodyElement.idl:
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::createEventHandlerNameMap):
+        * page/DOMWindow.idl:
+
+2015-04-20  Simon Fraser  <simon.fraser@apple.com>
+
+        Setting inline style to the same value it already has triggers a style recalc
+        https://bugs.webkit.org/show_bug.cgi?id=143922
+
+        Reviewed by Antti Koivisto.
+
+        MutableStyleProperties::setProperty() was taking the result of CSSParser::parseValue()
+        to mean "parsing changed the style", but it actually just means "parsing succeeded".
+        Add a new out param, piped through various parser functions, to indicate whether
+        parsing actually changed style, and instead return that from setProperty().
+
+        Add internals.startTrackingStyleRecalcs() and internals.styleRecalcCount() so
+        we can write tests for style recalc.
+
+        Test: fast/css/set-inline-style-recalc.html
+
+        * WebCore.xcodeproj/project.pbxproj: Let Xcode have it's way.
+        * css/CSSParser.cpp:
+        (WebCore::parseColorValue):
+        (WebCore::parseSimpleLengthValue):
+        (WebCore::parseKeywordValue):
+        (WebCore::parseTranslateTransformValue):
+        (WebCore::CSSParser::parseFontFaceValue):
+        (WebCore::CSSParser::parseValue):
+        * css/CSSParser.h:
+        * css/CSSProperty.h:
+        (WebCore::StylePropertyMetadata::operator==):
+        (WebCore::CSSProperty::operator==):
+        * css/DOMWindowCSS.cpp:
+        (WebCore::DOMWindowCSS::supports):
+        * css/StyleProperties.cpp:
+        (WebCore::MutableStyleProperties::setProperty):
+        (WebCore::MutableStyleProperties::appendPrefixingVariantProperty):
+        (WebCore::MutableStyleProperties::addParsedProperties):
+        (WebCore::MutableStyleProperties::addParsedProperty):
+        * css/StyleProperties.h:
+        * css/WebKitCSSMatrix.cpp:
+        (WebCore::WebKitCSSMatrix::setMatrixValue):
+        * dom/Document.cpp:
+        (WebCore::Document::recalcStyle):
+        (WebCore::Document::startTrackingStyleRecalcs):
+        (WebCore::Document::styleRecalcCount):
+        * dom/Document.h:
+        * html/canvas/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::setFont):
+        * testing/Internals.cpp:
+        (WebCore::Internals::startTrackingStyleRecalcs):
+        (WebCore::Internals::styleRecalcCount):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2015-04-20  Brady Eidson  <beidson@apple.com>
+
+        Crash in StyleResolver::invalidateMatchedPropertiesCache() when using content extensions.
+        <rdar://problem/20554405> and https://bugs.webkit.org/show_bug.cgi?id=143892
+
+        Reviewed by Chris Dumez.
+
+        Test: http/tests/contentextensions/style-resolver-changed-reentrancy.html
+
+        * contentextensions/ContentExtensionsBackend.cpp:
+        (WebCore::ContentExtensions::ContentExtensionsBackend::processContentExtensionRulesForLoad):
+
+        * dom/DocumentStyleSheetCollection.cpp:
+        (WebCore::DocumentStyleSheetCollection::DocumentStyleSheetCollection):
+        (WebCore::DocumentStyleSheetCollection::addContentExtensionUserSheet): Call styleResolverChanged on a delay.
+        (WebCore::DocumentStyleSheetCollection::maybeAddContentExtensionSheet): Ditto.
+        (WebCore::DocumentStyleSheetCollection::styleResolverChangedTimerFired):
+        * dom/DocumentStyleSheetCollection.h:
+
 2015-04-20  Per Arne Vollan  <peavo@outlook.com>
 
         Favicons are not always loaded.

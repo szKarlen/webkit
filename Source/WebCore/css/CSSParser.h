@@ -42,7 +42,7 @@
 #include <wtf/text/AtomicString.h>
 
 #if ENABLE(CSS_GRID_LAYOUT)
-#include "CSSGridTemplateAreasValue.h"
+#include "GridCoordinate.h"
 #endif
 
 namespace WebCore {
@@ -79,6 +79,14 @@ public:
         PropertyDeclarationError,
         GeneralSyntaxError
     };
+
+    enum class ParseResult {
+        Changed,
+        Unchanged,
+        Error
+    };
+
+    using ParsedPropertyVector = Vector<CSSProperty, 256>;
 
     class ValueWithCalculation {
     public:
@@ -369,7 +377,6 @@ public:
     std::unique_ptr<CSSParserValueList> m_valueList;
     bool m_supportsCondition;
 
-    typedef Vector<CSSProperty, 256> ParsedPropertyVector;
     ParsedPropertyVector m_parsedProperties;
     CSSSelectorList* m_selectorListForParseSelector;
 
