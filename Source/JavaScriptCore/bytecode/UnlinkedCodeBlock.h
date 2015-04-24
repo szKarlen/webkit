@@ -337,9 +337,6 @@ public:
     unsigned jumpTarget(int index) const { return m_jumpTargets[index]; }
     unsigned lastJumpTarget() const { return m_jumpTargets.last(); }
 
-    void setIsNumericCompareFunction(bool isNumericCompareFunction) { m_isNumericCompareFunction = isNumericCompareFunction; }
-    bool isNumericCompareFunction() const { return m_isNumericCompareFunction; }
-
     bool isBuiltinFunction() const { return m_isBuiltinFunction; }
     
     void shrinkToFit()
@@ -525,13 +522,14 @@ private:
     VirtualRegister m_lexicalEnvironmentRegister;
     VirtualRegister m_globalObjectRegister;
 
-    bool m_needsFullScopeChain : 1;
-    bool m_usesEval : 1;
-    bool m_isNumericCompareFunction : 1;
-    bool m_isStrictMode : 1;
-    bool m_isConstructor : 1;
-    bool m_hasCapturedVariables : 1;
-    bool m_isBuiltinFunction : 1;
+    unsigned m_needsFullScopeChain : 1;
+    unsigned m_usesEval : 1;
+    unsigned m_isStrictMode : 1;
+    unsigned m_isConstructor : 1;
+    unsigned m_hasCapturedVariables : 1;
+    unsigned m_isBuiltinFunction : 1;
+    unsigned m_constructorKind : 2;
+
     unsigned m_firstLine;
     unsigned m_lineCount;
     unsigned m_endColumn;
