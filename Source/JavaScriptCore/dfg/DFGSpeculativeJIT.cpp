@@ -1423,55 +1423,29 @@ void SpeculativeJIT::compileCurrentBlock()
         m_codeOriginForExitTarget = m_currentNode->origin.forExit;
         m_codeOriginForExitProfile = m_currentNode->origin.semantic;
         m_lastGeneratedNode = m_currentNode->op();
-        if (!m_currentNode->shouldGenerate()) {
-            switch (m_currentNode->op()) {
-            case JSConstant:
-                m_minifiedGraph->append(MinifiedNode::fromNode(m_currentNode));
-                break;
-                
-            case SetLocal:
-                RELEASE_ASSERT_NOT_REACHED();
-                break;
-                
-            case MovHint:
-                compileMovHint(m_currentNode);
-                break;
-                
-            case ZombieHint: {
-                recordSetLocal(m_currentNode->unlinkedLocal(), VirtualRegister(), DataFormatDead);
-                break;
-            }
-
-            default:
-                if (belongsInMinifiedGraph(m_currentNode->op()))
-                    m_minifiedGraph->append(MinifiedNode::fromNode(m_currentNode));
-                break;
-            }
-        } else {
-            
-            if (verboseCompilationEnabled()) {
-                dataLogF(
-                    "SpeculativeJIT generating Node @%d (bc#%u) at JIT offset 0x%x",
-                    (int)m_currentNode->index(),
-                    m_currentNode->origin.semantic.bytecodeIndex, m_jit.debugOffset());
-                dataLog("\n");
-            }
-            
-            compile(m_currentNode);
-
+        
+        ASSERT(m_currentNode->shouldGenerate());
+        
+        if (verboseCompilationEnabled()) {
+            dataLogF(
+                "SpeculativeJIT generating Node @%d (bc#%u) at JIT offset 0x%x",
+                (int)m_currentNode->index(),
+                m_currentNode->origin.semantic.bytecodeIndex, m_jit.debugOffset());
+            dataLog("\n");
+        }
+        
+        compile(m_currentNode);
+        
+        if (belongsInMinifiedGraph(m_currentNode->op()))
+            m_minifiedGraph->append(MinifiedNode::fromNode(m_currentNode));
+        
 #if ENABLE(DFG_REGISTER_ALLOCATION_VALIDATION)
-            m_jit.clearRegisterAllocationOffsets();
+        m_jit.clearRegisterAllocationOffsets();
 #endif
-
-            if (!m_compileOkay) {
-                bail(DFGBailedAtEndOfNode);
-                return;
-            }
-            
-            if (belongsInMinifiedGraph(m_currentNode->op())) {
-                m_minifiedGraph->append(MinifiedNode::fromNode(m_currentNode));
-                noticeOSRBirth(m_currentNode);
-            }
+        
+        if (!m_compileOkay) {
+            bail(DFGBailedAtEndOfNode);
+            return;
         }
         
         // Make sure that the abstract state is rematerialized for the next node.
