@@ -75,18 +75,35 @@ static bool evernoteHackNeeded()
 
     JSValue jsValue = toJS(exec, value);
 
-    if (jsValue.isUndefined())
-        return kJSTypeUndefined;
-    if (jsValue.isNull())
-        return kJSTypeNull;
-    if (jsValue.isBoolean())
-        return kJSTypeBoolean;
-    if (jsValue.isNumber())
-        return kJSTypeNumber;
-    if (jsValue.isString())
-        return kJSTypeString;
-    ASSERT(jsValue.isObject());
-    return kJSTypeObject;
+	if (jsValue.isUndefined())
+		return kJSTypeUndefined;
+	if (jsValue.isNull())
+		return kJSTypeNull;
+	if (jsValue.isBoolean())
+		return kJSTypeBoolean;
+	if (jsValue.isNumber())
+	{
+		if (jsValue.isInt32())
+			return kJSTypeIntNumber;
+		return kJSTypeNumber;
+	}
+	if (jsValue.isString())
+		return kJSTypeString;
+	if (jsValue.isFunction())
+		return kJSTypeFunction;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->dateStructure()->classInfo()))
+		return kJSTypeDate;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->arrayStructureForProfileDuringAllocation(static_cast<ArrayAllocationProfile*>(0))->classInfo()))
+		return kJSTypeArray;
+	if (jsValue.inherits(JSArrayBufferView::info()))
+		return kJSTypeTypedArray;
+	ASSERT(jsValue.isObject());
+	auto jsObject = jsValue.toObject(exec);
+	if (jsObject->isErrorInstance())
+		return kJSError;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->regExpStructure()->classInfo()))
+		return kJSTypeRegExp;
+	return kJSTypeObject;
 }
 
 bool JSValueIsUndefined(JSContextRef ctx, JSValueRef value)

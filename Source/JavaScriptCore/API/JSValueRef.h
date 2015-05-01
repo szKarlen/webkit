@@ -43,6 +43,12 @@
 @constant     kJSTypeNumber     A primitive integer number value.
 @constant     kJSTypeString     A primitive string value.
 @constant     kJSTypeObject     An object value (meaning that this JSValueRef is a JSObjectRef).
+@constant     kJSTypeFunction   A function value.
+@constant     kJSError          An error value.
+@constant     kJSTypeArray      An array value.
+@constant     kJSTypeTypedArray A typed array value.
+@constant     kJSTypeDate       A date value.
+@constant     kJSTypeRegExp     A RegExp value.
 */
 typedef enum {
     kJSTypeUndefined,
@@ -55,7 +61,9 @@ typedef enum {
 	kJSTypeFunction,
 	kJSError,
 	kJSTypeArray,
-	kJSTypeDate
+	kJSTypeTypedArray,
+	kJSTypeDate,
+	kJSTypeRegExp
 } JSType;
 
 #ifdef __cplusplus

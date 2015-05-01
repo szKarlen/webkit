@@ -65,55 +65,117 @@ using namespace JSC;
 
 ::JSType JSValueGetDataWithType(JSContextRef ctx, JSValueRef value, JSData* data)
 {
-	::JSType type = JSParameterGetType(ctx, value);
-
 	ExecState* exec = toJS(ctx);
 	JSLockHolder locker(exec);
 
-	switch (type)
+	JSValue jsValue = toJS(exec, value);
+
+	if (jsValue.isUndefined())
+		return kJSTypeUndefined;
+	if (jsValue.isNull())
+		return kJSTypeNull;
+	if (jsValue.isBoolean()) 
 	{
-	case ::JSType::kJSTypeBoolean:
-		data->b = JSValueToBooleanUnsafe(ctx, value);
-		break;
-	case ::JSType::kJSTypeIntNumber:
-		data->i = JSValueToIntNumberUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeNumber:
-		data->d = JSValueToNumberUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeString:
-		data->str = JSValueToStringCopyUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeObject:
-		data->data = JSObjectGetPrivate(JSValueToObject(ctx, value, NULL));
-		break;
+		data->b = jsValue.toBoolean(exec);
+		return kJSTypeBoolean;
 	}
-	return type;
+	else if (jsValue.isNumber())
+	{
+		if (jsValue.isInt32())
+		{
+			data->i = jsValue.toInt32(exec);
+			return kJSTypeIntNumber;
+		}
+		data->d = jsValue.toNumber(exec);
+		return kJSTypeNumber;
+	}
+	else if (jsValue.isString())
+	{
+		RefPtr<OpaqueJSString> stringRef(OpaqueJSString::create(jsValue.toString(exec)->value(exec)));
+		data->str = stringRef.release().leakRef();
+		return kJSTypeString;
+	}
+	else if (jsValue.isFunction())
+		return kJSTypeFunction;
+	else if (jsValue.inherits(exec->lexicalGlobalObject()->dateStructure()->classInfo()))
+	{
+		data->d = jsValue.toNumber(exec);
+		return kJSTypeDate;
+	}
+	else if (jsValue.inherits(exec->lexicalGlobalObject()->arrayStructureForProfileDuringAllocation(static_cast<ArrayAllocationProfile*>(0))->classInfo()))
+		return kJSTypeArray;
+	if (jsValue.inherits(JSArrayBufferView::info()))
+		return kJSTypeTypedArray;
+	else if (jsValue.isObject())
+	{
+		auto jsObject = jsValue.toObject(exec);
+		if (jsObject->isErrorInstance())
+			return kJSError;
+		if (jsObject->isProxy())
+			return kJSTypeProxy;
+		if (jsValue.inherits(exec->lexicalGlobalObject()->regExpStructure()->classInfo()))
+			return kJSTypeRegExp;
+		data->data = JSObjectGetPrivate(toRef(jsObject));
+		return kJSTypeObject;
+	}
+	
+	return kJSTypeObject;
 }
 
 ::JSType JSValueGetDataWithTypeUnsafe(JSContextRef ctx, JSValueRef value, JSData* data)
 {
-	::JSType type = JSParameterGetType(ctx, value);
+	ExecState* exec = toJS(ctx);
 
-	switch (type)
+	JSValue jsValue = toJS(exec, value);
+
+	if (jsValue.isUndefined())
+		return kJSTypeUndefined;
+	if (jsValue.isNull())
+		return kJSTypeNull;
+	if (jsValue.isBoolean())
 	{
-	case ::JSType::kJSTypeBoolean:
-		data->b = JSValueToBooleanUnsafe(ctx, value);
-		break;
-	case ::JSType::kJSTypeIntNumber:
-		data->i = JSValueToIntNumberUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeNumber:
-		data->d = JSValueToNumberUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeString:
-		data->str = JSValueToStringCopyUnsafe(ctx, value, NULL);
-		break;
-	case ::JSType::kJSTypeObject:
-		data->data = JSObjectGetPrivate(JSValueToObject(ctx, value, NULL));
-		break;
+		data->b = jsValue.toBoolean(exec);
+		return kJSTypeBoolean;
 	}
-	return type;
+	else if (jsValue.isNumber())
+	{
+		if (jsValue.isInt32())
+		{
+			data->i = jsValue.toInt32(exec);
+			return kJSTypeIntNumber;
+		}
+		data->d = jsValue.toNumber(exec);
+		return kJSTypeNumber;
+	}
+	else if (jsValue.isString())
+	{
+		RefPtr<OpaqueJSString> stringRef(OpaqueJSString::create(jsValue.toString(exec)->value(exec)));
+		data->str = stringRef.release().leakRef();
+		return kJSTypeString;
+	}
+	else if (jsValue.isFunction())
+		return kJSTypeFunction;
+	else if (jsValue.inherits(exec->lexicalGlobalObject()->dateStructure()->classInfo()))
+	{
+		data->d = jsValue.toNumber(exec);
+		return kJSTypeDate;
+	}
+	else if (jsValue.inherits(exec->lexicalGlobalObject()->arrayStructureForProfileDuringAllocation(static_cast<ArrayAllocationProfile*>(0))->classInfo()))
+		return kJSTypeArray;
+	if (jsValue.inherits(JSArrayBufferView::info()))
+		return kJSTypeTypedArray;
+	else if (jsValue.isObject())
+	{
+		auto jsObject = jsValue.toObject(exec);
+		if (jsValue.toObject(exec)->isErrorInstance())
+			return kJSError;
+		if (jsValue.inherits(exec->lexicalGlobalObject()->regExpStructure()->classInfo()))
+			return kJSTypeRegExp;
+		data->data = JSObjectGetPrivate(toRef(jsObject));
+		return kJSTypeObject;
+	}
+
+	return kJSTypeObject;
 }
 
 JSObjectRef JSObjectMakeUnsafe(JSContextRef ctx, JSClassRef jsClass, void* data)

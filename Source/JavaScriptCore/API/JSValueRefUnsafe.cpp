@@ -95,57 +95,6 @@ int32_t JSValueToIntNumber(JSContextRef ctx, JSValueRef value, JSValueRef* excep
 
 /* JSLR additions */
 
-JSValueRef JSMakeNumberForProperty(JSContextRef ctx, double value)
-{
-    if (!ctx) {
-        ASSERT_NOT_REACHED();
-        return 0;
-    }
-    ExecState* exec = toJS(ctx);
-
-    // Our JSValue representation relies on a standard bit pattern for NaN. NaNs
-    // generated internally to JavaScriptCore naturally have that representation,
-    // but an external NaN might not.
-    if (std::isnan(value))
-        value = PNaN;
-
-    return toRef(exec, jsNumber(value));
-}
-
-JSValueRef JSValueMakeNullUnsafe(JSContextRef ctx)
-{
-    if (!ctx) {
-        ASSERT_NOT_REACHED();
-        return 0;
-    }
-    ExecState* exec = toJS(ctx);
-    //APIEntryShim entryShim(exec);
-
-    return toRef(exec, jsNull());
-}
-
-JSValueRef JSMakeBooleanForProperty(JSContextRef ctx, bool value)
-{
-    if (!ctx) {
-        ASSERT_NOT_REACHED();
-        return 0;
-    }
-    ExecState* exec = toJS(ctx);
-
-    return toRef(exec, jsBoolean(value));
-}
-
-JSValueRef JSMakeStringForProperty(JSContextRef ctx, JSStringRef string)
-{
-    if (!ctx) {
-        ASSERT_NOT_REACHED();
-        return 0;
-    }
-    ExecState* exec = toJS(ctx);
-    
-    return toRef(exec, jsString(exec, string->string()));
-}
-
 ::JSType JSParameterGetType(JSContextRef ctx, JSValueRef value)
 {
     if (!ctx) {
@@ -170,7 +119,20 @@ JSValueRef JSMakeStringForProperty(JSContextRef ctx, JSStringRef string)
     }
     if (jsValue.isString())
         return kJSTypeString;
-    ASSERT(jsValue.isObject());
+	if (jsValue.isFunction())
+		return kJSTypeFunction;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->dateStructure()->classInfo()))
+		return kJSTypeDate;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->arrayStructureForProfileDuringAllocation(static_cast<ArrayAllocationProfile*>(0))->classInfo()))
+		return kJSTypeArray;
+	if (jsValue.inherits(JSArrayBufferView::info()))
+		return kJSTypeTypedArray;
+	ASSERT(jsValue.isObject());
+	auto jsObject = jsValue.toObject(exec);
+	if (jsObject->isErrorInstance())
+		return kJSError;
+	if (jsValue.inherits(exec->lexicalGlobalObject()->regExpStructure()->classInfo()))
+		return kJSTypeRegExp;
     return kJSTypeObject;
 }
 
@@ -453,4 +415,102 @@ JSStringRef JSValueToStringCopyUnsafe(JSContextRef ctx, JSValueRef value, JSValu
         stringRef.clear();
     }
     return stringRef.release().leakRef();
+}
+
+JSValueRef JSValueMakeUndefinedUnsafe(JSContextRef ctx)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	return toRef(exec, jsUndefined());
+}
+
+JSValueRef JSValueMakeNullUnsafe(JSContextRef ctx)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	return toRef(exec, jsNull());
+}
+
+JSValueRef JSValueMakeBooleanUnsafe(JSContextRef ctx, bool value)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	return toRef(exec, jsBoolean(value));
+}
+
+JSValueRef JSValueMakeNumberUnsafe(JSContextRef ctx, double value)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	return toRef(exec, jsNumber(purifyNaN(value)));
+}
+
+JSValueRef JSValueMakeStringUnsafe(JSContextRef ctx, JSStringRef string)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	return toRef(exec, jsString(exec, string ? string->string() : String()));
+}
+
+JSValueRef JSValueMakeFromJSONStringUnsafe(JSContextRef ctx, JSStringRef string)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+
+	String str = string->string();
+	unsigned length = str.length();
+	if (!length || str.is8Bit()) {
+		LiteralParser<LChar> parser(exec, str.characters8(), length, StrictJSON);
+		return toRef(exec, parser.tryLiteralParse());
+	}
+	LiteralParser<UChar> parser(exec, str.characters16(), length, StrictJSON);
+	return toRef(exec, parser.tryLiteralParse());
+}
+
+JSStringRef JSValueCreateJSONStringUnsafe(JSContextRef ctx, JSValueRef apiValue, unsigned indent, JSValueRef* exception)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+	
+	JSValue value = toJS(exec, apiValue);
+	String result = JSONStringify(exec, value, indent);
+	if (exception)
+		*exception = 0;
+	if (exec->hadException()) {
+		JSValue exceptionValue = exec->exception();
+		if (exception)
+			*exception = toRef(exec, exceptionValue);
+		exec->clearException();
+#if ENABLE(REMOTE_INSPECTOR)
+		exec->vmEntryGlobalObject()->inspectorController().reportAPIException(exec, exceptionValue);
+#endif
+		return 0;
+	}
+	return OpaqueJSString::create(result).leakRef();
 }

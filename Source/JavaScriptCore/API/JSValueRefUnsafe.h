@@ -53,42 +53,6 @@ JS_EXPORT int32_t JSValueToIntNumber(JSContextRef ctx, JSValueRef value, JSValue
 
 /*!
 @function
-@abstract       Creates a JavaScript value of the number type.
-@param ctx  The execution context to use.
-@param number   The double to assign to the newly created JSValue.
-@result         A JSValue of the number type, representing the value of number.
-*/
-JS_EXPORT JSValueRef JSMakeNumberForProperty(JSContextRef ctx, double number);
-
-/*!
-@function
-@abstract       Creates a JavaScript value of the null type.
-@param ctx  The execution context to use.
-@result         The unique null value.
-*/
-JS_EXPORT JSValueRef JSValueMakeNullUnsafe(JSContextRef ctx);
-
-/*!
-@function
-@abstract       Creates a JavaScript value of the boolean type.
-@param ctx  The execution context to use.
-@param boolean  The bool to assign to the newly created JSValue.
-@result         A JSValue of the boolean type, representing the value of boolean.
-*/
-JS_EXPORT JSValueRef JSMakeBooleanForProperty(JSContextRef ctx, bool value);
-
-/*!
-@function
-@abstract       Creates a JavaScript value of the string type.
-@param ctx  The execution context to use.
-@param string   The JSString to assign to the newly created JSValue. The
-newly created JSValue retains string, and releases it upon garbage collection.
-@result         A JSValue of the string type, representing the value of string.
-*/
-JS_EXPORT JSValueRef JSMakeStringForProperty(JSContextRef ctx, JSStringRef string);
-
-/*!
-@function
 @abstract       Returns a JavaScript value's type.
 @param ctx  The execution context to use.
 @param value    The JSValue whose type you want to obtain.
@@ -248,6 +212,72 @@ JS_EXPORT int32_t JSValueToIntNumberUnsafe(JSContextRef ctx, JSValueRef value, J
 @result         A JSString with the result of conversion, or NULL if an exception is thrown. Ownership follows the Create Rule.
 */
 JS_EXPORT JSStringRef JSValueToStringCopyUnsafe(JSContextRef ctx, JSValueRef value, JSValueRef* exception);
+
+/*!
+@function
+@abstract       Creates a JavaScript value of the undefined type.
+@param ctx  The execution context to use.
+@result         The unique undefined value.
+*/
+JS_EXPORT JSValueRef JSValueMakeUndefinedUnsafe(JSContextRef ctx);
+
+/*!
+@function
+@abstract       Creates a JavaScript value of the null type.
+@param ctx  The execution context to use.
+@result         The unique null value.
+*/
+JS_EXPORT JSValueRef JSValueMakeNullUnsafe(JSContextRef ctx);
+
+/*!
+@function
+@abstract       Creates a JavaScript value of the boolean type.
+@param ctx  The execution context to use.
+@param boolean  The bool to assign to the newly created JSValue.
+@result         A JSValue of the boolean type, representing the value of boolean.
+*/
+JS_EXPORT JSValueRef JSValueMakeBooleanUnsafe(JSContextRef ctx, bool boolean);
+
+/*!
+@function
+@abstract       Creates a JavaScript value of the number type.
+@param ctx  The execution context to use.
+@param number   The double to assign to the newly created JSValue.
+@result         A JSValue of the number type, representing the value of number.
+*/
+JS_EXPORT JSValueRef JSValueMakeNumberUnsafe(JSContextRef ctx, double number);
+
+/*!
+@function
+@abstract       Creates a JavaScript value of the string type.
+@param ctx  The execution context to use.
+@param string   The JSString to assign to the newly created JSValue. The
+newly created JSValue retains string, and releases it upon garbage collection.
+@result         A JSValue of the string type, representing the value of string.
+*/
+JS_EXPORT JSValueRef JSValueMakeStringUnsafe(JSContextRef ctx, JSStringRef string);
+
+/* Converting to and from JSON formatted strings */
+
+/*!
+@function
+@abstract       Creates a JavaScript value from a JSON formatted string.
+@param ctx      The execution context to use.
+@param string   The JSString containing the JSON string to be parsed.
+@result         A JSValue containing the parsed value, or NULL if the input is invalid.
+*/
+JS_EXPORT JSValueRef JSValueMakeFromJSONStringUnsafe(JSContextRef ctx, JSStringRef string);
+
+/*!
+@function
+@abstract       Creates a JavaScript string containing the JSON serialized representation of a JS value.
+@param ctx      The execution context to use.
+@param value    The value to serialize.
+@param indent   The number of spaces to indent when nesting.  If 0, the resulting JSON will not contains newlines.  The size of the indent is clamped to 10 spaces.
+@param exception A pointer to a JSValueRef in which to store an exception, if any. Pass NULL if you do not care to store an exception.
+@result         A JSString with the result of serialization, or NULL if an exception is thrown.
+*/
+JS_EXPORT JSStringRef JSValueCreateJSONStringUnsafe(JSContextRef ctx, JSValueRef value, unsigned indent, JSValueRef* exception);
 
 #ifdef __cplusplus
 }
