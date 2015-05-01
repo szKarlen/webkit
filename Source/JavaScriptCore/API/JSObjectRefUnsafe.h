@@ -49,9 +49,9 @@ union JSData
 	void* data;
 };
 
-JS_EXPORT JSType JSValueGetDataWithType(JSContextRef ctx, JSValueRef value, JSData* data);
+JS_EXPORT ::JSType JSValueGetDataWithType(JSContextRef ctx, JSValueRef value, JSData* data);
 
-JS_EXPORT JSType JSValueGetDataWithTypeUnsafe(JSContextRef ctx, JSValueRef value, JSData* data);
+JS_EXPORT ::JSType JSValueGetDataWithTypeUnsafe(JSContextRef ctx, JSValueRef value, JSData* data);
 
 JS_EXPORT JSObjectRef JSObjectMakeUnsafe(JSContextRef ctx, JSClassRef jsClass, void* data);
 
