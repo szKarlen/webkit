@@ -300,6 +300,7 @@
     <ClCompile Include="..\API\JSLRProcessor.cpp" />
     <ClCompile Include="..\API\JSObjectRef.cpp" />
     <ClCompile Include="..\API\JSObjectRefUnsafe.cpp" />
+    <ClCompile Include="..\API\JSSamplerPrivate.cpp" />
     <ClCompile Include="..\API\JSScriptRef.cpp" />
     <ClCompile Include="..\API\JSStringRef.cpp" />
     <ClCompile Include="..\API\JSStringRefBSTR.cpp" />
@@ -908,6 +909,7 @@
     <ClInclude Include="..\API\JSObjectRefPrivate.h" />
     <ClInclude Include="..\API\JSObjectRefUnsafe.h" />
     <ClInclude Include="..\API\JSRetainPtr.h" />
+    <ClInclude Include="..\API\JSSamplerPrivate.h" />
     <ClInclude Include="..\API\JSScriptRefPrivate.h" />
     <ClInclude Include="..\API\JSStringRef.h" />
     <ClInclude Include="..\API\JSStringRefBSTR.h" />
