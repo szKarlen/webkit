@@ -27,6 +27,7 @@
 #define JSProfiler_h
 
 #include <JavaScriptCore/JSBase.h>
+#include "OpaqueJSString.h"
 
 #ifndef __cplusplus
 #include <stdbool.h>
@@ -36,6 +37,8 @@
 extern "C" {
 #endif
 
+JS_EXPORT void JSStartProfiling(JSContextRef ctx, JSStringRef title);
+
 /*!
 @function JSStartProfiling
 @abstract Enables the profler.
@@ -43,7 +46,7 @@ extern "C" {
 @param title The title of the profile.
 @result The profiler is turned on.
 */
-JS_EXPORT void JSStartProfiling(JSContextRef ctx, JSStringRef title);
+JS_EXPORT JSValueRef JSEndProfilingWithReport(JSContextRef ctx, JSStringRef title);
 
 /*!
 @function JSEndProfiling
@@ -54,7 +57,7 @@ JS_EXPORT void JSStartProfiling(JSContextRef ctx, JSStringRef title);
         profile is stopped. If the name does not match any profile then no profile
         is stopped.
 */
-JS_EXPORT void JSEndProfiling(JSContextRef ctx, JSStringRef title);
+JS_EXPORT JSStringRef JSEndProfilingWithJSON(JSContextRef ctx, JSStringRef title);
 
 #ifdef __cplusplus
 }

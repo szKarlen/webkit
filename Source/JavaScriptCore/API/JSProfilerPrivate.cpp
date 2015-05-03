@@ -28,23 +28,104 @@
 
 #include "APICast.h"
 #include "LegacyProfiler.h"
-#include "OpaqueJSString.h"
+
+#include "JSGlobalObject.h"
+
+#include "ObjectConstructor.h"
+
+#include "JSONObject.h"
 
 using namespace JSC;
 
-void JSStartProfiling(JSContextRef ctx, JSStringRef title)
+JSValue fillCallNode(ExecState* exec, const JSC::ProfileNode::Call& call)
 {
-    // Use an independent stopwatch for API-initiated profiling, since the user will expect it
-    // to be relative to when their command was issued.
-    RefPtr<Stopwatch> stopwatch = Stopwatch::create();
-    stopwatch->start();
-    LegacyProfiler::profiler()->startProfiling(toJS(ctx), title->string(), stopwatch.release());
+	JSObject* nodes = constructEmptyObject(exec);
+	nodes->putDirectIndex(exec, 0, jsNumber(call.startTime()));
+	nodes->putDirectIndex(exec, 1, jsNumber(call.elapsedTime()));
+
+	return nodes;
 }
 
-void JSEndProfiling(JSContextRef ctx, JSStringRef title)
+JSValue fillNodes(ExecState* exec, ProfileNode* node)
 {
-    ExecState* exec = toJS(ctx);
-    LegacyProfiler* profiler = LegacyProfiler::profiler();
-    profiler->stopProfiling(exec, title->string());
+	typedef Vector<RefPtr<JSC::ProfileNode> > ProfileNodesList;
+	const ProfileNodesList& nodeChildren = node->children();
+	ProfileNodesList::const_iterator end = nodeChildren.end();
+	
+	JSObject* nodes = constructEmptyObject(exec);
+	
+	unsigned int index = 0;
+	for (RefPtr<JSC::ProfileNode> profileNode : node->children())
+	{
+		nodes->putDirectIndex(exec, index++, fillNodes(exec, profileNode.get()));
+	}
+
+	JSObject* result = constructEmptyObject(exec);
+
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("nodes"))->identifier(&exec->vm())), nodes);
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("functionName"))->identifier(&exec->vm())), jsString(exec, node->functionName()));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("url"))->identifier(&exec->vm())), jsString(exec, node->url()));
+
+	JSObject* calls = constructEmptyObject(exec);
+
+	index = 0;
+	for (const JSC::ProfileNode::Call& call : node->calls())
+		calls->putDirectIndex(exec, index++, fillCallNode(exec, call));
+
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("numberOfCalls"))->identifier(&exec->vm())), jsNumber(node->calls().size()));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("hash"))->identifier(&exec->vm())), jsNumber(node->callIdentifier().hash()));
+
+	return result;
+}
+
+void fillProfile(ExecState* exec, Profile* profile, JSObject* jsProfile)
+{
+	jsProfile->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("title"))->identifier(&exec->vm())), jsString(exec, profile->title()));
+
+	jsProfile->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("uid"))->identifier(&exec->vm())), jsNumber(profile->uid()));
+
+	jsProfile->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("profile"))->identifier(&exec->vm())), fillNodes(exec, profile->rootNode()));
+}
+
+JSValue toJS(ExecState* exec, Profile* profile)
+{
+	JSObject* result = constructEmptyObject(exec);
+
+	fillProfile(exec, profile, result);
+
+	return result;
+}
+
+void JSStartProfiling(JSContextRef ctx, JSStringRef title)
+{
+	ExecState* exec = toJS(ctx);
+	LegacyProfiler* profiler = LegacyProfiler::profiler();
+	RefPtr<Stopwatch> profilerStopwatch = Stopwatch::create();
+	profilerStopwatch->start();
+	profiler->startProfiling(exec, title->string(), profilerStopwatch.release());
+}
+
+JSValueRef JSEndProfilingWithReport(JSContextRef ctx, JSStringRef title)
+{
+	ExecState* exec = toJS(ctx);
+	LegacyProfiler* profiler = LegacyProfiler::profiler();
+	auto profile = profiler->stopProfiling(exec, title->string());
+
+	JSGlobalObject* globalObject = JSGlobalObject::create(exec->vm(), JSGlobalObject::createStructure(exec->vm(), jsNull()));
+
+	return toRef(globalObject->globalExec(), toJS(globalObject->globalExec(), profile.leakRef()));
+}
+
+JSStringRef JSEndProfilingWithJSON(JSContextRef ctx, JSStringRef title)
+{
+	ExecState* exec = toJS(ctx);
+	LegacyProfiler* profiler = LegacyProfiler::profiler();
+	auto profile = profiler->stopProfiling(exec, title->string());
+
+	JSGlobalObject* globalObject = JSGlobalObject::create(exec->vm(), JSGlobalObject::createStructure(exec->vm(), jsNull()));
+
+	const String str = JSONStringify(globalObject->globalExec(), toJS(globalObject->globalExec(), profile.leakRef()), 0);
+
+	return OpaqueJSString::create(str).leakRef();
 }
 
