@@ -288,6 +288,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\API\JSBase.cpp" />
+    <ClCompile Include="..\API\JSBytecodePrivate.cpp" />
     <ClCompile Include="..\API\JSCallbackConstructor.cpp" />
     <ClCompile Include="..\API\JSCallbackFunction.cpp" />
     <ClCompile Include="..\API\JSCallbackObject.cpp" />
@@ -300,6 +301,7 @@
     <ClCompile Include="..\API\JSLRProcessor.cpp" />
     <ClCompile Include="..\API\JSObjectRef.cpp" />
     <ClCompile Include="..\API\JSObjectRefUnsafe.cpp" />
+    <ClCompile Include="..\API\JSProfilerPrivate.cpp" />
     <ClCompile Include="..\API\JSSamplerPrivate.cpp" />
     <ClCompile Include="..\API\JSScriptRef.cpp" />
     <ClCompile Include="..\API\JSStringRef.cpp" />
@@ -890,6 +892,7 @@
     <ClInclude Include="..\API\JSAPIWrapperObject.h" />
     <ClInclude Include="..\API\JSBase.h" />
     <ClInclude Include="..\API\JSBasePrivate.h" />
+    <ClInclude Include="..\API\JSBytecodePrivate.h" />
     <ClInclude Include="..\API\JSCTestRunnerUtils.h" />
     <ClInclude Include="..\API\JSCallbackConstructor.h" />
     <ClInclude Include="..\API\JSCallbackFunction.h" />
@@ -908,6 +911,7 @@
     <ClInclude Include="..\API\JSObjectRef.h" />
     <ClInclude Include="..\API\JSObjectRefPrivate.h" />
     <ClInclude Include="..\API\JSObjectRefUnsafe.h" />
+    <ClInclude Include="..\API\JSProfilerPrivate.h" />
     <ClInclude Include="..\API\JSRetainPtr.h" />
     <ClInclude Include="..\API\JSSamplerPrivate.h" />
     <ClInclude Include="..\API\JSScriptRefPrivate.h" />

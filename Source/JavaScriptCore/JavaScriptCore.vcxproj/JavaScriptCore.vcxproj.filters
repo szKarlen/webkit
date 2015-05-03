@@ -1774,6 +1774,12 @@
     <ClCompile Include="..\API\JSSamplerPrivate.cpp">
       <Filter>API</Filter>
     </ClCompile>
+    <ClCompile Include="..\API\JSBytecodePrivate.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\JSProfilerPrivate.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\API\APICallbackFunction.h">
@@ -4245,6 +4251,12 @@
       <Filter>API</Filter>
     </ClInclude>
     <ClInclude Include="..\API\JSSamplerPrivate.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSBytecodePrivate.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\API\JSProfilerPrivate.h">
       <Filter>API</Filter>
     </ClInclude>
   </ItemGroup>
