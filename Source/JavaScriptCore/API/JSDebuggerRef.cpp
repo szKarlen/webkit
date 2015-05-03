@@ -185,32 +185,11 @@ void JSStackFrameGetDesc(JSDebuggerCallFrameRef debuggerFrame, JSStackFrameDesc*
 
 void JSStackFrameGetDescAtIndex(JSDebuggerCallFrameRef debuggerFrame, unsigned int index, JSStackFrameDesc* desc)
 {
-	/*auto exec = toJS(ctx);
-	Vector<StackFrame> stack;
-	toJS(ctx)->interpreter()->getStackTraceList(stack);
-	auto stackFrame = &stack[index];*/
-	//CallFrame* callFrame = (CallFrame*)&stack[index].executable;
-	
-	//std::printf("callframe is empty: %s", stackFrame->scope == NULL ? "null" : "not null");
-
-	/*
-	JSStackFrameDesc description = *desc;
-	//std::printf("function: %s", !callFrame->functionName().isNull() && !callFrame->functionName().isEmpty() ? callFrame->functionName().utf8() : "");
-	
-	description.functionName = OpaqueJSString::create(stackFrame->friendlyFunctionName(exec)).leakRef();
-	//description.global = toRef(exec, callFrame->vmEntryGlobalObject());
-	description.scope = toRef(exec, stackFrame->scope.get());
-	//description.thisObject = toRef(exec, callFrame->thisValue());
-	description.type = (JSC::DebuggerCallFrame::Type) stackFrame->codeType;
-	
-	//*desc = &description;
-	*/
-
 	auto callFrame = toJS(debuggerFrame);
 	unsigned int currentFrame = 0;
 	while (currentFrame != index)
 	{
-		callFrame = callFrame->callerFrame().leakRef();
+		callFrame = callFrame->callerFrame().get();
 		currentFrame++;
 	}
 	desc->functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
@@ -222,11 +201,9 @@ void JSStackFrameGetDescAtIndex(JSDebuggerCallFrameRef debuggerFrame, unsigned i
 void JSDebuggerGetStackSize(JSContextRef ctx, unsigned int *stackSize)
 {
 	auto exec = toJS(ctx);
-
 	Vector<StackFrame> stackTrace;
 
 	exec->vm().interpreter->getStackTraceList(stackTrace);
 
-	//*stackList = toRef(&stackTrace);
 	*stackSize = stackTrace.size();
 }
