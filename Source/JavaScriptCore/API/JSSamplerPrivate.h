@@ -43,8 +43,7 @@ extern "C" {
 @function JSStartProfiling
 @abstract Enables the profler.
 @param ctx The execution context to use.
-@param title The title of the profile.
-@result The profiler is turned on.
+@result The sampling is turned on.
 */
 JS_EXPORT void JSStartSampling(JSContextRef ctx);
 
@@ -52,10 +51,7 @@ JS_EXPORT void JSStartSampling(JSContextRef ctx);
 @function JSEndProfiling
 @abstract Disables the profler.
 @param ctx The execution context to use.
-@param title The title of the profile.
-@result The profiler is turned off. If there is no name, the most recently started
-        profile is stopped. If the name does not match any profile then no profile
-        is stopped.
+@result The sampling is turned off.
 */
 JS_EXPORT void JSStopSampling(JSContextRef ctx);
 
