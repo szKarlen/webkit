@@ -111,8 +111,6 @@ using namespace JSC;
 		auto jsObject = jsValue.toObject(exec);
 		if (jsObject->isErrorInstance())
 			return kJSError;
-		if (jsObject->isProxy())
-			return kJSTypeProxy;
 		if (jsValue.inherits(exec->lexicalGlobalObject()->regExpStructure()->classInfo()))
 			return kJSTypeRegExp;
 		data->data = JSObjectGetPrivate(toRef(jsObject));
