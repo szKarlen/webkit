@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 2015-05-17  Benjamin Poulain  <benjamin@webkit.org>
 
         [JSC] Make StringRecursionChecker faster in the simple cases without any recursion
@@ -1408,6 +1409,8 @@
         * platform/mac/accessibility/selection-sync-expected.txt: Added.
         * platform/mac/accessibility/selection-sync.html: Added.
 
+=======
+>>>>>>> d6738dc... Crash at com.apple.WebKit.WebContent at com.apple.WebCore: WebCore::createWindow + 185
 2015-05-04  Chris Dumez  <cdumez@apple.com>
 
         Crash at com.apple.WebKit.WebContent at com.apple.WebCore: WebCore::createWindow + 185
