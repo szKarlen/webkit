@@ -1,3 +1,172 @@
+2015-05-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Large array shouldn't be slow
+        https://bugs.webkit.org/show_bug.cgi?id=144617
+
+        Reviewed by Geoffrey Garen.
+        
+        Decouple MIN_SPARSE_ARRAY_INDEX, which is the threshold for storing to the sparse map when
+        you're already using ArrayStorage mode, from the minimul array length required to use
+        ArrayStorage in a new Array(length) allocation.
+        
+        Lift the array allocation length threshold to something very high. If this works, we'll
+        probably remove that threshold entirely.
+        
+        This is a 27% speed-up on JetStream/hash-map. Because run-jsc-benchmarks still can't run
+        JetStream as a discrete suite, this adds hash-map to LongSpider so that we run it somewhere
+        for now.
+
+        * dfg/DFGCallArrayAllocatorSlowPathGenerator.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNewArrayWithSize):
+        * runtime/ArrayConventions.h:
+        * runtime/JSArray.h:
+        (JSC::JSArray::create):
+        * runtime/JSGlobalObject.h:
+        (JSC::constructEmptyArray):
+        * tests/stress/new-array-storage-array-with-size.js: Skip this test until we fix https://bugs.webkit.org/show_bug.cgi?id=144609.
+
+2015-05-03  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Add backed intrinsics to private functions exposed with private symbols in global object
+        https://bugs.webkit.org/show_bug.cgi?id=144545
+
+        Reviewed by Darin Adler.
+
+        Math.abs and Math.floor have ASM intrinsics And it is further accelerated in DFG/FTL layers.
+        This patch adds intrinsic to private functions exposed with private symbols in global object,
+        @floor and @abs.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::init):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalPrivateFuncAbs): Deleted.
+        (JSC::globalPrivateFuncFloor): Deleted.
+        * runtime/MathObject.cpp:
+        * runtime/MathObject.h:
+        * tests/stress/array-from-abs-and-floor.js: Added.
+        (target1):
+        (target2):
+        (target3):
+
+2015-05-04  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [cmake] ARM related build system cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=144566
+
+        Reviewed by Darin Adler.
+
+        * CMakeLists.txt:
+
+2015-05-04  Andreas Kling  <akling@apple.com>
+
+        Optimize WeakBlock's "reap" and "visit" operations.
+        <https://webkit.org/b/144585>
+
+        Reviewed by Geoffrey Garen.
+
+        WeakBlock was using Heap::isLive(void*) to determine the liveness of weak pointees.
+        That function was really written with conservative roots marking in mind, and will do a bunch
+        of sanity and bounds checks.
+
+        For weaks, we know that the pointer will have been a valid cell pointer into a block
+        of appropriate cell size, so we can skip a lot of the checks.
+
+        We now keep a pointer to the MarkedBlock in each WeakBlock. That way we no longer have to do
+        MarkedBlock::blockFor() for every single cell when iterating.
+
+        Note that a WeakBlock's MarkedBlock pointer becomes null when we detach a logically empty
+        WeakBlock from its WeakSet and transfer ownership to Heap. At that point, the block will never
+        be pointing to any live cells, and the only operation that will run on the block is sweep().
+
+        Finally, MarkedBlock allows liveness queries in three states: Marked, Retired, and Allocated.
+        In Allocated state, all cells are reported as live. This state will reset to Marked on next GC.
+        This patch uses that knowledge to avoid branching on the MarkedBlock's state for every cell.
+
+        This is a ~3x speedup of visit() and a ~2x speedup of reap() on Dromaeo/dom-modify, netting
+        what looks like a 1% speedup locally.
+
+        * heap/MarkedBlock.cpp:
+        (JSC::MarkedBlock::MarkedBlock): Pass *this to the WeakSet's ctor.
+
+        * heap/MarkedBlock.h:
+        (JSC::MarkedBlock::isMarkedOrNewlyAllocated): Added, stripped-down version of isLive() when the
+        block's state is known to be either Marked or Retired.
+
+        (JSC::MarkedBlock::isAllocated): Added, tells WeakBlock it's okay to skip reap/visit since isLive()
+        would report that all cells are live anyway.
+
+        * heap/WeakBlock.cpp:
+        (JSC::WeakBlock::create):
+        (JSC::WeakBlock::WeakBlock): Stash a MarkedBlock* on each WeakBlock.
+
+        (JSC::WeakBlock::visit):
+        (JSC::WeakBlock::reap): Optimized these two to avoid a bunch of pointer arithmetic and branches.
+
+        * heap/WeakBlock.h:
+        (JSC::WeakBlock::disconnectMarkedBlock): Added.
+        * heap/WeakSet.cpp:
+        (JSC::WeakSet::sweep): Call the above when removing a WeakBlock from WeakSet and transferring
+        ownership to Heap until it can die peacefully.
+
+        (JSC::WeakSet::addAllocator):
+        * heap/WeakSet.h:
+        (JSC::WeakSet::WeakSet): Give WeakSet a MarkedBlock& for passing on to WeakBlocks.
+
+2015-05-04  Basile Clement  <basile_clement@apple.com>
+
+        Allocation sinking is prohibiting the creation of phis between a Phantom object and its materialization
+        https://bugs.webkit.org/show_bug.cgi?id=144587
+
+        Rubber stamped by Filip Pizlo.
+
+        When sinking object allocations, we ensure in
+        determineMaterializationPoints that whenever an allocation is
+        materialized on a path to a block, it is materialized in all such
+        paths. Thus when running the SSA calculator to place Phis in
+        placeMaterializationPoints, we can't encounter a situation where some
+        Upsilons are referring to a materialization while others are referring
+        to the phantom object.
+
+        This replaces the code that was adding a materialization late in
+        placeMaterializationPoints to handle that case by an assertion that it
+        does not happen, which will make
+        https://bugs.webkit.org/show_bug.cgi?id=143073 easier to implement.
+
+        * dfg/DFGObjectAllocationSinkingPhase.cpp:
+        (JSC::DFG::ObjectAllocationSinkingPhase::placeMaterializationPoints):
+
+2015-05-04  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Extending undefined in class syntax should throw a TypeError
+        https://bugs.webkit.org/show_bug.cgi?id=144284
+
+        Reviewed by Darin Adler.
+
+        The bug was caused by op_eq_null evaluating to true when compared to undefined.
+        Explicitly check op_eq_undefined first to detect the case where we're extending undefined.
+
+        We also had bogus test cases checked in class-syntax-extends.html. This patch also fixes them.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ClassExprNode::emitBytecode):
+
+2015-05-04  Ryosuke Niwa  <rniwa@webkit.org>
+
+        new super should be a syntax error
+        https://bugs.webkit.org/show_bug.cgi?id=144282
+
+        Reviewed by Joseph Pecoraro.
+
+        Disallow "new super" as ES6 spec doesn't allow this.
+
+        * parser/Parser.cpp:
+        (JSC::Parser<LexerType>::parseMemberExpression):
+
 2015-05-04  Saam Barati  <saambarati1@gmail.com>
 
         JSCallbackObject does not maintain symmetry between accesses for getOwnPropertySlot and put
