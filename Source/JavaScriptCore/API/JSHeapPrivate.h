@@ -36,9 +36,10 @@
 extern "C" {
 #endif
 
-	JS_EXPORT void JSHeapStatistics(JSContextRef ctx);
-
-	JS_EXPORT JSValueRef JSHeapGetStructure(JSContextRef ctx);
+	JS_EXPORT JSValueRef JSHeapGetGroupedByTypeObjectsCount(JSContextRef ctx);
+	JS_EXPORT size_t JSHeapGetObjectsCount(JSContextRef ctx);
+	JS_EXPORT size_t JSHeapGetProtectedObjectsCount(JSContextRef ctx);
+	JS_EXPORT JSValueRef JSHeapGetGroupedByTypeProtectedObjectsCount(JSContextRef ctx);
 
 #ifdef __cplusplus
 }
