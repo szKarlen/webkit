@@ -31,6 +31,7 @@
 
 #include <JavaScriptCore/JSObjectRef.h>
 #include <JavaScriptCore/JSValueRef.h>
+#include <JavaScriptCore/JSStringRef.h>
 
 #include "APICast.h"
 
@@ -88,15 +89,9 @@ JS_EXPORT void JSDebuggerStepOutOfFunction(JSDebuggerRef debugger);
 
 JS_EXPORT void JSDebuggerRecompile(JSContextRef ctx, JSDebuggerRef debugger);
 
-//JS_EXPORT void JSStackFrameGetDesc(JSDebuggerStackListRef stackList, unsigned int index, JSStackFrameDesc** desc);
+JS_EXPORT size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace);
 
-//JS_EXPORT void JSDebuggerGetStackList(JSContextRef ctx, JSDebuggerStackListRef* stackList, unsigned int *stackSize);
-
-JS_EXPORT void JSStackFrameGetDesc(JSDebuggerCallFrameRef debuggerFrame, JSStackFrameDesc* desc);
-
-JS_EXPORT void JSStackFrameGetDescAtIndex(JSDebuggerCallFrameRef debuggerFrame, unsigned int index, JSStackFrameDesc* desc);
-
-JS_EXPORT void JSDebuggerGetStackSize(JSContextRef ctx, unsigned int *stackSize);
+JS_EXPORT JSValueRef JSDebuggerEvaluate(JSContextRef ctx, JSDebuggerCallFrameRef debuggerFrame, JSStringRef source, JSValueRef* ex);
 
 #ifdef __cplusplus
 }

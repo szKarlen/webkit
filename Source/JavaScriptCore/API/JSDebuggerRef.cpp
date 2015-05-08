@@ -173,37 +173,30 @@ void JSDebuggerRecompile(JSContextRef ctx, JSDebuggerRef debugger)
 	jsDebugger->recompileAllJSFunctions(&exec->vm());
 }
 
-void JSStackFrameGetDesc(JSDebuggerCallFrameRef debuggerFrame, JSStackFrameDesc* desc)
+size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace)
 {
-	auto callFrame = toJS(debuggerFrame);
-
-	desc->functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
-	desc->scope = toRef(callFrame->exec(), (JSC::JSObject*)callFrame->scope());
-	desc->thisObject = toRef(callFrame->exec(), callFrame->thisValue());
-	desc->type = (JSC::DebuggerCallFrame::Type) callFrame->type();
-}
-
-void JSStackFrameGetDescAtIndex(JSDebuggerCallFrameRef debuggerFrame, unsigned int index, JSStackFrameDesc* desc)
-{
-	auto callFrame = toJS(debuggerFrame);
-	unsigned int currentFrame = 0;
-	while (currentFrame != index)
+	auto callFrame = toJS(initialFrame);
+	auto result = *backTrace;
+	unsigned int currentFrame = framesToSkip;
+	do
 	{
-		callFrame = callFrame->callerFrame().get();
+		*&result[currentFrame].functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
+		*&result[currentFrame].scope = toRef(callFrame->exec(), (JSC::JSObject*)callFrame->scope());
+		*&result[currentFrame].thisObject = toRef(callFrame->exec(), callFrame->thisValue());
+		*&result[currentFrame].type = (JSC::DebuggerCallFrame::Type) callFrame->type();
+		callFrame = callFrame->callerFrame() && callFrame->callerFrame()->isValid() ? callFrame->callerFrame().get() : nullptr;
 		currentFrame++;
-	}
-	desc->functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
-	desc->scope = toRef(callFrame->exec(), (JSC::JSObject*)callFrame->scope());
-	desc->thisObject = toRef(callFrame->exec(), callFrame->thisValue());
-	desc->type = (JSC::DebuggerCallFrame::Type) callFrame->type();
+	} while (currentFrame != framesToCapture && callFrame);
+	return currentFrame;
 }
 
-void JSDebuggerGetStackSize(JSContextRef ctx, unsigned int *stackSize)
+JSValueRef JSDebuggerEvaluate(JSContextRef ctx, JSDebuggerCallFrameRef debuggerFrame, JSStringRef source, JSValueRef* ex)
 {
 	auto exec = toJS(ctx);
-	Vector<StackFrame> stackTrace;
-
-	exec->vm().interpreter->getStackTraceList(stackTrace);
-
-	*stackSize = stackTrace.size();
+	auto callFrame = toJS(debuggerFrame);
+	JSValue exception;
+	auto result = toRef(exec, callFrame->evaluateNonBlocking(source->string(), exception));
+	if (exception && ex)
+		*ex = toRef(exec, exception);
+	return result;
 }
