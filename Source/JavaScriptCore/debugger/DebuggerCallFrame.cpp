@@ -205,6 +205,35 @@ JSValue DebuggerCallFrame::evaluate(const String& script, JSValue& exception)
     return result;
 }
 
+JSValue DebuggerCallFrame::evaluateNonBlocking(const String& script, JSValue& exception)
+{
+	ASSERT(isValid());
+	CallFrame* callFrame = m_callFrame;
+	if (!callFrame)
+		return jsNull();
+
+	if (!callFrame->codeBlock())
+		return JSValue();
+
+	DebuggerEvalEnabler evalEnabler(callFrame);
+	VM& vm = callFrame->vm();
+	EvalExecutable* eval = EvalExecutable::create(callFrame, makeSource(script), callFrame->codeBlock()->isStrictMode());
+	if (vm.exception()) {
+		exception = vm.exception();
+		vm.clearException();
+		return jsUndefined();
+	}
+
+	JSValue thisValue = thisValueForCallFrame(callFrame);
+	JSValue result = vm.interpreter->execute(eval, callFrame, thisValue, scope()->jsScope());
+	if (vm.exception()) {
+		exception = vm.exception();
+		vm.clearException();
+	}
+	ASSERT(result);
+	return result;
+}
+
 void DebuggerCallFrame::invalidate()
 {
     RefPtr<DebuggerCallFrame> frame = this;
