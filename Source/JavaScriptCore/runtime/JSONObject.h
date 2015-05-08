@@ -61,9 +61,7 @@ private:
 
 JS_EXPORT_PRIVATE JSValue JSONParse(ExecState*, const String&);
 JS_EXPORT_PRIVATE String JSONStringify(ExecState*, JSValue, unsigned indent);
-
-void escapeStringToBuilder(StringBuilder&, const String&);
-    
+   
 } // namespace JSC
 
 #endif // JSONObject_h
