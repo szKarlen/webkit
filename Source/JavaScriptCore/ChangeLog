@@ -1,3 +1,239 @@
+2015-05-08  Andreas Kling  <akling@apple.com>
+
+        Optimize serialization of quoted JSON strings.
+        <https://webkit.org/b/144754>
+
+        Reviewed by Darin Adler.
+
+        Optimized the serialization of quoted strings into JSON by moving the logic into
+        StringBuilder so it can make smarter decisions about buffering.
+
+        12% progression on Kraken/json-stringify-tinderbox (on my Mac Pro.)
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ObjectPatternNode::toString): Use the new StringBuilder API.
+
+        * runtime/JSONObject.h:
+        * runtime/JSONObject.cpp:
+        (JSC::Stringifier::Holder::appendNextProperty):
+        (JSC::appendStringToStringBuilder): Deleted.
+        (JSC::appendQuotedJSONStringToBuilder): Deleted.
+        (JSC::Stringifier::appendQuotedString): Deleted.
+        (JSC::Stringifier::appendStringifiedValue): Moved the bulk of this logic
+        to StringBuilder and call that from here.
+
+2015-05-07  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r183961.
+        https://bugs.webkit.org/show_bug.cgi?id=144784
+
+        Broke js/dom/JSON-stringify.html (Requested by kling on
+        #webkit).
+
+        Reverted changeset:
+
+        "Optimize serialization of quoted JSON strings."
+        https://bugs.webkit.org/show_bug.cgi?id=144754
+        http://trac.webkit.org/changeset/183961
+
+2015-05-07  Filip Pizlo  <fpizlo@apple.com>
+
+        GC has trouble with pathologically large array allocations
+        https://bugs.webkit.org/show_bug.cgi?id=144609
+
+        Reviewed by Geoffrey Garen.
+
+        The bug was that SlotVisitor::copyLater() would return early for oversize blocks (right
+        after pinning them), and would skip the accounting. The GC calculates the size of the heap
+        in tandem with the scan to save time, and that accounting was part of how the GC would
+        know how big the heap was. The GC would then think that oversize copied blocks use no
+        memory, and would then mess up its scheduling of the next GC.
+        
+        Fixing this bug is harder than it seems. When running an eden GC, we figure out the heap
+        size by summing the size from the last collection and the size by walking the eden heap.
+        But this breaks when we eagerly delete objects that the last collection touched. We can do
+        that in one corner case: copied block reallocation. The old block will be deleted from old
+        space during the realloc and a new block will be allocated in new space. In order for the
+        GC to know that the size of old space actually shrank, we need a field to tell us how much
+        such shrinkage could occur. Since this is a very dirty corner case and it only works for
+        very particular reasons arising from the special properties of copied space (single owner,
+        and the realloc is used in places where the compiler already knows that it cannot register
+        allocate a pointer to the old block), I opted for an equally dirty shrinkage counter
+        devoted just to this case. It's called bytesRemovedFromOldSpaceDueToReallocation.
+        
+        To test this, I needed to add an Option to force a particular RAM size in the GC. This
+        allows us to write tests that assert that the GC heap size is some value X, without
+        worrying about machine-to-machine variations due to GC heuristics changing based on RAM
+        size.
+
+        * heap/CopiedSpace.cpp:
+        (JSC::CopiedSpace::CopiedSpace): Initialize the dirty shrinkage counter.
+        (JSC::CopiedSpace::tryReallocateOversize): Bump the dirty shrinkage counter.
+        * heap/CopiedSpace.h:
+        (JSC::CopiedSpace::takeBytesRemovedFromOldSpaceDueToReallocation): Swap out the counter. Used by the GC when it does its accounting.
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap): Allow the user to force the RAM size.
+        (JSC::Heap::updateObjectCounts): Use the dirty shrinkage counter to good effect. Also, make this code less confusing.
+        * heap/SlotVisitorInlines.h:
+        (JSC::SlotVisitor::copyLater): The early return for isOversize() was the bug. We still need to report these bytes as live. Otherwise the GC doesn't know that it owns this memory.
+        * jsc.cpp: Add size measuring hooks to write the largeish test.
+        (GlobalObject::finishCreation):
+        (functionGCAndSweep):
+        (functionFullGC):
+        (functionEdenGC):
+        (functionHeapSize):
+        * runtime/Options.h:
+        * tests/stress/new-array-storage-array-with-size.js: Fix this so that it actually allocates ArrayStorage arrays and tests the thing it was supposed to test.
+        * tests/stress/new-largeish-contiguous-array-with-size.js: Added. This tests what the other test accidentally started testing, but does so without running your system out of memory.
+        (foo):
+        (test):
+
+2015-05-07  Saam Barati  <saambarati1@gmail.com>
+
+        Global functions should be initialized as JSFunctions in byte code
+        https://bugs.webkit.org/show_bug.cgi?id=144178
+
+        Reviewed by Geoffrey Garen.
+
+        This patch makes the initialization of global functions more explicit by
+        moving initialization into bytecode. It also prepares JSC for having ES6
+        style lexical scoping because initializing global functions in bytecode
+        easily allows global functions to be initialized with the proper scope that
+        will have access to global lexical variables. Global lexical variables
+        should be visible to global functions but don't live on the global object.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedProgramCodeBlock::visitChildren):
+        * bytecode/UnlinkedCodeBlock.h:
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::generate):
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/BytecodeGenerator.h:
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::initializeGlobalProperties):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::addGlobalVar):
+        (JSC::JSGlobalObject::addFunction):
+        * runtime/JSGlobalObject.h:
+
+2015-05-07  Benjamin Poulain  <bpoulain@apple.com>
+
+        Fix the x86 32bits build
+
+        * assembler/X86Assembler.h:
+
+2015-05-07  Benjamin Poulain  <bpoulain@apple.com>
+
+        [JSC] Add basic DFG/FTL support for Math.round
+        https://bugs.webkit.org/show_bug.cgi?id=144725
+
+        Reviewed by Filip Pizlo.
+
+        This patch adds two optimizations targeting Math.round():
+        -Add a DFGNode ArithRound corresponding to the intrinsic RoundIntrinsic.
+        -Change the MacroAssembler to be stricter on how we fail to convert a double
+         to ingeter. Previously, any number valued zero would fail, now we only
+         fail for -0.
+
+        Since ArithRound speculate it produces int32, the MacroAssembler assembler
+        part became necessary because zero is a pretty common output of Math.round()
+        and we would OSR exit a lot (and eventually recompile for doubles).
+
+        The implementation itself of the inline Math.round() is exactly the same
+        as the C function that exists for Math.round(). We can very likely do better
+        but it is a good start known to be valid and inlining alone alread provides
+        significant speedups.
+
+        * assembler/X86Assembler.h:
+        (JSC::X86Assembler::movmskpd_rr):
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::branchConvertDoubleToInt32):
+        When we have a zero, get the sign bit out of the double and check if is one.
+
+        I'll look into doing the same improvement for ARM.
+
+        * bytecode/SpeculatedType.cpp:
+        (JSC::typeOfDoubleRounding):
+        (JSC::typeOfDoubleFRound): Deleted.
+        * bytecode/SpeculatedType.h:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::AbstractInterpreter<AbstractStateType>::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleIntrinsic):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDoesGC.cpp:
+        (JSC::DFG::doesGC):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::roundShouldSpeculateInt32):
+        (JSC::DFG::Graph::negateShouldSpeculateMachineInt): Deleted.
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::arithNodeFlags):
+        (JSC::DFG::Node::hasHeapPrediction):
+        (JSC::DFG::Node::hasArithMode):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileArithRound):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::convertDoubleToInt32):
+        (JSC::FTL::LowerDFGToLLVM::compileDoubleAsInt32):
+        (JSC::FTL::LowerDFGToLLVM::compileArithRound):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::ceil64):
+        * jit/ThunkGenerators.cpp:
+        * runtime/MathCommon.cpp:
+        * runtime/MathCommon.h:
+        * runtime/MathObject.cpp:
+        (JSC::mathProtoFuncRound):
+        * tests/stress/math-round-basics.js: Added.
+        (mathRoundOnIntegers):
+        (mathRoundOnDoubles):
+        (mathRoundOnBooleans):
+        (uselessMathRound):
+        (mathRoundWithOverflow):
+        (mathRoundConsumedAsDouble):
+        (mathRoundDoesNotCareAboutMinusZero):
+        (mathRoundNoArguments):
+        (mathRoundTooManyArguments):
+        (testMathRoundOnConstants):
+        (mathRoundStructTransition):
+        (Math.round):
+
+2015-05-07  Saam Barati  <saambarati1@gmail.com>
+
+        exceptionFuzz tests should explicitly initialize the exceptionFuzz boolean in JavaScript code through a function in jsc.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=144753
+
+        Reviewed by Mark Lam.
+
+        This allows the BytecodeGenerator to freely emit startup code that "may"
+        throw exceptions without worrying that this startup code will trigger
+        the exceptionFuzz exception. The exceptionFuzz counter will only begin
+        ticking when the 'enableExceptionFuzz' function is explicitly called in 
+        the exceptionFuzz tests.
+
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (functionEnableExceptionFuzz):
+        * tests/exceptionFuzz/3d-cube.js:
+        * tests/exceptionFuzz/date-format-xparb.js:
+        * tests/exceptionFuzz/earley-boyer.js:
+
 2015-05-07  Andreas Kling  <akling@apple.com>
 
         Optimize serialization of quoted JSON strings.

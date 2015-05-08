@@ -401,12 +401,13 @@ static void appendQuotedJSONStringInternal(OutputCharacterType*& output, const I
             break;
         default:
             ASSERT((*input & 0xFF00) == 0);
+            static const char hexDigits[] = "0123456789abcdef";
             *output++ = '\\';
             *output++ = 'u';
             *output++ = '0';
             *output++ = '0';
-            *output++ = upperNibbleToASCIIHexDigit(*input);
-            *output++ = lowerNibbleToASCIIHexDigit(*input);
+            *output++ = static_cast<LChar>(hexDigits[(*input >> 4) & 0xF]);
+            *output++ = static_cast<LChar>(hexDigits[*input & 0xF]);
             break;
         }
     }
@@ -417,10 +418,8 @@ void StringBuilder::appendQuotedJSONString(const String& string)
     // Make sure we have enough buffer space to append this string without having
     // to worry about reallocating in the middle.
     // The 2 is for the '"' quotes on each end.
-    // The 'maximumOutputCharactersPerInputCharacter' is 6 for 16-bit characters
-    // since they may need \uNNNN-style representation. 2 for 8-bit strings.
-    unsigned maximumOutputCharactersPerInputCharacter = string.is8Bit() ? 2 : 6;
-    size_t maximumCapacityRequired = length() + 2 + (string.length() * maximumOutputCharactersPerInputCharacter);
+    // The 6 is for characters that need to be \uNNNN encoded.
+    size_t maximumCapacityRequired = length() + 2 + string.length() * 6;
     RELEASE_ASSERT(maximumCapacityRequired < std::numeric_limits<unsigned>::max());
 
     if (is8Bit() && !string.is8Bit())
