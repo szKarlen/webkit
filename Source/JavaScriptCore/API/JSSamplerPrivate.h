@@ -40,7 +40,7 @@ extern "C" {
 #endif
 
 /*!
-@function JSStartProfiling
+@function JSStartSampling
 @abstract Enables the profler.
 @param ctx The execution context to use.
 @result The sampling is turned on.
@@ -48,7 +48,7 @@ extern "C" {
 JS_EXPORT void JSStartSampling(JSContextRef ctx);
 
 /*!
-@function JSEndProfiling
+@function JSStopSampling
 @abstract Disables the profler.
 @param ctx The execution context to use.
 @result The sampling is turned off.
