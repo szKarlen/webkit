@@ -42,6 +42,25 @@
 #include "InitializeThreading.h"
 
 #include "DebuggerCallFrame.h"
+#include "CallFrameInlines.h"
+#include "DebuggerScope.h"
+
+typedef enum
+{
+	ProgramType,
+	FunctionType
+} CallFrameFunctionType;
+
+typedef enum
+{
+	GLOBAL_SCOPE = 0,
+	LOCAL_SCOPE = 1,
+	WITH_SCOPE = 2,
+	CLOSURE_SCOPE = 3,
+	CATCH_SCOPE = 4,
+	FUNCTION_NAME_SCOPE = 5,
+	UNDEFINED = 6
+} ScopeType;
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,15 +71,14 @@ extern "C" {
 	public:
 		JSStringRef functionName;
 		JSValueRef thisObject;
-		JSC::DebuggerCallFrame::Type type;
+		::CallFrameFunctionType type;
 		JSValueRef global;
 		JSValueRef scope;
-	};
-
-	enum CallFrameFunctionType
-	{
-		ProgramType,
-		FunctionType
+		int column;
+		int line;
+		::ScopeType scopeType;
+		JSStringRef url;
+		JSDebuggerCallFrameRef pointer;
 	};
 
 JS_EXPORT JSDebuggerRef JSDebuggerCreate(const JSDebuggerDefinition* definition);

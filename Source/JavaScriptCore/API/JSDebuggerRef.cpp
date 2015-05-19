@@ -35,9 +35,6 @@
 #include "VM.h"
 #include "Register.h"
 
-#include "DebuggerCallFrame.h"
-#include "CallFrameInlines.h"
-
 #include "CodeBlock.h"
 
 #include "JSDebugger.h"
@@ -173,6 +170,50 @@ void JSDebuggerRecompile(JSContextRef ctx, JSDebuggerRef debugger)
 	jsDebugger->recompileAllJSFunctions(&exec->vm());
 }
 
+/*
+Taken from JSJavaScriptCallFrame::scopeType(ExecState* exec)
+*/
+static ::ScopeType GetScopeType(ExecState* exec, DebuggerScope* scopeChain)
+{
+	if (!exec->argument(0).isInt32())
+		return ::ScopeType::UNDEFINED;
+	int index = exec->argument(0).asInt32();
+
+	DebuggerScope::iterator end = scopeChain->end();
+
+	bool foundLocalScope = false;
+	for (DebuggerScope::iterator iter = scopeChain->begin(); iter != end; ++iter) {
+		DebuggerScope* scope = iter.get();
+
+		if (!foundLocalScope && scope->isFunctionOrEvalScope()) {
+			// First function scope is the local scope, each successive one is a closure.
+			if (!index)
+				return ::ScopeType::LOCAL_SCOPE;
+			foundLocalScope = true;
+		}
+
+		if (!index) {
+			if (scope->isCatchScope())
+				return ::ScopeType::CATCH_SCOPE;
+			if (scope->isFunctionNameScope())
+				return ::ScopeType::FUNCTION_NAME_SCOPE;
+			if (scope->isWithScope())
+				return ::ScopeType::WITH_SCOPE;
+			if (scope->isGlobalScope()) {
+				ASSERT(++iter == end);
+				return ::ScopeType::GLOBAL_SCOPE;
+			}
+			ASSERT(scope->isFunctionOrEvalScope());
+			return ::ScopeType::CLOSURE_SCOPE;
+		}
+
+		--index;
+	}
+
+	ASSERT_NOT_REACHED();
+	return ::ScopeType::UNDEFINED;
+}
+
 size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace)
 {
 	auto callFrame = toJS(initialFrame);
@@ -183,7 +224,13 @@ size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsig
 		*&result[currentFrame].functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
 		*&result[currentFrame].scope = toRef(callFrame->exec(), (JSC::JSObject*)callFrame->scope());
 		*&result[currentFrame].thisObject = toRef(callFrame->exec(), callFrame->thisValue());
-		*&result[currentFrame].type = (JSC::DebuggerCallFrame::Type) callFrame->type();
+		*&result[currentFrame].type = (::CallFrameFunctionType) callFrame->type();
+		*&result[currentFrame].column = callFrame->column();
+		*&result[currentFrame].line = callFrame->line();
+		*&result[currentFrame].scopeType = ::GetScopeType(callFrame->exec(), callFrame->scope());
+		*&result[currentFrame].url = OpaqueJSString::create(callFrame->exec()->codeBlock()->ownerExecutable()->sourceURL()).leakRef();
+		*&result[currentFrame].pointer = toRef(callFrame);
+
 		callFrame = callFrame->callerFrame() && callFrame->callerFrame()->isValid() ? callFrame->callerFrame().get() : nullptr;
 		currentFrame++;
 	} while (currentFrame != framesToCapture && callFrame);
