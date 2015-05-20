@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2013-2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -328,6 +328,10 @@ public:
     }
     static Address addressFor(VirtualRegister virtualRegister)
     {
+        // NB. It's tempting on some architectures to sometimes use an offset from the stack
+        // register because for some offsets that will encode to a smaller instruction. But we
+        // cannot do this. We use this in places where the stack pointer has been moved to some
+        // unpredictable location.
         ASSERT(virtualRegister.isValid());
         return Address(GPRInfo::callFrameRegister, virtualRegister.offset() * sizeof(Register));
     }
@@ -356,26 +360,67 @@ public:
         return payloadFor(static_cast<VirtualRegister>(operand));
     }
 
+    // Access to our fixed callee CallFrame.
+    static Address calleeFrameSlot(int slot)
+    {
+        ASSERT(slot >= JSStack::CallerFrameAndPCSize);
+        return Address(stackPointerRegister, sizeof(Register) * (slot - JSStack::CallerFrameAndPCSize));
+    }
+
+    // Access to our fixed callee CallFrame.
+    static Address calleeArgumentSlot(int argument)
+    {
+        return calleeFrameSlot(virtualRegisterForArgument(argument).offset());
+    }
+
+    static Address calleeFrameTagSlot(int slot)
+    {
+        return calleeFrameSlot(slot).withOffset(TagOffset);
+    }
+
+    static Address calleeFramePayloadSlot(int slot)
+    {
+        return calleeFrameSlot(slot).withOffset(PayloadOffset);
+    }
+
+    static Address calleeArgumentTagSlot(int argument)
+    {
+        return calleeArgumentSlot(argument).withOffset(TagOffset);
+    }
+
+    static Address calleeArgumentPayloadSlot(int argument)
+    {
+        return calleeArgumentSlot(argument).withOffset(PayloadOffset);
+    }
+
+    static Address calleeFrameCallerFrame()
+    {
+        return calleeFrameSlot(0).withOffset(CallFrame::callerFrameOffset());
+    }
+    
     Jump branchIfCellNotObject(GPRReg cellReg)
     {
         return branch8(Below, Address(cellReg, JSCell::typeInfoTypeOffset()), TrustedImm32(ObjectType));
     }
 
-    static GPRReg selectScratchGPR(GPRReg preserve1 = InvalidGPRReg, GPRReg preserve2 = InvalidGPRReg, GPRReg preserve3 = InvalidGPRReg, GPRReg preserve4 = InvalidGPRReg)
+    static GPRReg selectScratchGPR(GPRReg preserve1 = InvalidGPRReg, GPRReg preserve2 = InvalidGPRReg, GPRReg preserve3 = InvalidGPRReg, GPRReg preserve4 = InvalidGPRReg, GPRReg preserve5 = InvalidGPRReg)
     {
-        if (preserve1 != GPRInfo::regT0 && preserve2 != GPRInfo::regT0 && preserve3 != GPRInfo::regT0 && preserve4 != GPRInfo::regT0)
+        if (preserve1 != GPRInfo::regT0 && preserve2 != GPRInfo::regT0 && preserve3 != GPRInfo::regT0 && preserve4 != GPRInfo::regT0 && preserve5 != GPRInfo::regT0)
             return GPRInfo::regT0;
 
-        if (preserve1 != GPRInfo::regT1 && preserve2 != GPRInfo::regT1 && preserve3 != GPRInfo::regT1 && preserve4 != GPRInfo::regT1)
+        if (preserve1 != GPRInfo::regT1 && preserve2 != GPRInfo::regT1 && preserve3 != GPRInfo::regT1 && preserve4 != GPRInfo::regT1 && preserve5 != GPRInfo::regT1)
             return GPRInfo::regT1;
 
-        if (preserve1 != GPRInfo::regT2 && preserve2 != GPRInfo::regT2 && preserve3 != GPRInfo::regT2 && preserve4 != GPRInfo::regT2)
+        if (preserve1 != GPRInfo::regT2 && preserve2 != GPRInfo::regT2 && preserve3 != GPRInfo::regT2 && preserve4 != GPRInfo::regT2 && preserve5 != GPRInfo::regT2)
             return GPRInfo::regT2;
 
-        if (preserve1 != GPRInfo::regT3 && preserve2 != GPRInfo::regT3 && preserve3 != GPRInfo::regT3 && preserve4 != GPRInfo::regT3)
+        if (preserve1 != GPRInfo::regT3 && preserve2 != GPRInfo::regT3 && preserve3 != GPRInfo::regT3 && preserve4 != GPRInfo::regT3 && preserve5 != GPRInfo::regT3)
             return GPRInfo::regT3;
 
-        return GPRInfo::regT4;
+        if (preserve1 != GPRInfo::regT4 && preserve2 != GPRInfo::regT4 && preserve3 != GPRInfo::regT4 && preserve4 != GPRInfo::regT4 && preserve5 != GPRInfo::regT4)
+            return GPRInfo::regT4;
+
+        return GPRInfo::regT5;
     }
 
     // Add a debug call. This call has no effect on JIT code execution state.
@@ -523,7 +568,9 @@ public:
     void callExceptionFuzz();
     
     enum ExceptionCheckKind { NormalExceptionCheck, InvertedExceptionCheck };
-    Jump emitExceptionCheck(ExceptionCheckKind kind = NormalExceptionCheck);
+    enum ExceptionJumpWidth { NormalJumpWidth, FarJumpWidth };
+    Jump emitExceptionCheck(
+        ExceptionCheckKind = NormalExceptionCheck, ExceptionJumpWidth = NormalJumpWidth);
 
 #if ENABLE(SAMPLING_COUNTERS)
     static void emitCount(MacroAssembler& jit, AbstractSamplingCounter& counter, int32_t increment = 1)

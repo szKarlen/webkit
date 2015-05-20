@@ -1033,7 +1033,6 @@ private:
         case GetArrayLength:
         case Phi:
         case Upsilon:
-        case GetArgument:
         case GetIndexedPropertyStorage:
         case GetTypedArrayByteOffset:
         case LastNodeType:
@@ -1215,6 +1214,10 @@ private:
         case AllocationProfileWatchpoint:
         case Call:
         case Construct:
+        case CallVarargs:
+        case ConstructVarargs:
+        case CallForwardVarargs:
+        case LoadVarargs:
         case ProfileControlFlow:
         case NativeCall:
         case NativeConstruct:

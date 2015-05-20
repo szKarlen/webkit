@@ -61,7 +61,6 @@ namespace JSC { namespace DFG {
     macro(KillLocal, NodeMustGenerate) \
     macro(MovHint, 0) \
     macro(ZombieHint, 0) \
-    macro(GetArgument, NodeResultJS | NodeMustGenerate) \
     macro(Phantom, NodeMustGenerate) \
     macro(HardPhantom, NodeMustGenerate) /* Like Phantom, but we never remove any of its children. */ \
     macro(Check, NodeMustGenerate) /* Used if we want just a type check but not liveness. Non-checking uses will be removed. */\
@@ -147,15 +146,16 @@ namespace JSC { namespace DFG {
     /* Since a put to 'length' may invalidate optimizations here, */\
     /* this must be the directly subsequent property put. Note that PutByVal */\
     /* opcodes use VarArgs beause they may have up to 4 children. */\
-    macro(GetByVal, NodeResultJS | NodeMustGenerate | NodeMightClobber) \
-    macro(PutByValDirect, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
-    macro(PutByVal, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
-    macro(PutByValAlias, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
-    macro(GetById, NodeResultJS | NodeMustGenerate | NodeClobbersWorld) \
-    macro(GetByIdFlush, NodeResultJS | NodeMustGenerate | NodeClobbersWorld) \
-    macro(PutById, NodeMustGenerate | NodeClobbersWorld) \
-    macro(PutByIdFlush, NodeMustGenerate | NodeMustGenerate | NodeClobbersWorld) \
-    macro(PutByIdDirect, NodeMustGenerate | NodeClobbersWorld) \
+    macro(GetByVal, NodeResultJS | NodeMustGenerate) \
+    macro(LoadVarargs, NodeMustGenerate) \
+    macro(PutByValDirect, NodeMustGenerate | NodeHasVarArgs) \
+    macro(PutByVal, NodeMustGenerate | NodeHasVarArgs) \
+    macro(PutByValAlias, NodeMustGenerate | NodeHasVarArgs) \
+    macro(GetById, NodeResultJS | NodeMustGenerate) \
+    macro(GetByIdFlush, NodeResultJS | NodeMustGenerate) \
+    macro(PutById, NodeMustGenerate) \
+    macro(PutByIdFlush, NodeMustGenerate | NodeMustGenerate) \
+    macro(PutByIdDirect, NodeMustGenerate) \
     macro(CheckStructure, NodeMustGenerate) \
     macro(GetExecutable, NodeResultJS) \
     macro(PutStructure, NodeMustGenerate) \
@@ -216,10 +216,13 @@ namespace JSC { namespace DFG {
     macro(CompareStrictEq, NodeResultBoolean) \
     \
     /* Calls. */\
-    macro(Call, NodeResultJS | NodeMustGenerate | NodeHasVarArgs | NodeClobbersWorld) \
-    macro(Construct, NodeResultJS | NodeMustGenerate | NodeHasVarArgs | NodeClobbersWorld) \
-    macro(NativeCall, NodeResultJS | NodeMustGenerate | NodeHasVarArgs | NodeClobbersWorld) \
-    macro(NativeConstruct, NodeResultJS | NodeMustGenerate | NodeHasVarArgs | NodeClobbersWorld) \
+    macro(Call, NodeResultJS | NodeMustGenerate | NodeHasVarArgs) \
+    macro(Construct, NodeResultJS | NodeMustGenerate | NodeHasVarArgs) \
+    macro(CallVarargs, NodeResultJS | NodeMustGenerate) \
+    macro(CallForwardVarargs, NodeResultJS | NodeMustGenerate) \
+    macro(ConstructVarargs, NodeResultJS | NodeMustGenerate) \
+    macro(NativeCall, NodeResultJS | NodeMustGenerate | NodeHasVarArgs) \
+    macro(NativeConstruct, NodeResultJS | NodeMustGenerate | NodeHasVarArgs) \
     \
     /* Allocations. */\
     macro(NewObject, NodeResultJS) \

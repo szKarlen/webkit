@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -141,18 +141,6 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
         break;
     }
         
-    case GetArgument: {
-        ASSERT(m_graph.m_form == SSA);
-        VariableAccessData* variable = node->variableAccessData();
-        AbstractValue& value = m_state.variables().operand(variable->local().offset());
-        ASSERT(value.isHeapTop());
-        FiltrationResult result =
-            value.filter(typeFilterFor(useKindFor(variable->flushFormat())));
-        ASSERT_UNUSED(result, result == FiltrationOK);
-        forNode(node) = value;
-        break;
-    }
-        
     case ExtractOSREntryLocal: {
         if (!(node->unlinkedLocal().isArgument())
             && m_graph.m_lazyVars.get(node->unlinkedLocal().toLocal())) {
@@ -170,6 +158,8 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     case GetLocal: {
         VariableAccessData* variableAccessData = node->variableAccessData();
         AbstractValue value = m_state.variables().operand(variableAccessData->local().offset());
+        // The value in the local should already be checked.
+        DFG_ASSERT(m_graph, node, value.isType(typeFilterFor(variableAccessData->flushFormat())));
         if (value.value())
             m_state.setFoundConstants(true);
         forNode(node) = value;
@@ -204,9 +194,20 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     }
         
     case SetArgument:
-        // Assert that the state of arguments has been set.
-        ASSERT(!m_state.block()->valuesAtHead.operand(node->local()).isClear());
+        // Assert that the state of arguments has been set. SetArgument means that someone set
+        // the argument values out-of-band, and currently this always means setting to a
+        // non-clear value.
+        ASSERT(!m_state.variables().operand(node->local()).isClear());
         break;
+        
+    case LoadVarargs: {
+        clobberWorld(node->origin.semantic, clobberLimit);
+        LoadVarargsData* data = node->loadVarargsData();
+        m_state.variables().operand(data->count).setType(SpecInt32);
+        for (unsigned i = data->limit - 1; i--;)
+            m_state.variables().operand(data->start.offset() + i).makeHeapTop();
+        break;
+    }
             
     case BitAnd:
     case BitOr:
@@ -1334,7 +1335,8 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
         // the arguments a bit. Note that this is not sufficient to force constant folding
         // of GetMyArgumentsLength, because GetMyArgumentsLength is a clobbering operation.
         // We perform further optimizations on this later on.
-        if (node->origin.semantic.inlineCallFrame) {
+        if (node->origin.semantic.inlineCallFrame
+            && !node->origin.semantic.inlineCallFrame->isVarargs()) {
             setConstant(
                 node, jsNumber(node->origin.semantic.inlineCallFrame->arguments.size() - 1));
             m_state.setDidClobber(true); // Pretend that we clobbered to prevent constant folding.
@@ -1983,6 +1985,9 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     case Construct:
     case NativeCall:
     case NativeConstruct:
+    case CallVarargs:
+    case CallForwardVarargs:
+    case ConstructVarargs:
         clobberWorld(node->origin.semantic, clobberLimit);
         forNode(node).makeHeapTop();
         break;

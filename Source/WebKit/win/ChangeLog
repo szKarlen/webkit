@@ -1,3 +1,359 @@
+2015-04-01  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix Windows build.
+
+        * WebCoreSupport/WebChromeClient.h:
+        (WebChromeClient::numWheelEventHandlersChanged): Deleted.
+
+2015-03-25  Per Arne Vollan  <peavo@outlook.com>
+
+        [WinCairo] Crash when plugin window is destroyed.
+        https://bugs.webkit.org/show_bug.cgi?id=142905
+
+        Reviewed by Alex Christensen.
+
+        When a plugin window is destroyed with the Win32 api function DestroyWindow,
+        the system will send a synchronous WM_PARENTNOTIFY message to the WebView.
+        The WebView window procedure will, when processing the WM_PARENTNOTIFY message,
+        call UpdateWindow to paint synchronously. This will cause reentrancy problems,
+        since we're already called from WebCore code, and then reenter WebCore painting code.
+        We should avoid calling UpdateWindow when handling the WM_PARENTNOTIFY message.
+
+        * WebView.cpp:
+        (WebView::WebViewWndProc):
+        (WebView::updateWindowIfNeeded):
+        * WebView.h:
+
+2015-03-19  Chris Dumez  <cdumez@apple.com>
+
+        Clean up DOMTimer related settings
+        https://bugs.webkit.org/show_bug.cgi?id=142837
+
+        Reviewed by Darin Adler.
+
+        Stop setting the DOMTimers' default minimum interval to 4ms as this
+        is now the default.
+
+        * WebView.cpp:
+        (WebView::initWithFrame):
+        (WebView::defaultMinimumTimerInterval):
+
+2015-03-16  Conrad Shultz  <conrad_shultz@apple.com>
+
+        Allow clients to selectively disable plug-ins
+        https://bugs.webkit.org/show_bug.cgi?id=142506
+
+        Reviewed by Anders Carlsson.
+
+        * WebCoreSupport/WebPlatformStrategies.h:
+        * WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebPlatformStrategies::getWebVisiblePluginInfo):
+        Wrap getPluginInfo();
+
+        * WebView.cpp:
+        (WebView::canShowMIMEType):
+        Update to reflect function rename.
+
+2015-03-13  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r181483.
+        https://bugs.webkit.org/show_bug.cgi?id=142688
+
+        Caused use-after-free on many tests (Requested by ap on
+        #webkit).
+
+        Reverted changeset:
+
+        "Allow clients to selectively disable plug-ins"
+        https://bugs.webkit.org/show_bug.cgi?id=142506
+        http://trac.webkit.org/changeset/181483
+
+2015-03-10  Conrad Shultz  <conrad_shultz@apple.com>
+
+        Allow clients to selectively disable plug-ins
+        https://bugs.webkit.org/show_bug.cgi?id=142506
+
+        Reviewed by Anders Carlsson.
+
+        * WebCoreSupport/WebPlatformStrategies.h:
+        * WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebPlatformStrategies::getWebVisiblePluginInfo):
+        Wrap getPluginInfo();
+
+        * WebView.cpp:
+        (WebView::canShowMIMEType):
+        Update to reflect function rename.
+
+2015-03-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] AX: Implement support for ARIA 1.1 'switch' role
+        https://bugs.webkit.org/show_bug.cgi?id=142016
+        <rdar://problem/19953264>
+
+        Reviewed by Chris Fleizach.
+
+        The changes in Bug 141986 did not update the proper Windows routines to
+        support the new ARIA 1.1 role. This turned out to be trivial.
+
+        * AccessibleBase.cpp:
+        (MSAARole): Provide MSAA role for 'switch'. Also correct 'ToggleButtonRole',
+        which was improperly reporting as 'push button'.
+
+2015-03-04  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Hide Promise with runtime flags under Cocoa JSContext API
+        https://bugs.webkit.org/show_bug.cgi?id=141965
+
+        Reviewed by Filip Pizlo.
+
+        Add new JSC runtime flag, PromiseDisabled.
+
+        * Interfaces/IWebPreferences.idl:
+        * Interfaces/IWebPreferencesPrivate.idl:
+
+2015-03-03  Chris Dumez  <cdumez@apple.com>
+
+        Access ApplicationCacheStorage global instance via singleton() static member function
+        https://bugs.webkit.org/show_bug.cgi?id=142239
+
+        Reviewed by Anders Carlsson.
+
+        Access ApplicationCacheStorage global instance via singleton() static
+        member function as per WebKit coding style.
+
+2015-03-01  Chris Dumez  <cdumez@apple.com>
+
+        Make NotificationCenter / Notification suspendable
+        https://bugs.webkit.org/show_bug.cgi?id=142117
+        <rdar://problem/19923085>
+
+        Reviewed by Andreas Kling.
+
+        Provide implementation for NotificationClient::hasPendingPermissionRequests().
+
+        * WebCoreSupport/WebDesktopNotificationsDelegate.cpp:
+        (WebDesktopNotificationsDelegate::requestPermission):
+        (hasPendingPermissionRequests):
+        * WebCoreSupport/WebDesktopNotificationsDelegate.h:
+
+2015-02-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Remove remaining SafariTheme cruft
+        https://bugs.webkit.org/show_bug.cgi?id=142075
+
+        Reviewed by Anders Carlsson.
+
+        Remove reference to SafariTheme-switching preference.
+
+        * Interfaces/IWebPreferencesPrivate.idl:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::WebKitClassFactory):
+        (WebKitClassFactory::QueryInterface):
+        (WebKitClassFactory::AddRef):
+        (WebKitClassFactory::Release):
+        (WebKitClassFactory::CreateInstance):
+        (WebKitClassFactory::LockServer):
+        * WebPreferences.cpp:
+        (WebPreferences::shouldPaintNativeControls): Deleted.
+        (WebPreferences::setShouldPaintNativeControls): Deleted.
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::initWithFrame):
+        (WebView::notifyPreferencesChanged):
+
+2015-02-26  Chris Dumez  <cdumez@apple.com>
+
+        Rename DatabaseManager::manager() to DatabaseManager::singleton()
+        https://bugs.webkit.org/show_bug.cgi?id=142054
+
+        Reviewed by Ryosuke Niwa.
+
+        Rename DatabaseManager::manager() to DatabaseManager::singleton() as
+        per coding style and use WTF::NeverDestroyed.
+
+        * WebDatabaseManager.cpp:
+        (WebDatabaseManager::sharedWebDatabaseManager):
+        (WebDatabaseManager::origins):
+        (WebDatabaseManager::databasesWithOrigin):
+        (WebDatabaseManager::detailsForDatabase):
+        (WebDatabaseManager::deleteAllDatabases):
+        (WebDatabaseManager::deleteOrigin):
+        (WebDatabaseManager::deleteDatabase):
+        (WebDatabaseManager::setQuota):
+        (WebKitInitializeWebDatabasesIfNecessary):
+        * WebSecurityOrigin.cpp:
+        (WebSecurityOrigin::usage):
+        (WebSecurityOrigin::quota):
+        (WebSecurityOrigin::setQuota):
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2015-02-25  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Use WEBCORE_EXPORT instead of Definition file
+        https://bugs.webkit.org/show_bug.cgi?id=141734
+
+        Reviewed by Alex Christensen.
+
+        * CFDictionaryPropertyBag.h: Add required export macros.
+        * Interfaces/WebKit.idl: Ditto.
+        * WebCoreStatistics.cpp: Add missing #include (required
+        now that we are exporting more symbols.)
+        * WebKitCOMAPI.h: Add required export macros.
+        * WebKitDLL.h: Ditto.
+        * WebKitPrefix.h: Ditto.
+        * WebView.cpp: Add missing #include required using new
+        due to new export mechanism.
+
+2015-02-24  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        REGRESSION(r179429): Can't type comments in Facebook
+        https://bugs.webkit.org/show_bug.cgi?id=141859
+
+        Reviewed by Brent Fulgham.
+
+        Added Windows support.
+
+        * Interfaces/IWebPreferences.idl:
+        * Interfaces/IWebPreferencesPrivate.idl:
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initializeDefaultSettings):
+        (WebPreferences::javaScriptRuntimeFlags):
+        (WebPreferences::setJavaScriptRuntimeFlags):
+        (WebPreferences::isWebSecurityEnabled):
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2015-02-18  Chris Dumez  <cdumez@apple.com>
+
+        Access FontCache global instance via singleton() static member function
+        https://bugs.webkit.org/show_bug.cgi?id=141726
+
+        Reviewed by Daniel Bates.
+
+        Access FontCache global instance via singleton() static member function,
+        as per coding style.
+
+2015-02-09  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: remove some unnecessary Inspector prefixes from class names in Inspector namespace
+        https://bugs.webkit.org/show_bug.cgi?id=141372
+
+        Reviewed by Joseph Pecoraro.
+
+        * WebCoreSupport/WebInspectorClient.cpp:
+        (WebInspectorFrontendClient::destroyInspectorView):
+
+2015-02-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] [64-bit] Work around MSVC2013 Runtime Bug
+        https://bugs.webkit.org/show_bug.cgi?id=141498
+        <rdar://problem/19803642>
+
+        Reviewed by Anders Carlsson.
+
+        Disable FMA3 instruction use in the MSVC math library to
+        work around a VS2013 runtime crash. We can remove this
+        workaround when we switch to VS2015.
+
+        * WebKitDLL.cpp: Call _set_FMA3_enable(0) to disable FMA3 support.
+
+2015-02-11  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Accelerated compositing should be disabled when graphics card does not support it.
+        https://bugs.webkit.org/show_bug.cgi?id=140667
+
+        Reviewed by Alex Christensen.
+
+        * WebCoreSupport/AcceleratedCompositingContext.cpp:
+        (AcceleratedCompositingContext::scrollNonCompositedContents):
+        (AcceleratedCompositingContext::acceleratedCompositingAvailable):
+        * WebCoreSupport/AcceleratedCompositingContext.h:
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2015-02-09  Brent Fulgham  <bfulgham@apple.com>
+
+        AX: [Win] OBJID_CLIENT comparisons broken in 64-bit builds
+        https://bugs.webkit.org/show_bug.cgi?id=141391
+        <rdar://problem/19767342>
+
+        Reviewed by Anders Carlsson.
+
+        * WebView.cpp:
+        (WebView::onGetObject): Cast lParam as LONG to ensure proper word size for
+        comparison against OBJID_CLIENT.
+
+2015-02-07  Chris Dumez  <cdumez@apple.com>
+
+        Add Vector::removeFirstMatching() / removeAllMatching() methods taking lambda functions
+        https://bugs.webkit.org/show_bug.cgi?id=141321
+
+        Reviewed by Darin Adler.
+
+        Use new Vector::removeFirstMatching() / removeAllMatching() methods.
+
+2015-02-02  Chris Dumez  <cdumez@apple.com>
+
+        Access MemoryCache singleton using MemoryCache::singleton()
+        https://bugs.webkit.org/show_bug.cgi?id=141104
+
+        Reviewed by Andreas Kling.
+
+        Access MemoryCache singleton using MemoryCache::singleton() static
+        member function, instead of a free function, as per the recent
+        coding style discussion on WebKit-dev.
+
+2015-01-30  Chris Dumez  <cdumez@apple.com>
+
+        Rename shared() static member functions to singleton() for singleton classes.
+        https://bugs.webkit.org/show_bug.cgi?id=141088
+
+        Reviewed by Ryosuke Niwa and Benjamin Poulain.
+
+        Rename shared() static member functions to singleton() for singleton
+        classes as per the recent coding style change.
+
+2015-01-29  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Build fix after r179368.
+
+        * Interfaces/IWebPreferencesPrivate.idl:
+        * WebPreferences.cpp:
+        (WebPreferences::screenFontSubstitutionEnabled): Deleted.
+        (WebPreferences::setScreenFontSubstitutionEnabled): Deleted.
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2015-01-29  Sam Weinig  <sam@webkit.org>
+
+        Remove support for screen font substitution
+        https://bugs.webkit.org/show_bug.cgi?id=141038
+
+        Reviewed by Tim Horton.
+
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::screenFontSubstitutionEnabled):
+        (WebPreferences::setScreenFontSubstitutionEnabled):
+        Remove implementations. Have this setting set on windows didn't have any effect before,
+        so this doesn't change behavior.
+
+2015-01-29  Chris Dumez  <cdumez@apple.com>
+
+        Clean up / modernize PageCache class
+        https://bugs.webkit.org/show_bug.cgi?id=141009
+
+        Reviewed by Darin Adler.
+
+        Clean up / modernize PageCache class.
+
+        * WebView.cpp:
+        (WebView::setCacheModel):
+
 2015-01-28  peavo@outlook.com  <peavo@outlook.com>
 
         [WinCairo] Message loop is flooded with timer messages when animating in accelerated compositing mode.

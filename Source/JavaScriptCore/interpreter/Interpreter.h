@@ -301,8 +301,21 @@ namespace JSC {
     };
 
     JSValue eval(CallFrame*);
-    CallFrame* sizeFrameForVarargs(CallFrame*, JSStack*, JSValue, int, uint32_t firstVarArgOffset);
-    void loadVarargs(CallFrame*, CallFrame*, JSValue, JSValue, uint32_t firstVarArgOffset);
+
+    inline CallFrame* calleeFrameForVarargs(CallFrame* callFrame, unsigned numUsedStackSlots, unsigned argumentCountIncludingThis)
+    {
+        unsigned paddedCalleeFrameOffset = WTF::roundUpToMultipleOf(
+            stackAlignmentRegisters(),
+            numUsedStackSlots + argumentCountIncludingThis + JSStack::CallFrameHeaderSize);
+        return CallFrame::create(callFrame->registers() - paddedCalleeFrameOffset);
+    }
+
+    unsigned sizeOfVarargs(CallFrame* exec, JSValue arguments, uint32_t firstVarArgOffset);
+    unsigned sizeFrameForVarargs(CallFrame* exec, JSStack*, JSValue arguments, unsigned numUsedStackSlots, uint32_t firstVarArgOffset);
+    void loadVarargs(CallFrame* execCaller, VirtualRegister firstElementDest, JSValue source, uint32_t offset, uint32_t length);
+    void setupVarargsFrame(CallFrame* execCaller, CallFrame* execCallee, JSValue arguments, uint32_t firstVarArgOffset, uint32_t length);
+    void setupVarargsFrameAndSetThis(CallFrame* execCaller, CallFrame* execCallee, JSValue thisValue, JSValue arguments, uint32_t firstVarArgOffset, uint32_t length);
+    
 } // namespace JSC
 
 #endif // Interpreter_h

@@ -135,6 +135,8 @@ public:
         m_prologue = FTL_NEW_BLOCK(m_out, ("Prologue"));
         LBasicBlock stackOverflow = FTL_NEW_BLOCK(m_out, ("Stack overflow"));
         m_handleExceptions = FTL_NEW_BLOCK(m_out, ("Handle Exceptions"));
+        
+        LBasicBlock checkArguments = FTL_NEW_BLOCK(m_out, ("Check arguments"));
 
         for (BlockIndex blockIndex = 0; blockIndex < m_graph.numBlocks(); ++blockIndex) {
             m_highBlock = m_graph.block(blockIndex);
@@ -185,6 +187,30 @@ public:
             m_out.stackmapIntrinsic(), m_out.constInt64(m_ftlState.capturedStackmapID),
             m_out.int32Zero, capturedAlloca);
         
+        // If we have any CallVarargs then we nee to have a spill slot for it.
+        bool hasVarargs = false;
+        for (BasicBlock* block : preOrder) {
+            for (Node* node : *block) {
+                switch (node->op()) {
+                case CallVarargs:
+                case CallForwardVarargs:
+                case ConstructVarargs:
+                    hasVarargs = true;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        if (hasVarargs) {
+            LValue varargsSpillSlots = m_out.alloca(
+                arrayType(m_out.int64, JSCallVarargs::numSpillSlotsNeeded()));
+            m_ftlState.varargsSpillSlotsStackmapID = m_stackmapIDs++;
+            m_out.call(
+                m_out.stackmapIntrinsic(), m_out.constInt64(m_ftlState.varargsSpillSlotsStackmapID),
+                m_out.int32Zero, varargsSpillSlots);
+        }
+        
         m_callFrame = m_out.ptrToInt(
             m_out.call(m_out.frameAddressIntrinsic(), m_out.int32Zero), m_out.intPtr);
         m_tagTypeNumber = m_out.constInt64(TagTypeNumber);
@@ -193,7 +219,7 @@ public:
         m_out.storePtr(m_out.constIntPtr(codeBlock()), addressFor(JSStack::CodeBlock));
         
         m_out.branch(
-            didOverflowStack(), rarely(stackOverflow), usually(lowBlock(m_graph.block(0))));
+            didOverflowStack(), rarely(stackOverflow), usually(checkArguments));
         
         m_out.appendTo(stackOverflow, m_handleExceptions);
         m_out.call(m_out.operation(operationThrowStackOverflowError), m_callFrame, m_out.constIntPtr(codeBlock()));
@@ -203,13 +229,58 @@ public:
             m_out.constInt32(MacroAssembler::maxJumpReplacementSize()));
         m_out.unreachable();
         
-        m_out.appendTo(m_handleExceptions, lowBlock(m_graph.block(0)));
+        m_out.appendTo(m_handleExceptions, checkArguments);
         m_ftlState.handleExceptionStackmapID = m_stackmapIDs++;
         m_out.call(
             m_out.stackmapIntrinsic(), m_out.constInt64(m_ftlState.handleExceptionStackmapID),
             m_out.constInt32(MacroAssembler::maxJumpReplacementSize()));
         m_out.unreachable();
-
+        
+        m_out.appendTo(checkArguments, lowBlock(m_graph.block(0)));
+        availabilityMap().clear();
+        availabilityMap().m_locals = Operands<Availability>(codeBlock()->numParameters(), 0);
+        for (unsigned i = codeBlock()->numParameters(); i--;) {
+            availabilityMap().m_locals.argument(i) =
+                Availability(FlushedAt(FlushedJSValue, virtualRegisterForArgument(i)));
+        }
+        m_codeOriginForExitTarget = CodeOrigin(0);
+        m_codeOriginForExitProfile = CodeOrigin(0);
+        m_node = nullptr;
+        for (unsigned i = codeBlock()->numParameters(); i--;) {
+            Node* node = m_graph.m_arguments[i];
+            VirtualRegister operand = virtualRegisterForArgument(i);
+            
+            LValue jsValue = m_out.load64(addressFor(operand));
+            
+            if (node) {
+                DFG_ASSERT(m_graph, node, operand == node->variableAccessData()->machineLocal());
+                
+                // This is a hack, but it's an effective one. It allows us to do CSE on the
+                // primordial load of arguments. This assumes that the GetLocal that got put in
+                // place of the original SetArgument doesn't have any effects before it. This
+                // should hold true.
+                m_loadedArgumentValues.add(node, jsValue);
+            }
+            
+            switch (m_graph.m_argumentFormats[i]) {
+            case FlushedInt32:
+                speculate(BadType, jsValueValue(jsValue), node, isNotInt32(jsValue));
+                break;
+            case FlushedBoolean:
+                speculate(BadType, jsValueValue(jsValue), node, isNotBoolean(jsValue));
+                break;
+            case FlushedCell:
+                speculate(BadType, jsValueValue(jsValue), node, isNotCell(jsValue));
+                break;
+            case FlushedJSValue:
+                break;
+            default:
+                DFG_CRASH(m_graph, node, "Bad flush format for argument");
+                break;
+            }
+        }
+        m_out.jump(lowBlock(m_graph.block(0)));
+        
         for (BasicBlock* block : preOrder)
             compileBlock(block);
         
@@ -380,9 +451,6 @@ private:
             break;
         case BooleanToNumber:
             compileBooleanToNumber();
-            break;
-        case GetArgument:
-            compileGetArgument();
             break;
         case ExtractOSREntryLocal:
             compileExtractOSREntryLocal();
@@ -638,6 +706,14 @@ private:
         case Call:
         case Construct:
             compileCallOrConstruct();
+            break;
+        case CallVarargs:
+        case CallForwardVarargs:
+        case ConstructVarargs:
+            compileCallOrConstructVarargs();
+            break;
+        case LoadVarargs:
+            compileLoadVarargs();
             break;
 #if ENABLE(FTL_NATIVE_CALL_INLINING)
         case NativeCall:
@@ -982,36 +1058,6 @@ private:
         }
     }
 
-    void compileGetArgument()
-    {
-        VariableAccessData* variable = m_node->variableAccessData();
-        VirtualRegister operand = variable->machineLocal();
-        DFG_ASSERT(m_graph, m_node, operand.isArgument());
-
-        LValue jsValue = m_out.load64(addressFor(operand));
-
-        switch (useKindFor(variable->flushFormat())) {
-        case Int32Use:
-            speculate(BadType, jsValueValue(jsValue), m_node, isNotInt32(jsValue));
-            setInt32(unboxInt32(jsValue));
-            break;
-        case CellUse:
-            speculate(BadType, jsValueValue(jsValue), m_node, isNotCell(jsValue));
-            setJSValue(jsValue);
-            break;
-        case BooleanUse:
-            speculate(BadType, jsValueValue(jsValue), m_node, isNotBoolean(jsValue));
-            setBoolean(unboxBoolean(jsValue));
-            break;
-        case UntypedUse:
-            setJSValue(jsValue);
-            break;
-        default:
-            DFG_CRASH(m_graph, m_node, "Bad use kind");
-            break;
-        }
-    }
-    
     void compileExtractOSREntryLocal()
     {
         EncodedJSValue* buffer = static_cast<EncodedJSValue*>(
@@ -1021,12 +1067,15 @@ private:
     
     void compileGetLocal()
     {
-        // GetLocals arise only for captured variables.
+        // GetLocals arise only for captured variables and arguments. For arguments, we might have
+        // already loaded it.
+        if (LValue value = m_loadedArgumentValues.get(m_node)) {
+            setJSValue(value);
+            return;
+        }
         
         VariableAccessData* variable = m_node->variableAccessData();
         AbstractValue& value = m_state.variables().operand(variable->local());
-        
-        DFG_ASSERT(m_graph, m_node, variable->isCaptured());
         
         if (isInt32Speculation(value.m_type))
             setInt32(m_out.load32(payloadFor(variable->machineLocal())));
@@ -2048,8 +2097,22 @@ private:
     {
         checkArgumentsNotCreated();
 
-        DFG_ASSERT(m_graph, m_node, !m_node->origin.semantic.inlineCallFrame);
-        setInt32(m_out.add(m_out.load32NonNegative(payloadFor(JSStack::ArgumentCount)), m_out.constInt32(-1)));
+        if (m_node->origin.semantic.inlineCallFrame
+            && !m_node->origin.semantic.inlineCallFrame->isVarargs()) {
+            setInt32(
+                m_out.constInt32(
+                    m_node->origin.semantic.inlineCallFrame->arguments.size() - 1));
+        } else {
+            VirtualRegister argumentCountRegister;
+            if (!m_node->origin.semantic.inlineCallFrame)
+                argumentCountRegister = VirtualRegister(JSStack::ArgumentCount);
+            else
+                argumentCountRegister = m_node->origin.semantic.inlineCallFrame->argumentCountRegister;
+            setInt32(
+                m_out.add(
+                    m_out.load32NonNegative(payloadFor(argumentCountRegister)),
+                    m_out.constInt32(-1)));
+        }
     }
     
     void compileGetMyArgumentByVal()
@@ -2062,10 +2125,17 @@ private:
         LValue oneBasedIndex = m_out.add(zeroBasedIndex, m_out.int32One);
         
         LValue limit;
-        if (codeOrigin.inlineCallFrame)
-            limit = m_out.constInt32(codeOrigin.inlineCallFrame->arguments.size());
-        else
-            limit = m_out.load32(payloadFor(JSStack::ArgumentCount));
+        if (codeOrigin.inlineCallFrame
+            && !codeOrigin.inlineCallFrame->isVarargs())
+            limit = m_out.constInt32(codeOrigin.inlineCallFrame->arguments.size() - 1);
+        else {
+            VirtualRegister argumentCountRegister;
+            if (!codeOrigin.inlineCallFrame)
+                argumentCountRegister = VirtualRegister(JSStack::ArgumentCount);
+            else
+                argumentCountRegister = codeOrigin.inlineCallFrame->argumentCountRegister;
+            limit = m_out.sub(m_out.load32(payloadFor(argumentCountRegister)), m_out.int32One);
+        }
         
         speculate(Uncountable, noValue(), 0, m_out.aboveOrEqual(oneBasedIndex, limit));
         
@@ -3762,6 +3832,87 @@ private:
         
         setJSValue(call);
     }
+    
+    void compileCallOrConstructVarargs()
+    {
+        LValue jsCallee = lowJSValue(m_node->child1());
+        
+        LValue jsArguments = nullptr;
+        LValue thisArg = nullptr;
+        
+        switch (m_node->op()) {
+        case CallVarargs:
+            jsArguments = lowJSValue(m_node->child2());
+            thisArg = lowJSValue(m_node->child3());
+            break;
+        case CallForwardVarargs:
+            thisArg = lowJSValue(m_node->child2());
+            break;
+        case ConstructVarargs:
+            jsArguments = lowJSValue(m_node->child2());
+            break;
+        default:
+            DFG_CRASH(m_graph, m_node, "bad node type");
+            break;
+        }
+        
+        unsigned stackmapID = m_stackmapIDs++;
+        
+        Vector<LValue> arguments;
+        arguments.append(m_out.constInt64(stackmapID));
+        arguments.append(m_out.constInt32(sizeOfICFor(m_node)));
+        arguments.append(constNull(m_out.ref8));
+        arguments.append(m_out.constInt32(1 + !!jsArguments + !!thisArg));
+        arguments.append(jsCallee);
+        if (jsArguments)
+            arguments.append(jsArguments);
+        if (thisArg)
+            arguments.append(thisArg);
+        
+        callPreflight();
+        
+        LValue call = m_out.call(m_out.patchpointInt64Intrinsic(), arguments);
+        setInstructionCallingConvention(call, LLVMCCallConv);
+        
+        m_ftlState.jsCallVarargses.append(JSCallVarargs(stackmapID, m_node));
+        
+        setJSValue(call);
+    }
+    
+    void compileLoadVarargs()
+    {
+        LoadVarargsData* data = m_node->loadVarargsData();
+        LValue jsArguments = lowJSValue(m_node->child1());
+        
+        LValue length = vmCall(
+            m_out.operation(operationSizeOfVarargs), m_callFrame, jsArguments,
+            m_out.constInt32(data->offset));
+        
+        // FIXME: There is a chance that we will call an effectful length property twice. This is safe
+        // from the standpoint of the VM's integrity, but it's subtly wrong from a spec compliance
+        // standpoint. The best solution would be one where we can exit *into* the op_call_varargs right
+        // past the sizing.
+        // https://bugs.webkit.org/show_bug.cgi?id=141448
+        
+        LValue lengthIncludingThis = m_out.add(length, m_out.int32One);
+        speculate(
+            VarargsOverflow, noValue(), nullptr,
+            m_out.above(lengthIncludingThis, m_out.constInt32(data->limit)));
+        
+        m_out.store32(lengthIncludingThis, payloadFor(data->machineCount));
+        
+        // FIXME: This computation is rather silly. If operationLaodVarargs just took a pointer instead
+        // of a VirtualRegister, we wouldn't have to do this.
+        // https://bugs.webkit.org/show_bug.cgi?id=141660
+        LValue machineStart = m_out.lShr(
+            m_out.sub(addressFor(data->machineStart.offset()).value(), m_callFrame),
+            m_out.constIntPtr(3));
+        
+        vmCall(
+            m_out.operation(operationLoadVarargs), m_callFrame,
+            m_out.castToInt32(machineStart), jsArguments, m_out.constInt32(data->offset),
+            length, m_out.constInt32(data->mandatoryMinimum));
+    }
 
     void compileJump()
     {
@@ -4066,7 +4217,7 @@ private:
             
                 LValue call = m_out.call(
                     m_out.patchpointInt64Intrinsic(),
-                    m_out.constInt64(stackmapID), m_out.constInt32(sizeOfCheckIn()),
+                    m_out.constInt64(stackmapID), m_out.constInt32(sizeOfIn()),
                     constNull(m_out.ref8), m_out.constInt32(1), cell);
 
                 setInstructionCallingConvention(call, LLVMAnyRegCallConv);
@@ -6454,7 +6605,7 @@ private:
 
         // Buffer is out of space, flush it.
         m_out.appendTo(bufferIsFull, continuation);
-        vmCall(m_out.operation(operationFlushWriteBarrierBuffer), m_callFrame, base, NoExceptions);
+        vmCallNoExceptions(m_out.operation(operationFlushWriteBarrierBuffer), m_callFrame, base);
         m_out.jump(continuation);
 
         m_out.appendTo(continuation, lastNext);
@@ -6463,44 +6614,23 @@ private:
 #endif
     }
 
-    enum ExceptionCheckMode { NoExceptions, CheckExceptions };
-    
-    LValue vmCall(LValue function, ExceptionCheckMode mode = CheckExceptions)
+    template<typename... Args>
+    LValue vmCall(LValue function, Args... args)
     {
         callPreflight();
-        LValue result = m_out.call(function);
-        callCheck(mode);
-        return result;
-    }
-    LValue vmCall(LValue function, LValue arg1, ExceptionCheckMode mode = CheckExceptions)
-    {
-        callPreflight();
-        LValue result = m_out.call(function, arg1);
-        callCheck(mode);
-        return result;
-    }
-    LValue vmCall(LValue function, LValue arg1, LValue arg2, ExceptionCheckMode mode = CheckExceptions)
-    {
-        callPreflight();
-        LValue result = m_out.call(function, arg1, arg2);
-        callCheck(mode);
-        return result;
-    }
-    LValue vmCall(LValue function, LValue arg1, LValue arg2, LValue arg3, ExceptionCheckMode mode = CheckExceptions)
-    {
-        callPreflight();
-        LValue result = m_out.call(function, arg1, arg2, arg3);
-        callCheck(mode);
-        return result;
-    }
-    LValue vmCall(LValue function, LValue arg1, LValue arg2, LValue arg3, LValue arg4, ExceptionCheckMode mode = CheckExceptions)
-    {
-        callPreflight();
-        LValue result = m_out.call(function, arg1, arg2, arg3, arg4);
-        callCheck(mode);
+        LValue result = m_out.call(function, args...);
+        callCheck();
         return result;
     }
     
+    template<typename... Args>
+    LValue vmCallNoExceptions(LValue function, Args... args)
+    {
+        callPreflight();
+        LValue result = m_out.call(function, args...);
+        return result;
+    }
+
     void callPreflight(CodeOrigin codeOrigin)
     {
         m_out.store32(
@@ -6514,11 +6644,8 @@ private:
         callPreflight(m_node->origin.semantic);
     }
     
-    void callCheck(ExceptionCheckMode mode = CheckExceptions)
+    void callCheck()
     {
-        if (mode == NoExceptions)
-            return;
-        
         if (Options::enableExceptionFuzz())
             m_out.call(m_out.operation(operationExceptionFuzz));
         
@@ -6997,6 +7124,11 @@ private:
     HashMap<Node*, LoweredNodeValue> m_booleanValues;
     HashMap<Node*, LoweredNodeValue> m_storageValues;
     HashMap<Node*, LoweredNodeValue> m_doubleValues;
+    
+    // This is a bit of a hack. It prevents LLVM from having to do CSE on loading of arguments.
+    // It's nice to have these optimizations on our end because we can guarantee them a bit better.
+    // Probably also saves LLVM compile time.
+    HashMap<Node*, LValue> m_loadedArgumentValues;
     
     HashMap<Node*, LValue> m_phis;
     

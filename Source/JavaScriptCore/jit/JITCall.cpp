@@ -54,7 +54,7 @@ void JIT::emitPutCallResult(Instruction* instruction)
     emitPutVirtualRegister(dst);
 }
 
-void JIT::compileLoadVarargs(Instruction* instruction)
+void JIT::compileSetupVarargsFrame(Instruction* instruction, CallLinkInfo* info)
 {
     int thisValue = instruction[3].u.operand;
     int arguments = instruction[4].u.operand;
@@ -130,6 +130,20 @@ void JIT::compileLoadVarargs(Instruction* instruction)
     if (canOptimize)
         end.link(this);
     
+    // Profile the argument count.
+    load32(Address(regT1, JSStack::ArgumentCount * static_cast<int>(sizeof(Register)) + PayloadOffset), regT2);
+    load8(&info->maxNumArguments, regT0);
+    Jump notBiggest = branch32(Above, regT0, regT2);
+    Jump notSaturated = branch32(BelowOrEqual, regT2, TrustedImm32(255));
+    move(TrustedImm32(255), regT2);
+    notSaturated.link(this);
+    store8(regT2, &info->maxNumArguments);
+    notBiggest.link(this);
+    
+    // Initialize 'this'.
+    emitGetVirtualRegister(thisValue, regT0);
+    store64(regT0, Address(regT1, CallFrame::thisArgumentOffset() * static_cast<int>(sizeof(Register))));
+
     addPtr(TrustedImm32(sizeof(CallerFrameAndPC)), regT1, stackPointerRegister);
 }
 
@@ -170,6 +184,8 @@ void JIT::compileCallEvalSlowCase(Instruction* instruction, Vector<SlowCaseEntry
 
 void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned callLinkInfoIndex)
 {
+    CallLinkInfo* info = m_codeBlock->addCallLinkInfo();
+
     int callee = instruction[2].u.operand;
 
     /* Caller always:
@@ -188,7 +204,7 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     COMPILE_ASSERT(OPCODE_LENGTH(op_call) == OPCODE_LENGTH(op_call_varargs), call_and_call_varargs_opcodes_must_be_same_length);
     COMPILE_ASSERT(OPCODE_LENGTH(op_call) == OPCODE_LENGTH(op_construct_varargs), call_and_construct_varargs_opcodes_must_be_same_length);
     if (opcodeID == op_call_varargs || opcodeID == op_construct_varargs)
-        compileLoadVarargs(instruction);
+        compileSetupVarargsFrame(instruction, info);
     else {
         int argCount = instruction[3].u.operand;
         int registerOffset = -instruction[4].u.operand;
@@ -212,8 +228,6 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
 
     store64(regT0, Address(stackPointerRegister, JSStack::Callee * static_cast<int>(sizeof(Register)) - sizeof(CallerFrameAndPC)));
     
-    CallLinkInfo* info = m_codeBlock->addCallLinkInfo();
-
     if (opcodeID == op_call_eval) {
         compileCallEval(instruction);
         return;

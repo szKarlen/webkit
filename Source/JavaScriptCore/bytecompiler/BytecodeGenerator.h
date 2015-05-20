@@ -441,7 +441,6 @@ namespace JSC {
         void emitProfileControlFlow(int);
 
         RegisterID* emitLoad(RegisterID* dst, bool);
-        RegisterID* emitLoad(RegisterID* dst, double);
         RegisterID* emitLoad(RegisterID* dst, const Identifier&);
         RegisterID* emitLoad(RegisterID* dst, JSValue);
         RegisterID* emitLoadGlobalObject(RegisterID* dst);
@@ -796,7 +795,6 @@ namespace JSC {
         // Constant pool
         IdentifierMap m_identifierMap;
         JSValueMap m_jsValueMap;
-        NumberMap m_numberMap;
         IdentifierStringMap m_stringMap;
 
         StaticPropertyAnalyzer m_staticPropertyAnalyzer;

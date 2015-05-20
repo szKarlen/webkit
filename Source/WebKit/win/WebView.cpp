@@ -2497,14 +2497,31 @@ LRESULT CALLBACK WebView::WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
             break;
     }
 
-    if (webView->needsDisplay() && message != WM_PAINT)
-        ::UpdateWindow(hWnd);
+    webView->updateWindowIfNeeded(hWnd, message);
 
     if (!handled)
         lResult = DefWindowProc(hWnd, message, wParam, lParam);
     
     // Let the client know whether we consider this message handled.
     return (message == WM_KEYDOWN || message == WM_SYSKEYDOWN || message == WM_KEYUP || message == WM_SYSKEYUP) ? !handled : lResult;
+}
+
+void WebView::updateWindowIfNeeded(HWND hWnd, UINT message)
+{
+    if (!needsDisplay())
+        return;
+
+    // Care should be taken when updating the window from the window procedure.
+    // Updating the window in response to e.g. WM_PARENTNOTIFY may cause reentrancy problems,
+    // because WM_PARENTNOTIFY is sent synchronously to the parent window when e.g. DestroyWindow() is called.
+
+    switch (message) {
+    case WM_PAINT:
+    case WM_PARENTNOTIFY:
+        return;
+    }
+
+    ::UpdateWindow(hWnd);
 }
 
 bool WebView::developerExtrasEnabled() const
@@ -5016,6 +5033,10 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
     hr = prefsPrivate->acceleratedCompositingEnabled(&enabled);
     if (FAILED(hr))
         return hr;
+#if USE(TEXTURE_MAPPER_GL)
+    static bool acceleratedCompositingAvailable = AcceleratedCompositingContext::acceleratedCompositingAvailable();
+    enabled = enabled && acceleratedCompositingAvailable;
+#endif
     settings.setAcceleratedCompositingEnabled(enabled);
 
     hr = prefsPrivate->showDebugBorders(&enabled);
@@ -6256,7 +6277,7 @@ bool WebView::onGetObject(WPARAM wParam, LPARAM lParam, LRESULT& lResult) const
 {
     lResult = 0;
 
-    if (lParam != OBJID_CLIENT)
+    if (static_cast<LONG>(lParam) != OBJID_CLIENT)
         return false;
 
     AXObjectCache::enableAccessibility();

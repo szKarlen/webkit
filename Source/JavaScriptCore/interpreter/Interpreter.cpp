@@ -135,7 +135,7 @@ JSValue eval(CallFrame* callFrame)
     return interpreter->execute(eval, callFrame, thisValue, callerScopeChain);
 }
 
-CallFrame* sizeFrameForVarargs(CallFrame* callFrame, JSStack* stack, JSValue arguments, int firstFreeRegister, uint32_t firstVarArgOffset)
+unsigned sizeOfVarargs(CallFrame* callFrame, JSValue arguments, uint32_t firstVarArgOffset)
 {
     if (!arguments) { // f.apply(x, arguments), with arguments unmodified.
         unsigned argumentCountIncludingThis = callFrame->argumentCountIncludingThis();
@@ -205,10 +205,17 @@ CallFrame* sizeFrameForVarargs(CallFrame* callFrame, JSStack* stack, JSValue arg
     if (argCount >= firstVarArgOffset)
         argCount -= firstVarArgOffset;
     else
-        argCount = 0;
-    unsigned paddedCalleeFrameOffset = WTF::roundUpToMultipleOf(stackAlignmentRegisters(), -firstFreeRegister + CallFrame::offsetFor(argCount + 1));
-    CallFrame* newCallFrame = CallFrame::create(callFrame->registers() - paddedCalleeFrameOffset);
-    if (argCount > Arguments::MaxArguments || !stack->ensureCapacityFor(newCallFrame->registers())) {
+        length = 0;
+    
+    return length;
+}
+
+unsigned sizeFrameForVarargs(CallFrame* callFrame, JSStack* stack, JSValue arguments, unsigned numUsedStackSlots, uint32_t firstVarArgOffset)
+{
+    unsigned length = sizeOfVarargs(callFrame, arguments, firstVarArgOffset);
+    
+    CallFrame* calleeFrame = calleeFrameForVarargs(callFrame, numUsedStackSlots, length + 1);
+    if (length > Arguments::MaxArguments || !stack->ensureCapacityFor(calleeFrame->registers())) {
         throwStackOverflowError(callFrame);
         return 0;
     }

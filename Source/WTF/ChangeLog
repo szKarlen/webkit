@@ -1,3 +1,871 @@
+2015-03-09  Mark Lam  <mark.lam@apple.com>
+
+        8-bit version of weakCompareAndSwap() can cause an infinite loop.
+        https://webkit.org/b/142513>
+
+        Reviewed by Filip Pizlo.
+
+        Presently, Bitmap::concurrentTestAndSet() uses the 8-bit version of
+        weakCompareAndSwap() (which compares and swaps an uint8_t value).
+        Bitmap::concurrentTestAndSet() has a loop that checks if a bit in the
+        byte of interest has been set.  If not, it will call the 8-bit CAS
+        function to set the bit.
+
+        Under the covers, for ARM, the 8-bit CAS function actually works with a
+        32-bit CAS.  The 8-bit CAS will first fetch the 32-bit value in memory
+        that should contain the 8-bit value, and check if it contains the
+        expected byte.  If the value in memory doesn't have the expected byte,
+        it will return early to its caller.  The expectation is that the caller
+        will reload the byte from memory and call the 8-bit CAS again.
+
+        Unfortunately, this code path that returns early does not have a
+        compiler fence.  Without a compiler fence, the C++ compiler can
+        optimize away the reloading of the expected byte value, leaving it
+        unchanged.  As a result, we'll have a infinite loop here that checks a
+        value that will never change, and the loop will not terminate until the
+        value changes.
+
+        The fix is to eliminate the early return check in the 8-bit CAS, and
+        have it always call down to the 32-bit CAS.  The 32-bit CAS has a
+        compiler fence which will prevent this issue.
+
+        * wtf/Atomics.h:
+        (WTF::weakCompareAndSwap):
+
+2015-03-09  Martin Robinson  <mrobinson@igalia.com>
+
+        [EFL] Move DispatchQueue to WTF
+        https://bugs.webkit.org/show_bug.cgi?id=142493
+
+        Reviewed by Csaba Osztrogonác.
+
+        * wtf/PlatformEfl.cmake: Add DispatchQueue to the source list.
+        * wtf/efl/DispatchQueueEfl.cpp: Renamed from Source/WebKit2/Platform/efl/DispatchQueueEfl.cpp.
+        * wtf/efl/DispatchQueueEfl.h: Renamed from Source/WebKit2/Platform/efl/DispatchQueueEfl.h.
+        * wtf/efl/DispatchQueueWorkItemEfl.h: Renamed from Source/WebKit2/Platform/efl/DispatchQueueWorkItemEfl.h.
+
+2015-03-08  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] WTF::WorkQueue does not balance ref/deref properly
+        https://bugs.webkit.org/show_bug.cgi?id=142471
+
+        Reviewed by Antti Koivisto.
+
+        Make sure we deref the count when we execute a function in the
+        WorkQueue.
+
+        * wtf/win/WorkQueueWin.cpp:
+        (WTF::WorkQueue::performWorkOnRegisteredWorkThread):
+
+2015-03-07  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Revive WTF::WorkQueue on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=142432
+
+        Reviewed by Darin Adler.
+
+        Revive the Windows implementation of WTF::WorkQueue.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * wtf/WorkQueue.h:
+        * wtf/win/WorkItemWin.cpp: Added.
+        * wtf/win/WorkItemWin.h: Added.
+        * wtf/win/WorkQueueWin.cpp: Added.
+
+2015-03-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Fix crashes seen on the the Windows buildbots after my last patch.
+
+        Unreviewed.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastAlignedMalloc): Let's pass these arguments in the right order.
+
+2015-03-06  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Crash in -[WebCascadeList objectAtIndex:] + 195
+        https://bugs.webkit.org/show_bug.cgi?id=141274
+
+        Reviewed by David Kilzer.
+
+        * wtf/WeakPtr.h:
+        (WTF::WeakPtrFactory::createWeakPtr): WebCascadeList uses a const FontCascade,
+        and it calls createWeakPtr() on it. Therefore, createWeakPtr has to be marked
+        const.
+        (WTF::WeakPtrFactory::operator=): Removed because it was broken and had no
+        callers
+
+2015-03-06  Simon Fraser  <simon.fraser@apple.com>
+
+        Allow tree dumping functions to be used in release builds by switching a flag
+        https://bugs.webkit.org/show_bug.cgi?id=142379
+
+        Reviewed by Zalan Bujtas.
+
+        There are various tree dumping functions that are useful for debugging, and sometimes
+        you want to be able to use them in release builds. Currently they are surrounded by
+        #ifndef NDEBUG. Change this to #if ENABLE(TREE_DEBUGGING), which is defined to 0 or 1
+        in wtf/Platform.h
+
+        * wtf/Platform.h:
+
+2015-03-05  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r173761): ASSERTION FAILED: !is8Bit() in StringImpl::characters16()
+        https://bugs.webkit.org/show_bug.cgi?id=142350
+
+        Reviewed by Michael Saboff and Benjamin Poulain.
+
+        Fix ASSERTION FAILED: !is8Bit() in StringImpl::characters16() from
+        WTF::equalInner() after r173761. The code was incorrectly assuming that
+        if stringImpl is 16-bit, then matchString is 16-bit too, which is not
+        correct.
+
+        Also rename WTFString::startsWith() / endsWith() taking an offset to
+        hasInfixStartingAt() / hasInfixEndingAt() for clarity. It seems odd
+        to call it startsWith even though it won't technically *start* with
+        the pattern if the input offset is greater than zero.
+
+        Also drop the caseSensitive argument as it is never used (always true
+        at call sites.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::equalInner):
+        (WTF::StringImpl::hasInfixStartingAt):
+        (WTF::StringImpl::hasInfixEndingAt):
+        (WTF::StringImpl::startsWith): Deleted.
+        (WTF::StringImpl::endsWith): Deleted.
+        * wtf/text/StringImpl.h:
+        * wtf/text/WTFString.h:
+        (WTF::String::hasInfixStartingAt):
+        (WTF::String::hasInfixEndingAt):
+        (WTF::String::startsWith): Deleted.
+        (WTF::String::endsWith): Deleted.
+
+2015-03-05  Chris Dumez  <cdumez@apple.com>
+
+        NetworkCache efficacy logging is using too much CPU
+        https://bugs.webkit.org/show_bug.cgi?id=142186
+        <rdar://problem/19632080>
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/HashMap.h:
+        (WTF::copyToVector):
+        Add copyToVector() utility function for HashMap that uses an std::pair<key, value>
+        as element type.
+
+        * wtf/text/WTFString.h:
+        (WTF::StringCapture::StringCapture):
+        (WTF::StringCapture::operator=):
+        Add default constructor and assignment operator to StringCapture so that
+        it can be used in a Vector.
+
+2015-03-05  Antti Koivisto  <antti@apple.com>
+
+        Support WorkQueue QOS classes on Mavericks
+        https://bugs.webkit.org/show_bug.cgi?id=142328
+
+        Reviewed by Anders Carlsson.
+
+        "The priority of a dispatch queue is inherited from its target queue.  In order to
+        change the priority of a queue created with dispatch_queue_create(), use the
+        dispatch_get_global_queue() function to obtain a target queue of the desired prior-
+        ity."
+
+        * wtf/cocoa/WorkQueueCocoa.cpp:
+        (WTF::targetQueueForQOSClass):
+        (WTF::WorkQueue::platformInitialize):
+
+2015-03-03  Anders Carlsson  <andersca@apple.com>
+
+        Remove unused compression code
+        https://bugs.webkit.org/show_bug.cgi?id=142237
+
+        Reviewed by Geoffrey Garen.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/Compression.cpp: Removed.
+        * wtf/Compression.h: Removed.
+
+2015-03-02  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [WK2] Remove unnecessary create() factory functions.
+        https://bugs.webkit.org/show_bug.cgi?id=142161
+
+        Reviewed by Chris Dumez.
+
+        We can replace some create() factory functions with std::make_unique(). Because
+        it just returns new instance. Even some of those functions have used std::unique_ptr<>
+        instead of std::make_unique<>. Fixed all.
+
+        * wtf/efl/WorkQueueEfl.cpp:
+        (WorkQueue::dispatch):
+
+2015-03-02  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG compile time measurements should really report milliseconds
+        https://bugs.webkit.org/show_bug.cgi?id=142209
+
+        Reviewed by Benjamin Poulain.
+        
+        This bug was introduced because currentTimeMS() calls were converted to
+        monotonicallyIncreasingTime() calls. Perhaps this bug would be less likely if there was a
+        monotonicallyIncreasingTimeMS() function available, so this patch adds it.
+
+        * wtf/CurrentTime.h:
+        (WTF::monotonicallyIncreasingTimeMS):
+
+2015-02-27  Darin Adler  <darin@apple.com>
+
+        Remove unused PossiblyNull
+        https://bugs.webkit.org/show_bug.cgi?id=142124
+
+        Reviewed by Andreas Kling.
+
+        * WTF.vcxproj/WTF.vcxproj: Removed the file.
+        * WTF.vcxproj/WTF.vcxproj.filters: Ditto.
+        * WTF.xcodeproj/project.pbxproj: Ditto.
+        * wtf/CMakeLists.txt: Ditto.
+        * wtf/PossiblyNull.h: Removed.
+
+        * wtf/FastMalloc.h: Moved everything to the left.
+        Moved member functions out of the TryMallocReturnValue class definition.
+        (WTF::TryMallocReturnValue::operator PossiblyNull<T>): Deleted.
+        (WTF::TryMallocReturnValue::getValue): Marked inline, changed to work
+        only with pointer types, not arbitrary non-pointer types.
+
+2015-02-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Make build logs more legible by reducing noise
+        https://bugs.webkit.org/show_bug.cgi?id=142034
+
+        Reviewed by Alexey Proskuryakov.
+
+        Modify batch files, makefiles, and DOS commands to remove
+        uninteresting/unhelpful output.
+
+        * WTF.vcxproj/WTFGenerated.make:
+        * WTF.vcxproj/WTFPreBuild.cmd:
+        * WTF.vcxproj/copy-files.cmd:
+
+2015-02-26  Landry Breuil  <landry@openbsd.org>
+
+        Revert bug 19975, now that gcc 4.7 is required.
+        https://bugs.webkit.org/show_bug.cgi?id=129927
+
+        Reviewed by Andreas Kling.
+
+        isfinite() and signbit() are provided by gcc's cmath header.
+
+        * wtf/MathExtras.h:
+
+2015-02-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        UNREACHABLE_FOR_PLATFORM() should be release assert
+        https://bugs.webkit.org/show_bug.cgi?id=141904
+
+        Reviewed by Darin Adler.
+
+        * wtf/Assertions.h:
+        (UNREACHABLE_FOR_PLATFORM):
+
+2015-02-25  Filip Pizlo  <fpizlo@apple.com>
+
+        Enable concurrent JIT on GTK
+        https://bugs.webkit.org/show_bug.cgi?id=142007
+
+        Reviewed by Benjamin Poulain.
+
+        Seems weird that GTK keeps it off. No good reason for that as far as I can tell.
+
+        * wtf/Platform.h:
+
+2015-02-23  Brent Fulgham  <bfulgham@apple.com>
+
+        WTF::WeakPtr should rename 'forgot' to 'clear' and support nullptr assignment
+        https://bugs.webkit.org/show_bug.cgi?id=141935
+
+        Reviewed by Myles C. Maxfield.
+
+        * wtf/WeakPtr.h:
+        (WTF::WeakPtr::operator=): Added 'nullptr_t' overload.
+        (WTF::WeakPtr::clear): Renamed from 'forget'
+        (WTF::WeakPtr::forget): Deleted.
+
+2015-02-23  Brent Fulgham  <bfulgham@apple.com>
+
+        WTF::WeakPtr should have a 'forget' method
+        https://bugs.webkit.org/show_bug.cgi?id=141923
+
+        Reviewed by Myles C. Maxfield.
+
+        * wtf/WeakPtr.h:
+        (WTF::WeakPtr::forget): Added.
+
+2015-02-20  Geoffrey Garen  <ggaren@apple.com>
+
+        Remove TCMalloc
+        https://bugs.webkit.org/show_bug.cgi?id=141844
+
+        Reviewed by Andreas Kling.
+
+        It's unused.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/FastMalloc.cpp:
+        (WTF::EntropySource<4>::value): Deleted.
+        (WTF::EntropySource<8>::value): Deleted.
+        (WTF::internalEntropyValue): Deleted.
+        (WTF::freedObjectStartPoison): Deleted.
+        (WTF::freedObjectEndPoison): Deleted.
+        (WTF::ClassIndex): Deleted.
+        (WTF::HardenedSLL::create): Deleted.
+        (WTF::HardenedSLL::null): Deleted.
+        (WTF::HardenedSLL::setValue): Deleted.
+        (WTF::HardenedSLL::value): Deleted.
+        (WTF::HardenedSLL::operator!): Deleted.
+        (WTF::HardenedSLL::operator UnspecifiedBoolType): Deleted.
+        (WTF::HardenedSLL::operator!=): Deleted.
+        (WTF::HardenedSLL::operator==): Deleted.
+        (WTF::LgFloor): Deleted.
+        (WTF::SLL_Next): Deleted.
+        (WTF::SLL_SetNext): Deleted.
+        (WTF::SLL_Push): Deleted.
+        (WTF::SLL_Pop): Deleted.
+        (WTF::SLL_PopRange): Deleted.
+        (WTF::SLL_PushRange): Deleted.
+        (WTF::SizeClass): Deleted.
+        (WTF::ByteSizeForClass): Deleted.
+        (WTF::NumMoveSize): Deleted.
+        (WTF::InitSizeClasses): Deleted.
+        (WTF::MetaDataAlloc): Deleted.
+        (WTF::PageHeapAllocator::Init): Deleted.
+        (WTF::PageHeapAllocator::New): Deleted.
+        (WTF::PageHeapAllocator::Delete): Deleted.
+        (WTF::PageHeapAllocator::inuse): Deleted.
+        (WTF::pages): Deleted.
+        (WTF::AllocationSize): Deleted.
+        (WTF::spanInitializerCookie): Deleted.
+        (WTF::Span::next): Deleted.
+        (WTF::Span::remoteNext): Deleted.
+        (WTF::Span::prev): Deleted.
+        (WTF::Span::setNext): Deleted.
+        (WTF::Span::setPrev): Deleted.
+        (WTF::Span::initCookie): Deleted.
+        (WTF::Span::clearCookie): Deleted.
+        (WTF::Span::isValid): Deleted.
+        (WTF::Event): Deleted.
+        (WTF::NewSpan): Deleted.
+        (WTF::DeleteSpan): Deleted.
+        (WTF::DLL_Init): Deleted.
+        (WTF::DLL_Remove): Deleted.
+        (WTF::DLL_IsEmpty): Deleted.
+        (WTF::DLL_Length): Deleted.
+        (WTF::DLL_Print): Deleted.
+        (WTF::DLL_Prepend): Deleted.
+        (WTF::TCMalloc_Central_FreeList::length): Deleted.
+        (WTF::TCMalloc_Central_FreeList::tc_length): Deleted.
+        (WTF::TCMalloc_Central_FreeList::enumerateFreeObjects): Deleted.
+        (WTF::TCMalloc_Central_FreeList::entropy): Deleted.
+        (WTF::FastMallocZone::goodSize): Deleted.
+        (WTF::FastMallocZone::check): Deleted.
+        (WTF::FastMallocZone::print): Deleted.
+        (WTF::FastMallocZone::log): Deleted.
+        (WTF::FastMallocZone::forceLock): Deleted.
+        (WTF::FastMallocZone::forceUnlock): Deleted.
+        (WTF::FastMallocZone::statistics): Deleted.
+        (WTF::FastMallocZone::zoneValloc): Deleted.
+        (WTF::FastMallocZone::zoneDestroy): Deleted.
+        (WTF::MallocHook::record): Deleted.
+        (WTF::MallocHook::recordAllocation): Deleted.
+        (WTF::MallocHook::recordDeallocation): Deleted.
+        (WTF::MallocHook::init): Deleted.
+        (WTF::MallocHook::InvokeNewHook): Deleted.
+        (WTF::MallocHook::InvokeDeleteHook): Deleted.
+        (WTF::KernelSupportsTLS): Deleted.
+        (WTF::CheckIfKernelSupportsTLS): Deleted.
+        (WTF::TCMalloc_PageHeap::GetDescriptor): Deleted.
+        (WTF::TCMalloc_PageHeap::GetDescriptorEnsureSafe): Deleted.
+        (WTF::TCMalloc_PageHeap::SystemBytes): Deleted.
+        (WTF::TCMalloc_PageHeap::FreeBytes): Deleted.
+        (WTF::TCMalloc_PageHeap::GetSizeClassIfCached): Deleted.
+        (WTF::TCMalloc_PageHeap::CacheSizeClass): Deleted.
+        (WTF::TCMalloc_PageHeap::RecordSpan): Deleted.
+        (WTF::TCMalloc_PageHeap::init): Deleted.
+        (WTF::TCMalloc_PageHeap::initializeScavenger): Deleted.
+        (WTF::TCMalloc_PageHeap::isScavengerSuspended): Deleted.
+        (WTF::TCMalloc_PageHeap::scheduleScavenger): Deleted.
+        (WTF::TCMalloc_PageHeap::rescheduleScavenger): Deleted.
+        (WTF::TCMalloc_PageHeap::suspendScavenger): Deleted.
+        (WTF::TCMalloc_PageHeap::scavengerTimerFired): Deleted.
+        (WTF::TCMalloc_PageHeap::runScavengerThread): Deleted.
+        (WTF::TCMalloc_PageHeap::signalScavenger): Deleted.
+        (WTF::TCMalloc_PageHeap::scavenge): Deleted.
+        (WTF::TCMalloc_PageHeap::shouldScavenge): Deleted.
+        (WTF::TCMalloc_PageHeap::New): Deleted.
+        (WTF::TCMalloc_PageHeap::AllocLarge): Deleted.
+        (WTF::TCMalloc_PageHeap::Split): Deleted.
+        (WTF::TCMalloc_PageHeap::Carve): Deleted.
+        (WTF::mergeDecommittedStates): Deleted.
+        (WTF::TCMalloc_PageHeap::Delete): Deleted.
+        (WTF::TCMalloc_PageHeap::IncrementalScavenge): Deleted.
+        (WTF::TCMalloc_PageHeap::RegisterSizeClass): Deleted.
+        (WTF::TCMalloc_PageHeap::ReturnedBytes): Deleted.
+        (WTF::PagesToMB): Deleted.
+        (WTF::TCMalloc_PageHeap::Dump): Deleted.
+        (WTF::TCMalloc_PageHeap::GrowHeap): Deleted.
+        (WTF::TCMalloc_PageHeap::Check): Deleted.
+        (WTF::TCMalloc_PageHeap::CheckList): Deleted.
+        (WTF::TCMalloc_PageHeap::ReleaseFreeList): Deleted.
+        (WTF::TCMalloc_PageHeap::ReleaseFreePages): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::Init): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::length): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::empty): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::lowwatermark): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::clear_lowwatermark): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::Push): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::PushRange): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::PopRange): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::Pop): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::Validate): Deleted.
+        (WTF::TCMalloc_ThreadCache_FreeList::enumerateFreeObjects): Deleted.
+        (WTF::TCMalloc_ThreadCache::freelist_length): Deleted.
+        (WTF::TCMalloc_ThreadCache::Size): Deleted.
+        (WTF::TCMalloc_ThreadCache::enumerateFreeObjects): Deleted.
+        (WTF::getPageHeap): Deleted.
+        (WTF::fastMallocGoodSize): Deleted.
+        (WTF::TCMalloc_PageHeap::periodicScavenge): Deleted.
+        (WTF::TCMalloc_PageHeap::scavengerThread): Deleted.
+        (WTF::setThreadHeap): Deleted.
+        (WTF::TCMalloc_Central_FreeList::Init): Deleted.
+        (WTF::TCMalloc_Central_FreeList::ReleaseListToSpans): Deleted.
+        (WTF::TCMalloc_Central_FreeList::ReleaseToSpans): Deleted.
+        (WTF::TCMalloc_Central_FreeList::EvictRandomSizeClass): Deleted.
+        (WTF::TCMalloc_Central_FreeList::MakeCacheSpace): Deleted.
+        (WTF::TCMalloc_Central_FreeList::ShrinkCache): Deleted.
+        (WTF::TCMalloc_Central_FreeList::InsertRange): Deleted.
+        (WTF::TCMalloc_Central_FreeList::RemoveRange): Deleted.
+        (WTF::TCMalloc_Central_FreeList::FetchFromSpansSafe): Deleted.
+        (WTF::TCMalloc_Central_FreeList::FetchFromSpans): Deleted.
+        (WTF::TCMalloc_Central_FreeList::Populate): Deleted.
+        (WTF::TCMalloc_ThreadCache::SampleAllocation): Deleted.
+        (WTF::TCMalloc_ThreadCache::Init): Deleted.
+        (WTF::TCMalloc_ThreadCache::Cleanup): Deleted.
+        (WTF::TCMalloc_ThreadCache::Allocate): Deleted.
+        (WTF::TCMalloc_ThreadCache::Deallocate): Deleted.
+        (WTF::TCMalloc_ThreadCache::FetchFromCentralCache): Deleted.
+        (WTF::TCMalloc_ThreadCache::ReleaseToCentralCache): Deleted.
+        (WTF::TCMalloc_ThreadCache::Scavenge): Deleted.
+        (WTF::TCMalloc_ThreadCache::PickNextSample): Deleted.
+        (WTF::TCMalloc_ThreadCache::InitModule): Deleted.
+        (WTF::TCMalloc_ThreadCache::NewHeap): Deleted.
+        (WTF::TCMalloc_ThreadCache::GetThreadHeap): Deleted.
+        (WTF::TCMalloc_ThreadCache::GetCache): Deleted.
+        (WTF::TCMalloc_ThreadCache::GetCacheIfPresent): Deleted.
+        (WTF::TCMalloc_ThreadCache::InitTSD): Deleted.
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary): Deleted.
+        * wtf/TCPackedCache.h: Removed.
+        * wtf/TCPageMap.h: Removed.
+        * wtf/TCSystemAlloc.cpp: Removed.
+        * wtf/TCSystemAlloc.h: Removed.
+
+2015-02-20  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove svn:keywords property.
+
+        As far as I can tell, the property had no effect on any of these files, but also,
+        when it has effect it's likely harmful.
+
+        * wtf/DecimalNumber.cpp: Removed property svn:keywords.
+        * wtf/spi/darwin/XPCSPI.h: Removed property svn:keywords.
+
+2015-02-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        EFL URTBF
+
+        * wtf/PlatformEfl.cmake:
+
+2015-02-20  Simon Fraser  <simon.fraser@apple.com>
+
+        RunLoop::dispatch() should drop the mutex before calling wakeUp().
+        https://bugs.webkit.org/show_bug.cgi?id=141820
+
+        Reviewed by Alexey Proskuryakov.
+        
+        RunLoop::wakeUp() calls into CoreFoundation which could take time,
+        so scope the mutex just to protect m_functionQueue.
+
+        * wtf/RunLoop.cpp:
+        (WTF::RunLoop::dispatch):
+
+2015-02-20  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL build fix since r180410.
+
+        * wtf/PlatformEfl.cmake: Add WEBKIT2/Platform/efl path in order to include DispatchQueueEfl.h.
+
+2015-02-20  Antti Koivisto  <antti@apple.com>
+
+        Move WorkQueue from WK2 to WTF
+        https://bugs.webkit.org/show_bug.cgi?id=141797
+
+        Reviewed by Anders Carlsson.
+
+        It may be useful in WebCore.
+
+        Windows implementation is still missing.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/PlatformGTK.cmake:
+        * wtf/WorkQueue.cpp: Copied from Source/WebKit2/Platform/WorkQueue.cpp.
+        * wtf/WorkQueue.h: Copied from Source/WebKit2/Platform/WorkQueue.h.
+        * wtf/cocoa: Added.
+        * wtf/cocoa/WorkQueueCocoa.cpp: Copied from Source/WebKit2/Platform/mac/WorkQueueMac.cpp.
+        * wtf/efl/WorkQueueEfl.cpp: Copied from Source/WebKit2/Platform/efl/WorkQueueEfl.cpp.
+        * wtf/gtk/WorkQueueGtk.cpp: Copied from Source/WebKit2/Platform/gtk/WorkQueueGtk.cpp.
+
+2015-02-13  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Enable bmalloc for EFL port 
+        https://bugs.webkit.org/show_bug.cgi?id=141459
+
+        Reviewed by Csaba Osztrogonác.
+
+        * wtf/CMakeLists.txt: Remove TCSystemAlloc.cpp/h.
+        * wtf/FastMalloc.cpp: Enable BMALLOC for EFL port.
+
+2015-02-13  Anders Carlsson  <andersca@apple.com>
+
+        Add a move constructor and move assignment operator to Deque
+        https://bugs.webkit.org/show_bug.cgi?id=141571
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Deque.h:
+        (WTF::inlineCapacity>::Deque):
+        (WTF::=): Deleted.
+
+2015-02-13  Anders Carlsson  <andersca@apple.com>
+
+        Add an initializer list constructor to Deque
+        https://bugs.webkit.org/show_bug.cgi?id=141565
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Deque.h:
+        (WTF::inlineCapacity>::Deque):
+
+2015-02-13  Anders Carlsson  <andersca@apple.com>
+
+        Re-indent Deque.h
+
+        Rubber-stamped by Antti Koivisto.
+
+        * wtf/Deque.h:
+
+2015-02-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] [64-bit] Work around MSVC2013 Runtime Bug
+        https://bugs.webkit.org/show_bug.cgi?id=141498
+        <rdar://problem/19803642>
+
+        Reviewed by Anders Carlsson.
+
+        Disable FMA3 instruction use in the MSVC math library to
+        work around a VS2013 runtime crash. We can remove this
+        workaround when we switch to VS2015.
+
+        * WTF.vcxproj/WTF.vcxproj: Add new files.
+        * WTF.vcxproj/WTF.vcxproj.filters: Ditto.
+        * wtf/win/WTFDLL.cpp: Added.
+
+2015-02-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL][GTK] Use bmalloc instead of tcmalloc
+        https://bugs.webkit.org/show_bug.cgi?id=140162
+
+        Reviewed by Carlos Garcia Campos.
+
+        * wtf/CMakeLists.txt:
+        * wtf/FastMalloc.cpp:
+            Enable bmalloc on GTK ports, but EFL port will enable it when bmalloc supports
+            memory statistics.
+
+2015-02-10  Darin Adler  <darin@apple.com>
+
+        Add the crash-on-failure behavior to bmalloc-based fastMalloc
+        https://bugs.webkit.org/show_bug.cgi?id=141434
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/FastMalloc.cpp: Removed unneeded includes.
+        (WTF::fastMalloc): Added null check and CRASH.
+        (WTF::fastCalloc): Added overflow checking, null check, and CRASH.
+        (WTF::fastRealloc): Added null check and CRASH.
+        (WTF::fastMallocSize): Added FIXME comment.
+        (WTF::fastMallocGoodSize): Added FIXME comment.
+        (WTF::fastAlignedMalloc): Added null check and CRASH.
+        (WTF::tryFastMalloc): Changed to call bmalloc directly instead of
+        calling fastMalloc, since fastMalloc will now crash on failure.
+        (WTF::tryFastRealloc): Changed to call bmalloc directly instead of
+        calling fastRealloc, since fastRealloc will now crash on failure.
+        (WTF::tryFastCalloc): Added overflow checking.
+        (WTF::fastMallocStatistics): Added FIXME comment.
+
+2015-02-10  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] GMutexLocker build issue
+        https://bugs.webkit.org/show_bug.cgi?id=141381
+
+        Reviewed by Žan Doberšek.
+
+        Remove using WTF::GMutexLocker from the header, since newer glib
+        versions have a GMutexLocker in the public API.
+
+        * wtf/gobject/GMutexLocker.h:
+
+2015-02-09  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION: tryFastCalloc is no longer "try"
+        https://bugs.webkit.org/show_bug.cgi?id=141406
+
+        Reviewed by Darin Adler.
+
+        This causes crashes on some WebKit regression test bots.
+
+        * wtf/FastMalloc.cpp: (WTF::tryFastCalloc): Fix what looks like a copy/paste mistake.
+
+2015-02-07  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] GC sometimes stuck in an infinite loop if parallel GC is enabled
+        https://bugs.webkit.org/show_bug.cgi?id=141290
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h:
+
+2015-02-07  Chris Dumez  <cdumez@apple.com>
+
+        Add Vector::removeFirstMatching() / removeAllMatching() methods taking lambda functions
+        https://bugs.webkit.org/show_bug.cgi?id=141321
+
+        Reviewed by Darin Adler.
+
+        Add Vector::removeFirstMatching() / removeAllMatching() methods taking
+        lambda functions to match the element(s) to remove. This simplifies the
+        code a bit. Vector::removeAllMatching() is also more efficient than the
+        manual removal alternative.
+
+        * wtf/Vector.h:
+
+2015-02-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179743.
+        https://bugs.webkit.org/show_bug.cgi?id=141335
+
+        caused missing symbols in non-WebKit clients of WTF::Vector
+        (Requested by kling on #webkit).
+
+        Reverted changeset:
+
+        "Remove WTF::fastMallocGoodSize()."
+        https://bugs.webkit.org/show_bug.cgi?id=141020
+        http://trac.webkit.org/changeset/179743
+
+2015-02-06  Andreas Kling  <akling@apple.com>
+
+        Remove WTF::fastMallocGoodSize().
+        <https://webkit.org/b/141020>
+
+        Reviewed by Anders Carlsson.
+
+        bmalloc's good-size API just returns exactly whatever you pass it,
+        so it's of no utility to us anymore.
+
+        This gets rid of a bunch of pointless out-of-line calls in Vector
+        construction and growth.
+
+        * wtf/Compression.cpp:
+        (WTF::GenericCompressedData::create):
+        * wtf/FastMalloc.cpp:
+        (WTF::fastMallocGoodSize): Deleted.
+        * wtf/FastMalloc.h:
+        * wtf/Vector.h:
+        (WTF::VectorBufferBase::allocateBuffer):
+        (WTF::VectorBufferBase::tryAllocateBuffer):
+        (WTF::VectorBufferBase::reallocateBuffer):
+
+2015-02-05  Youenn Fablet  <youenn.fablet@crf.canon.fr> and Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+        [Streams API] Implement a barebone ReadableStream interface
+        https://bugs.webkit.org/show_bug.cgi?id=141045
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/FeatureDefines.h:
+
+2015-02-04  Alexey Proskuryakov  <ap@apple.com>
+
+        Optimized equal() functions in StringImpl.h are not ASan compatible
+        https://bugs.webkit.org/show_bug.cgi?id=141258
+
+        Reviewed by Daniel Bates.
+
+        * wtf/text/StringImpl.h: (WTF::equal): Add custom implementations for ASan.
+
+2015-02-04  Chris Dumez  <cdumez@apple.com>
+
+        Add removeFirst(value) / removeAll(value) methods to WTF::Vector
+        https://bugs.webkit.org/show_bug.cgi?id=141192
+
+        Reviewed by Benjamin Poulain.
+
+        Add removeFirst(value) / removeAll(value) convenience methods to
+        WTF::Vector to reduce complexity a bit at call sites.
+
+        I am planning to add overloads for these taking a lambda function for
+        matching in a follow-up patch as well. I have seen quite a few
+        Vector::remove(index) call sites that would benefit from it.
+
+        * wtf/Vector.h:
+        (WTF::OverflowHandler>::removeFirst):
+        (WTF::OverflowHandler>::removeAll):
+
+2015-02-02  Dhi Aurrahman  <diorahman@rockybars.com>
+
+        Optimize matchesLangPseudoClass() of :lang()
+        https://bugs.webkit.org/show_bug.cgi?id=140873
+
+        Reviewed by Darin Adler.
+
+        Add some basic equality comparison operators.
+
+        * wtf/text/StringView.h:
+        (WTF::operator==):
+        (WTF::operator!=):
+        (WTF::equal):
+        (WTF::equalIgnoringASCIICase):
+
+2015-02-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+
+        Reviewed by Mark Hahnenberg.
+
+        Re-landing just the HandleBlock piece of this patch.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::fastAlignedMalloc):
+        (WTF::fastAlignedFree):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/FastMalloc.h:
+
+2015-02-02  Daniel Bates  <dabates@apple.com>
+
+        [iOS] ASSERTION FAILED: m_scriptExecutionContext->isContextThread() in ContextDestructionObserver::observeContext
+        https://bugs.webkit.org/show_bug.cgi?id=141057
+        <rdar://problem/19068790>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/MainThread.h:
+        * wtf/mac/MainThreadMac.mm:
+        (WTF::callOnWebThreadOrDispatchAsyncOnMainThread): Added.
+
+2015-01-31  Sam Weinig  <sam@webkit.org>
+
+        Remove even more Mountain Lion support
+        https://bugs.webkit.org/show_bug.cgi?id=141124
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * wtf/Assertions.cpp:
+        * wtf/FeatureDefines.h:
+        * wtf/Platform.h:
+
+2015-01-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179426.
+        https://bugs.webkit.org/show_bug.cgi?id=141119
+
+        "caused a memory use regression" (Requested by Guest45 on
+        #webkit).
+
+        Reverted changeset:
+
+        "Use FastMalloc (bmalloc) instead of BlockAllocator for GC
+        pages"
+        https://bugs.webkit.org/show_bug.cgi?id=140900
+        http://trac.webkit.org/changeset/179426
+
+2015-01-31  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r179408.
+        https://bugs.webkit.org/show_bug.cgi?id=141117
+
+        This didn't fully fix the issue (Requested by anttik on
+        #webkit).
+
+        Reverted changeset:
+
+        "OSObjectPtr does not work with dispatch_data_t on Maverics"
+        https://bugs.webkit.org/show_bug.cgi?id=141081
+        http://trac.webkit.org/changeset/179408
+
+2015-01-30  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Implement ES6 Symbol
+        https://bugs.webkit.org/show_bug.cgi?id=140435
+
+        Reviewed by Geoffrey Garen.
+
+        Introduce new unique string mechanizm into StringImpl.
+        It is used for implementing Symbol which holds a [[Description]] value.
+
+        * wtf/text/AtomicString.h:
+        (WTF::AtomicString::add):
+        (WTF::AtomicString::addWithStringTableProvider):
+
+        Previously, we checked `isAtomic()` or `!length()`. This guard can filter out EmptyUnique.
+        But now, we introduced new unique StringImpl. Since it has an actual string value, we need to check `isUnique()`.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::~StringImpl):
+        (WTF::StringImpl::createUnique):
+
+        In createUnique, we leverage Substring mechanizm to produce a new unique
+        string from an existing string.
+
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::StringImpl):
+        (WTF::StringImpl::createUniqueEmpty):
+        (WTF::StringImpl::flagIsUnique):
+        (WTF::StringImpl::isUnique):
+        (WTF::StringImpl::setIsAtomic):
+        (WTF::StringImpl::createEmptyUnique): Deleted.
+        (WTF::StringImpl::isEmptyUnique): Deleted.
+
+        Instead of EmptyUnique, we introduced new flag to StringImpl, `isUnique`.
+        While EmptyUnique cannot hold any string values except for empty string,
+        the unique StringImpl can hold any String values.
+        We fold the Symbol's descriptiveString value here.
+
+        * wtf/text/StringStatics.cpp:
+        (WTF::StringImpl::hashAndFlagsForUnique):
+        (WTF::StringImpl::hashAndFlagsForEmptyUnique): Deleted.
+
 2015-01-30  Geoffrey Garen  <ggaren@apple.com>
 
         Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
