@@ -36,11 +36,7 @@ class GCArraySegment : public DoublyLinkedListNode<GCArraySegment<T>> {
     friend class WTF::DoublyLinkedListNode<GCArraySegment<T>>;
 public:
     GCArraySegment()
-<<<<<<< HEAD
-        : HeapBlock<GCArraySegment>()
-=======
         : DoublyLinkedListNode<GCArraySegment<T>>()
->>>>>>> ccb53a7... Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
 #if !ASSERT_DISABLED
         , m_top(0)
 #endif
@@ -48,10 +44,8 @@ public:
     }
 
     static GCArraySegment* create();
-<<<<<<< HEAD
-=======
+
     static void destroy(GCArraySegment*);
->>>>>>> ccb53a7... Use FastMalloc (bmalloc) instead of BlockAllocator for GC pages
 
     T* data()
     {
