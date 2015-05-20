@@ -161,7 +161,6 @@ Debugger::Debugger(bool isInWorkerThread)
     , m_lastExecutedLine(UINT_MAX)
     , m_lastExecutedSourceID(noSourceID)
     , m_topBreakpointID(noBreakpointID)
-    , m_pausingBreakpointID(noBreakpointID)
 {
 }
 
@@ -672,15 +671,9 @@ void Debugger::pauseIfNeeded(CallFrame* callFrame)
         // we still have a current call frame when we get back.
         if (breakpoint.autoContinue || !m_currentCallFrame)
             return;
-        m_pausingBreakpointID = breakpoint.id;
     }
 
-    {
-        PauseReasonDeclaration reason(*this, didHitBreakpoint ? PausedForBreakpoint : m_reasonForPause);
-        handlePause(vmEntryGlobalObject, m_reasonForPause);
-    }
-
-    m_pausingBreakpointID = noBreakpointID;
+    handlePause(vmEntryGlobalObject, m_reasonForPause);
 
     if (!m_pauseOnNextStatement && !m_pauseOnCallFrame) {
         setSteppingMode(SteppingModeDisabled);
@@ -791,7 +784,7 @@ void Debugger::didReachBreakpoint(CallFrame* callFrame)
     if (m_isPaused)
         return;
 
-    PauseReasonDeclaration reason(*this, PausedForDebuggerStatement);
+    PauseReasonDeclaration reason(*this, PausedForBreakpoint);
     m_pauseOnNextStatement = true;
     setSteppingMode(SteppingModeEnabled);
     updateCallFrameAndPauseIfNeeded(callFrame);
