@@ -84,6 +84,7 @@ inline bool JSLexicalEnvironment::symbolTablePut(ExecState* exec, PropertyName p
     ASSERT(!Heap::heap(value) || Heap::heap(value) == Heap::heap(this));
     
     WriteBarrierBase<Unknown>* reg;
+    WatchpointSet* set;
     {
         GCSafeConcurrentJITLocker locker(symbolTable()->m_lock, exec->vm().heap);
         SymbolTable::Map::iterator iter = symbolTable()->find(locker, propertyName.uid());
@@ -98,11 +99,12 @@ inline bool JSLexicalEnvironment::symbolTablePut(ExecState* exec, PropertyName p
         // Defend against the inspector asking for a var after it has been optimized out.
         if (!isValid(iter->value))
             return false;
-        if (VariableWatchpointSet* set = iter->value.watchpointSet())
-            set->invalidate(VariableWriteFireDetail(this, propertyName)); // Don't mess around - if we had found this statically, we would have invcalidated it.
-        reg = &registerAt(iter->value.getIndex());
+        set = iter->value.watchpointSet();
+        reg = &variableAt(offset);
     }
     reg->set(vm, this, value);
+    if (set)
+        set->invalidate(VariableWriteFireDetail(this, propertyName)); // Don't mess around - if we had found this statically, we would have invalidated it.
     return true;
 }
 

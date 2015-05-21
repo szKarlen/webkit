@@ -31,6 +31,58 @@ namespace JSC {
 
 class ExecState;
 
+ALWAYS_INLINE bool isIndex(uint32_t index)
+{
+    return index != 0xFFFFFFFFU;
+}
+
+template <typename CharType>
+ALWAYS_INLINE Optional<uint32_t> parseIndex(const CharType* characters, unsigned length)
+{
+    // An empty string is not a number.
+    if (!length)
+        return Nullopt;
+
+    // Get the first character, turning it into a digit.
+    uint32_t value = characters[0] - '0';
+    if (value > 9)
+        return Nullopt;
+
+    // Check for leading zeros. If the first characher is 0, then the
+    // length of the string must be one - e.g. "042" is not equal to "42".
+    if (!value && length > 1)
+        return Nullopt;
+
+    while (--length) {
+        // Multiply value by 10, checking for overflow out of 32 bits.
+        if (value > 0xFFFFFFFFU / 10)
+            return Nullopt;
+        value *= 10;
+
+        // Get the next character, turning it into a digit.
+        uint32_t newValue = *(++characters) - '0';
+        if (newValue > 9)
+            return Nullopt;
+
+        // Add in the old value, checking for overflow out of 32 bits.
+        newValue += value;
+        if (newValue < value)
+            return Nullopt;
+        value = newValue;
+    }
+
+    if (!isIndex(value))
+        return Nullopt;
+    return value;
+}
+
+ALWAYS_INLINE Optional<uint32_t> parseIndex(StringImpl& impl)
+{
+    if (impl.is8Bit())
+        return parseIndex(impl.characters8(), impl.length());
+    return parseIndex(impl.characters16(), impl.length());
+}
+
 class Identifier {
     friend class Structure;
 public:

@@ -458,17 +458,6 @@ void Heap::addReference(JSCell* cell, ArrayBuffer* buffer)
     }
 }
 
-void Heap::pushTempSortVector(Vector<ValueStringPair, 0, UnsafeVectorOverflow>* tempVector)
-{
-    m_tempSortingVectors.append(tempVector);
-}
-
-void Heap::popTempSortVector(Vector<ValueStringPair, 0, UnsafeVectorOverflow>* tempVector)
-{
-    ASSERT_UNUSED(tempVector, tempVector == m_tempSortingVectors.last());
-    m_tempSortingVectors.removeLast();
-}
-
 void Heap::harvestWeakReferences()
 {
     m_slotVisitor.harvestWeakReferences();
@@ -548,7 +537,6 @@ void Heap::markRoots(double gcStartTime, void* stackOrigin, void* stackTop, Mach
         visitSmallStrings();
         visitConservativeRoots(conservativeRoots);
         visitProtectedObjects(heapRootVisitor);
-        visitTempSortVectors(heapRootVisitor);
         visitArgumentBuffers(heapRootVisitor);
         visitException(heapRootVisitor);
         visitStrongHandles(heapRootVisitor);
@@ -687,23 +675,6 @@ void Heap::visitProtectedObjects(HeapRootVisitor& heapRootVisitor)
     m_slotVisitor.donateAndDrain();
 }
 
-void Heap::visitTempSortVectors(HeapRootVisitor& heapRootVisitor)
-{
-    GCPHASE(VisitTempSortVectors);
-
-    for (auto* vector : m_tempSortingVectors) {
-        for (auto& valueStringPair : *vector) {
-            if (valueStringPair.first)
-                heapRootVisitor.visit(&valueStringPair.first);
-        }
-    }
-
-    if (Options::logGC() == GCLogging::Verbose)
-        dataLog("Temp Sort Vectors:\n", m_slotVisitor);
-
-    m_slotVisitor.donateAndDrain();
-}
-
 void Heap::visitArgumentBuffers(HeapRootVisitor& visitor)
 {
     GCPHASE(MarkingArgumentBuffers);
@@ -822,15 +793,14 @@ void Heap::updateObjectCounts(double gcStartTime)
 #endif
         dataLogF("\nNumber of live Objects after GC %lu, took %.6f secs\n", static_cast<unsigned long>(visitCount), WTF::monotonicallyIncreasingTime() - gcStartTime);
     }
-
-    if (m_operationInProgress == EdenCollection) {
-        m_totalBytesVisited += m_slotVisitor.bytesVisited();
-        m_totalBytesCopied += m_slotVisitor.bytesCopied();
-    } else {
-        ASSERT(m_operationInProgress == FullCollection);
-        m_totalBytesVisited = m_slotVisitor.bytesVisited();
-        m_totalBytesCopied = m_slotVisitor.bytesCopied();
+    
+    if (m_operationInProgress == FullCollection) {
+        m_totalBytesVisited = 0;
+        m_totalBytesCopied = 0;
     }
+
+    m_totalBytesVisited += m_slotVisitor.bytesVisited();
+    m_totalBytesCopied += m_slotVisitor.bytesCopied();
 #if ENABLE(PARALLEL_GC)
     m_totalBytesVisited += m_sharedData.childBytesVisited();
     m_totalBytesCopied += m_sharedData.childBytesCopied();

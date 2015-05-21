@@ -274,15 +274,13 @@ namespace JSC {
 
         bool isArgumentNumber(const Identifier&, int);
 
-        void setIsNumericCompareFunction(bool isNumericCompareFunction);
-
-        bool willResolveToArguments(const Identifier&);
-
-        bool hasSafeLocalArgumentsRegister() { return m_localArgumentsRegister; }
-        RegisterID* uncheckedLocalArgumentsRegister();
-
-        bool isCaptured(int operand);
-        CaptureMode captureMode(int operand) { return isCaptured(operand) ? IsCaptured : NotCaptured; }
+        Variable variable(const Identifier&);
+        
+        // Ignores the possibility of intervening scopes.
+        Variable variablePerSymbolTable(const Identifier&);
+        
+        enum ExistingVariableMode { VerifyExisting, IgnoreExisting };
+        void createVariable(const Identifier&, VarKind, ConstantMode, ExistingVariableMode = VerifyExisting); // Creates the variable, or asserts that the already-created variable is sufficiently compatible.
         
         Local local(const Identifier&);
         Local constLocal(const Identifier&);

@@ -58,7 +58,7 @@ inline JSCallbackObject<Parent>* JSCallbackObject<Parent>::asCallbackObject(Enco
 template <class Parent>
 JSCallbackObject<Parent>::JSCallbackObject(ExecState* exec, Structure* structure, JSClassRef jsClass, void* data)
     : Parent(exec->vm(), structure)
-    , m_callbackObjectData(adoptPtr(new JSCallbackObjectData(data, jsClass)))
+    , m_callbackObjectData(std::make_unique<JSCallbackObjectData>(data, jsClass))
 {
 }
 
@@ -66,8 +66,8 @@ JSCallbackObject<Parent>::JSCallbackObject(ExecState* exec, Structure* structure
 // FIXME: Move this into a separate JSGlobalCallbackObject class derived from this one.
 template <class Parent>
 JSCallbackObject<Parent>::JSCallbackObject(VM& vm, JSClassRef jsClass, Structure* structure)
-    : Parent(vm, structure)
-    , m_callbackObjectData(adoptPtr(new JSCallbackObjectData(0, jsClass)))
+    : Parent(vm, structure, &javaScriptCoreAPIGlobalObjectMethodTable)
+    , m_callbackObjectData(std::make_unique<JSCallbackObjectData>(nullptr, jsClass))
 {
 }
 
@@ -265,6 +265,9 @@ void JSCallbackObject<Parent>::put(JSCell* cell, ExecState* exec, PropertyName p
             
             if (OpaqueJSClassStaticFunctionsTable* staticFunctions = jsClass->staticFunctions(exec)) {
                 if (StaticFunctionEntry* entry = staticFunctions->get(name)) {
+                    PropertySlot getSlot(thisObject);
+                    if (Parent::getOwnPropertySlot(thisObject, exec, propertyName, getSlot))
+                        return Parent::put(thisObject, exec, propertyName, value, slot);
                     if (entry->attributes & kJSPropertyAttributeReadOnly)
                         return;
                     thisObject->JSCallbackObject<Parent>::putDirect(exec->vm(), propertyName, value); // put as override property

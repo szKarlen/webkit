@@ -35,6 +35,7 @@ namespace JSC {
 class JSNameScope : public JSEnvironmentRecord {
 public:
     typedef JSEnvironmentRecord Base;
+    static const unsigned StructureFlags = Base::StructureFlags| OverridesGetOwnPropertySlot;
 
     enum Type {
         CatchScope,
@@ -78,17 +79,8 @@ protected:
         symbolTable()->add(identifier.impl(), SymbolTableEntry(-1, attributes));
     }
 
-    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | Base::StructureFlags;
-
-private:
-    JSNameScope(VM& vm, JSGlobalObject* globalObject, JSScope* next, Type type)
-        : Base(
-            vm,
-            globalObject->nameScopeStructure(),
-            reinterpret_cast<Register*>(&m_registerStore + 1),
-            next
-        )
-        , m_type(type)
+    JSNameScope(VM& vm, Structure* structure, JSScope* next, SymbolTable* symbolTable)
+        : Base(vm, structure, next, symbolTable)
     {
     }
 

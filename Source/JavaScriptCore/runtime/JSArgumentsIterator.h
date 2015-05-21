@@ -33,6 +33,7 @@ namespace JSC {
 class JSArgumentsIterator : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags;
 
     DECLARE_EXPORT_INFO;
 
@@ -59,9 +60,6 @@ public:
     }
 
 private:
-
-    static const unsigned StructureFlags = Base::StructureFlags;
-
     JSArgumentsIterator(VM& vm, Structure* structure)
         : Base(vm, structure)
         , m_nextIndex(0)

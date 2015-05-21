@@ -140,6 +140,7 @@
     macro(osrExitSites) \
     macro(osrExits) \
     macro(parse) \
+    macro(parseInt) \
     macro(postMessage) \
     macro(profiledBytecodes) \
     macro(propertyIsEnumerable) \
@@ -232,6 +233,17 @@
     macro(deferred) \
     macro(countdownHolder) \
     macro(Object) \
+    macro(objectKeys) \
+    macro(objectGetOwnPropertyDescriptor) \
+    macro(objectGetOwnPropertySymbols) \
+    macro(Number) \
+    macro(Array) \
+    macro(String) \
+    macro(abs) \
+    macro(floor) \
+    macro(isFinite) \
+    macro(getPrototypeOf) \
+    macro(getOwnPropertyNames) \
     macro(TypeError) \
     macro(undefined) \
     macro(BuiltinLog)

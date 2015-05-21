@@ -24,10 +24,10 @@
 #ifndef JSFunction_h
 #define JSFunction_h
 
+#include "FunctionRareData.h"
 #include "InternalFunction.h"
 #include "JSCallee.h"
 #include "JSScope.h"
-#include "ObjectAllocationProfile.h"
 #include "Watchpoint.h"
 
 namespace JSC {
@@ -48,7 +48,7 @@ class JITCompiler;
 JS_EXPORT_PRIVATE EncodedJSValue JSC_HOST_CALL callHostFunctionAsConstructor(ExecState*);
 
 JS_EXPORT_PRIVATE String getCalculatedDisplayName(CallFrame*, JSObject*);
-    
+
 class JSFunction : public JSCallee {
     friend class JIT;
     friend class DFG::SpeculativeJIT;
@@ -57,20 +57,15 @@ class JSFunction : public JSCallee {
 
 public:
     typedef JSCallee Base;
+    const static unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | OverridesGetPropertyNames;
 
     JS_EXPORT_PRIVATE static JSFunction* create(VM&, JSGlobalObject*, int length, const String& name, NativeFunction, Intrinsic = NoIntrinsic, NativeFunction nativeConstructor = callHostFunctionAsConstructor);
+    
+    static JSFunction* createWithInvalidatedReallocationWatchpoint(VM&, FunctionExecutable*, JSScope*);
 
-    static JSFunction* create(VM& vm, FunctionExecutable* executable, JSScope* scope)
-    {
-        JSFunction* function = new (NotNull, allocateCell<JSFunction>(vm.heap)) JSFunction(vm, executable, scope);
-        ASSERT(function->structure()->globalObject());
-        function->finishCreation(vm);
-        return function;
-    }
+    static JSFunction* create(VM&, FunctionExecutable*, JSScope*);
 
     static JSFunction* createBuiltinFunction(VM&, FunctionExecutable*, JSGlobalObject*);
-
-    static void destroy(JSCell*);
 
     JS_EXPORT_PRIVATE String name(ExecState*);
     JS_EXPORT_PRIVATE String displayName(ExecState*);
@@ -105,23 +100,28 @@ public:
         return OBJECT_OFFSETOF(JSFunction, m_executable);
     }
 
-    static inline ptrdiff_t offsetOfAllocationProfile()
+    static inline ptrdiff_t offsetOfRareData()
     {
-        return OBJECT_OFFSETOF(JSFunction, m_allocationProfile);
+        return OBJECT_OFFSETOF(JSFunction, m_rareData);
     }
 
-    ObjectAllocationProfile* allocationProfile(ExecState* exec, unsigned inlineCapacity)
+    FunctionRareData* rareData(ExecState* exec, unsigned inlineCapacity)
     {
-        if (UNLIKELY(m_allocationProfile.isNull()))
-            return createAllocationProfile(exec, inlineCapacity);
-        return &m_allocationProfile;
+        if (UNLIKELY(!m_rareData))
+            return createRareData(exec, inlineCapacity);
+        return m_rareData.get();
     }
 
-    Structure* allocationStructure() { return m_allocationProfile.structure(); }
+    Structure* allocationStructure()
+    {
+        ASSERT(m_rareData);
+        return m_rareData.get()->allocationStructure();
+    }
 
     InlineWatchpointSet& allocationProfileWatchpointSet()
     {
-        return m_allocationProfileWatchpoint;
+        ASSERT(m_rareData);
+        return m_rareData.get()->allocationProfileWatchpointSet();
     }
 
     bool isHostOrBuiltinFunction() const;
@@ -129,15 +129,13 @@ public:
     JS_EXPORT_PRIVATE bool isHostFunctionNonInline() const;
 
 protected:
-    const static unsigned StructureFlags = OverridesGetOwnPropertySlot | ImplementsHasInstance | OverridesGetPropertyNames | JSObject::StructureFlags;
-
     JS_EXPORT_PRIVATE JSFunction(VM&, JSGlobalObject*, Structure*);
     JSFunction(VM&, FunctionExecutable*, JSScope*);
 
     void finishCreation(VM&, NativeExecutable*, int length, const String& name);
     using Base::finishCreation;
 
-    ObjectAllocationProfile* createAllocationProfile(ExecState*, size_t inlineCapacity);
+    FunctionRareData* createRareData(ExecState*, size_t inlineCapacity);
 
     static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
     static void getOwnNonIndexPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode = ExcludeDontEnumProperties);
@@ -150,6 +148,14 @@ protected:
     static void visitChildren(JSCell*, SlotVisitor&);
 
 private:
+    static JSFunction* createImpl(VM& vm, FunctionExecutable* executable, JSScope* scope)
+    {
+        JSFunction* function = new (NotNull, allocateCell<JSFunction>(vm.heap)) JSFunction(vm, executable, scope);
+        ASSERT(function->structure()->globalObject());
+        function->finishCreation(vm);
+        return function;
+    }
+    
     friend class LLIntOffsetsExtractor;
 
     static EncodedJSValue argumentsGetter(ExecState*, JSObject*, EncodedJSValue, PropertyName);
@@ -158,8 +164,7 @@ private:
     static EncodedJSValue nameGetter(ExecState*, JSObject*, EncodedJSValue, PropertyName);
 
     WriteBarrier<ExecutableBase> m_executable;
-    ObjectAllocationProfile m_allocationProfile;
-    InlineWatchpointSet m_allocationProfileWatchpoint;
+    WriteBarrier<FunctionRareData> m_rareData;
 };
 
 } // namespace JSC

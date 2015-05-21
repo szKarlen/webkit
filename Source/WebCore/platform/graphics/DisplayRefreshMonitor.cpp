@@ -39,8 +39,10 @@ PassRefPtr<DisplayRefreshMonitor> DisplayRefreshMonitor::create(DisplayRefreshMo
 {
     PlatformDisplayID displayID = client->displayID();
 
-    if (RefPtr<DisplayRefreshMonitor> monitor = client->createDisplayRefreshMonitor(displayID))
-        return monitor.release();
+    if (Optional<RefPtr<DisplayRefreshMonitor>> monitor = client->createDisplayRefreshMonitor(displayID))
+        return monitor.value();
+
+    // If ChromeClient returned Nullopt, we'll make one of the default type.
 
 #if PLATFORM(MAC)
     return DisplayRefreshMonitorMac::create(displayID);

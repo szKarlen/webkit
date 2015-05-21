@@ -836,7 +836,7 @@ Ref<RenderStyle> StyleResolver::styleForKeyframe(const RenderStyle* elementStyle
 
     applyCascadedProperties(cascade, firstCSSProperty, CSSPropertyLineHeight);
 
-    // If our font got dirtied, go ahead and update it now.
+    // If our font got dirtied, update it now.
     updateFont();
 
     // Line-height is set when we are sure we decided on the font-size
@@ -846,8 +846,7 @@ Ref<RenderStyle> StyleResolver::styleForKeyframe(const RenderStyle* elementStyle
     // Now do rest of the properties.
     applyCascadedProperties(cascade, CSSPropertyAnimation, lastCSSProperty);
 
-    // If our font got dirtied by one of the non-essential font props,
-    // go ahead and update it a second time.
+    // If our font got dirtied by one of the non-essential font props, update it a second time.
     updateFont();
 
     cascade.applyDeferredProperties(*this);
@@ -1007,7 +1006,7 @@ Ref<RenderStyle> StyleResolver::styleForPage(int pageIndex)
 
     applyCascadedProperties(cascade, firstCSSProperty, CSSPropertyLineHeight);
 
-    // If our font got dirtied, go ahead and update it now.
+    // If our font got dirtied, update it now.
     updateFont();
 
     // Line-height is set when we are sure we decided on the font-size.
@@ -1800,7 +1799,7 @@ void StyleResolver::applyMatchedProperties(const MatchResult& matchResult, const
     if (cacheItem && cacheItem->renderStyle->effectiveZoom() != state.style()->effectiveZoom())
         return applyMatchedProperties(matchResult, element, DoNotUseMatchedPropertiesCache);
 
-    // If our font got dirtied, go ahead and update it now.
+    // If our font got dirtied, update it now.
     updateFont();
 
     // Line-height is set when we are sure we decided on the font-size.

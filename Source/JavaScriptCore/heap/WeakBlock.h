@@ -40,8 +40,8 @@ class WeakHandleOwner;
 
 class WeakBlock : public DoublyLinkedListNode<WeakBlock> {
 public:
-    friend class DoublyLinkedListNode<WeakBlock>;
-    static const size_t blockSize = 4 * KB; // 5% of MarkedBlock size
+    friend class WTF::DoublyLinkedListNode<WeakBlock>;
+    static const size_t blockSize = 1 * KB; // 1/16 of MarkedBlock size
 
     struct FreeCell {
         FreeCell* next;

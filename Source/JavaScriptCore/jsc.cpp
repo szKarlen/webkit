@@ -1,6 +1,6 @@
 /*
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004, 2005, 2006, 2007, 2008, 2012, 2013 Apple Inc. All rights reserved.
+ *  Copyright (C) 2004-2008, 2012-2013, 2015 Apple Inc. All rights reserved.
  *  Copyright (C) 2006 Bjoern Graf (bjoern.graf@gmail.com)
  *
  *  This library is free software; you can redistribute it and/or
@@ -178,6 +178,7 @@ public:
     }
 
     typedef JSNonFinalObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags | JSC::MasqueradesAsUndefined;
 
     static Masquerader* create(VM& vm, JSGlobalObject* globalObject)
     {
@@ -194,9 +195,6 @@ public:
     }
 
     DECLARE_INFO;
-
-protected:
-    static const unsigned StructureFlags = JSC::MasqueradesAsUndefined | Base::StructureFlags;
 };
 
 class Root : public JSDestructibleObject {
@@ -254,6 +252,7 @@ public:
 
     DECLARE_INFO;
     typedef JSNonFinalObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags | JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot;
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
     {
@@ -273,8 +272,6 @@ public:
         if (delegate)
             m_delegate.set(vm, this, delegate);
     }
-
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 
     static bool getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName name, PropertySlot& slot)
     {
@@ -305,6 +302,7 @@ private:
 class RuntimeArray : public JSArray {
 public:
     typedef JSArray Base;
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames;
 
     static RuntimeArray* create(ExecState* exec)
     {
@@ -392,8 +390,6 @@ protected:
             m_vector.append(exec->argument(i).toInt32(exec));
     }
 
-    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesGetPropertyNames | JSArray::StructureFlags;
-
 private:
     RuntimeArray(ExecState* exec, Structure* structure)
         : JSArray(exec->vm(), structure, 0)
@@ -452,6 +448,7 @@ static EncodedJSValue JSC_HOST_CALL functionJSCStack(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionGCAndSweep(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionFullGC(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionEdenGC(ExecState*);
+static EncodedJSValue JSC_HOST_CALL functionHeapSize(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionDeleteAllCompiledCode(ExecState*);
 #ifndef NDEBUG
 static EncodedJSValue JSC_HOST_CALL functionReleaseExecutableMemory(ExecState*);
@@ -589,6 +586,7 @@ protected:
         addFunction(vm, "gc", functionGCAndSweep, 0);
         addFunction(vm, "fullGC", functionFullGC, 0);
         addFunction(vm, "edenGC", functionEdenGC, 0);
+        addFunction(vm, "gcHeapSize", functionHeapSize, 0);
         addFunction(vm, "deleteAllCompiledCode", functionDeleteAllCompiledCode, 0);
 #ifndef NDEBUG
         addFunction(vm, "dumpCallFrame", functionDumpCallFrame, 0);
@@ -834,21 +832,27 @@ EncodedJSValue JSC_HOST_CALL functionGCAndSweep(ExecState* exec)
 {
     JSLockHolder lock(exec);
     exec->heap()->collectAllGarbage();
-    return JSValue::encode(jsUndefined());
+    return JSValue::encode(jsNumber(exec->heap()->sizeAfterLastFullCollection()));
 }
 
 EncodedJSValue JSC_HOST_CALL functionFullGC(ExecState* exec)
 {
     JSLockHolder lock(exec);
     exec->heap()->collect(FullCollection);
-    return JSValue::encode(jsUndefined());
+    return JSValue::encode(jsNumber(exec->heap()->sizeAfterLastFullCollection()));
 }
 
 EncodedJSValue JSC_HOST_CALL functionEdenGC(ExecState* exec)
 {
     JSLockHolder lock(exec);
     exec->heap()->collect(EdenCollection);
-    return JSValue::encode(jsUndefined());
+    return JSValue::encode(jsNumber(exec->heap()->sizeAfterLastEdenCollection()));
+}
+
+EncodedJSValue JSC_HOST_CALL functionHeapSize(ExecState* exec)
+{
+    JSLockHolder lock(exec);
+    return JSValue::encode(jsNumber(exec->heap()->size()));
 }
 
 EncodedJSValue JSC_HOST_CALL functionDeleteAllCompiledCode(ExecState* exec)
@@ -1435,7 +1439,7 @@ void CommandLine::parseArguments(int argc, char** argv)
         m_arguments.append(argv[i]);
 
     if (needToDumpOptions)
-        JSC::Options::dumpAllOptions(stderr);
+        JSC::Options::dumpAllOptions(JSC::Options::DumpLevel::Verbose, "All JSC runtime options:", stderr);
     if (needToExit)
         jscExit(EXIT_SUCCESS);
 }

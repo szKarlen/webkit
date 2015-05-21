@@ -45,9 +45,23 @@ class JSEnvironmentRecord : public JSSymbolTableObject {
 
 public:
     typedef JSSymbolTableObject Base;
+    static const unsigned StructureFlags = Base::StructureFlags;
 
-    WriteBarrierBase<Unknown>* registers() { return m_registers; }
-    WriteBarrierBase<Unknown>& registerAt(int index) const { return m_registers[index]; }
+    WriteBarrierBase<Unknown>* variables()
+    {
+        return bitwise_cast<WriteBarrierBase<Unknown>*>(bitwise_cast<char*>(this) + offsetOfVariables());
+    }
+    
+    bool isValid(ScopeOffset offset)
+    {
+        return !!offset && offset.offset() < symbolTable()->scopeSize();
+    }
+    
+    WriteBarrierBase<Unknown>& variableAt(ScopeOffset offset)
+    {
+        ASSERT(isValid(offset));
+        return variables()[offset.offset()];
+    }
 
     WriteBarrierBase<Unknown>* const * addressOfRegisters() const { return &m_registers; }
     static size_t offsetOfRegisters() { return OBJECT_OFFSETOF(JSEnvironmentRecord, m_registers); }
@@ -55,8 +69,6 @@ public:
     DECLARE_INFO;
 
 protected:
-    static const unsigned StructureFlags = Base::StructureFlags;
-
     JSEnvironmentRecord(
         VM& vm,
         Structure* structure,
@@ -66,6 +78,20 @@ protected:
         : Base(vm, structure, scope, symbolTable)
         , m_registers(reinterpret_cast<WriteBarrierBase<Unknown>*>(registers))
     {
+    }
+    
+    void finishCreationUninitialized(VM& vm)
+    {
+        Base::finishCreation(vm);
+    }
+    
+    void finishCreation(VM& vm)
+    {
+        finishCreationUninitialized(vm);
+        for (unsigned i = symbolTable()->scopeSize(); i--;) {
+            // Filling this with undefined is useful because that's what variables start out as.
+            variableAt(ScopeOffset(i)).setUndefined();
+        }
     }
 
     WriteBarrierBase<Unknown>* m_registers; // "r" in the stack.

@@ -45,6 +45,7 @@ private:
     
 public:
     typedef JSEnvironmentRecord Base;
+    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | OverridesGetPropertyNames;
 
     static JSLexicalEnvironment* create(VM& vm, CallFrame* callFrame, Register* registers, JSScope* currentScope, CodeBlock* codeBlock)
     {
@@ -80,15 +81,6 @@ public:
     DECLARE_INFO;
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject) { return Structure::create(vm, globalObject, jsNull(), TypeInfo(ActivationObjectType, StructureFlags), info()); }
-
-    WriteBarrierBase<Unknown>& registerAt(int) const;
-    bool isValidIndex(int) const;
-    bool isValid(const SymbolTableEntry&) const;
-    int registersOffset();
-    static int registersOffset(SymbolTable*);
-
-protected:
-    static const unsigned StructureFlags = OverridesGetOwnPropertySlot | OverridesGetPropertyNames | Base::StructureFlags;
 
 private:
     bool symbolTableGet(PropertyName, PropertySlot&);

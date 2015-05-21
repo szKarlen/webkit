@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,27 +23,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "VariableWatchpointSet.h"
+// Regression test for https://bugs.webkit.org/show_bug.cgi?id=144020.
+// This test should not crash.
 
-#include "JSCInlines.h"
-
-namespace JSC {
-
-void VariableWriteFireDetail::dump(PrintStream& out) const
-{
-    out.print("Write to ", m_name, " in ", JSValue(m_object));
+// What happened in the bug:
+function foo(p) {
+    var b = {};
+    b.a = {};
+    if (p)
+        b.a.C = p.q;
+    return b.a.C;
 }
+noInline(foo);
 
-void VariableWatchpointSet::notifyWrite(VM& vm, JSValue value, JSObject* baseObject, const PropertyName& propertyName)
-{
-    notifyWrite(vm, value, VariableWriteFireDetail(baseObject, propertyName));
+for (var i = 0; i < 10000; i++)
+    foo(true);
+
+// A reduced version:
+function foo2(p) {
+    var o = {};
+    if (p)
+        o.f = {};
+    return o.f;
 }
+noInline(foo2);
 
-void VariableWatchpointSet::notifyWrite(VM& vm, JSValue value, const char* reason)
-{
-    notifyWrite(vm, value, StringFireDetail(reason));
-}
-
-} // namespace JSC
+for (var i = 0; i < 10000; i++)
+    foo2(true);
 

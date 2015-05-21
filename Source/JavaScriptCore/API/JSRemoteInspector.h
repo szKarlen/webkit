@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,38 +23,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef VariableWatchpointSetInlines_h
-#define VariableWatchpointSetInlines_h
+#ifndef JSRemoteInspector_h
+#define JSRemoteInspector_h
 
-#include "SymbolTable.h"
-#include "VariableWatchpointSet.h"
+#include <JavaScriptCore/JSBase.h>
+#include <JavaScriptCore/WebKitAvailability.h>
 
-namespace JSC {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-inline void VariableWatchpointSet::notifyWrite(VM& vm, JSValue value, const FireDetail& detail)
-{
-    ASSERT(!!value);
-    switch (state()) {
-    case ClearWatchpoint:
-        m_inferredValue.set(vm, &m_symbolTable, value);
-        startWatching();
-        return;
+JS_EXPORT void JSRemoteInspectorDisableAutoStart(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorStart(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorSetParentProcessInformation(pid_t, const uint8_t* auditData, size_t auditLength) CF_AVAILABLE(10_11, 9_0);
 
-    case IsWatched:
-        ASSERT(!!m_inferredValue);
-        if (value == m_inferredValue.get())
-            return;
-        invalidate(detail);
-        return;
-            
-    case IsInvalidated:
-        ASSERT(!m_inferredValue);
-        return;
-    }
-        
-    ASSERT_NOT_REACHED();
+JS_EXPORT void JSRemoteInspectorSetLogToSystemConsole(bool) CF_AVAILABLE(10_11, 9_0);
+
+JS_EXPORT bool JSRemoteInspectorGetInspectionEnabledByDefault(void) CF_AVAILABLE(10_11, 9_0);
+JS_EXPORT void JSRemoteInspectorSetInspectionEnabledByDefault(bool) CF_AVAILABLE(10_11, 9_0);
+
+#ifdef __cplusplus
 }
+#endif
 
-} // namespace JSC
-
-#endif // VariableWatchpointSetInlines_h
+#endif /* JSRemoteInspector_h */

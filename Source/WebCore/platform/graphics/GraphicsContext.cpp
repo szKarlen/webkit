@@ -774,8 +774,7 @@ bool GraphicsContext::drawLuminanceMask() const
 }
 
 #if !USE(CG)
-// Implement this if you want to go ahead and push the drawing mode into your native context
-// immediately.
+// Implement this if you want to go push the drawing mode into your native context immediately.
 void GraphicsContext::setPlatformTextDrawingMode(TextDrawingModeFlags)
 {
 }

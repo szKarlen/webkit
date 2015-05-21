@@ -645,7 +645,7 @@ void ComplexTextController::adjustGlyphsAndAdvances()
                 advance.width = fontData->adjustedSpaceWidth();
 
             if (hasExtraSpacing) {
-                // If we're a glyph with an advance, go ahead and add in letter-spacing.
+                // If we're a glyph with an advance, add in letter-spacing.
                 // That way we weed out zero width lurkers.  This behavior matches the fast text code path.
                 if (advance.width && m_font.letterSpacing())
                     advance.width += m_font.letterSpacing();

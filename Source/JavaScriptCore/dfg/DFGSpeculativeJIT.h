@@ -1218,6 +1218,18 @@ public:
         return appendCallWithExceptionCheckSetResult(operation, result);
     }
 
+    JITCompiler::Call callOperation(J_JITOperation_EJscC operation, GPRReg result, GPRReg arg1, JSCell* cell)
+    {
+        m_jit.setupArgumentsWithExecState(arg1, TrustedImmPtr(cell));
+        return appendCallWithExceptionCheckSetResult(operation, result);
+    }
+
+    JITCompiler::Call callOperation(V_JITOperation_EWs operation, WatchpointSet* watchpointSet)
+    {
+        m_jit.setupArgumentsWithExecState(TrustedImmPtr(watchpointSet));
+        return appendCall(operation);
+    }
+
 #if USE(JSVALUE64)
     JITCompiler::Call callOperation(J_JITOperation_E operation, GPRReg result)
     {
@@ -1481,12 +1493,6 @@ public:
     {
         m_jit.setupArgumentsWithExecState(arg1, arg2, arg3);
         return appendCallWithExceptionCheck(operation);
-    }
-
-    JITCompiler::Call callOperation(V_JITOperation_EVwsJ operation, VariableWatchpointSet* watchpointSet, GPRReg arg)
-    {
-        m_jit.setupArgumentsWithExecState(TrustedImmPtr(watchpointSet), arg);
-        return appendCall(operation);
     }
 
     JITCompiler::Call callOperation(D_JITOperation_EJ operation, FPRReg result, GPRReg arg1)
@@ -1797,12 +1803,6 @@ public:
     {
         m_jit.setupArgumentsWithExecState(arg1, arg2, EABI_32BIT_DUMMY_ARG SH4_32BIT_DUMMY_ARG arg3Payload, arg3Tag);
         return appendCallWithExceptionCheck(operation);
-    }
-
-    JITCompiler::Call callOperation(V_JITOperation_EVwsJ operation, VariableWatchpointSet* watchpointSet, GPRReg argTag, GPRReg argPayload)
-    {
-        m_jit.setupArgumentsWithExecState(TrustedImmPtr(watchpointSet), argPayload, argTag);
-        return appendCall(operation);
     }
 
     JITCompiler::Call callOperation(D_JITOperation_EJ operation, FPRReg result, GPRReg arg1Tag, GPRReg arg1Payload)
@@ -2225,8 +2225,20 @@ public:
     void compilePutByValForIntTypedArray(GPRReg base, GPRReg property, Node*, TypedArrayType);
     void compileGetByValOnFloatTypedArray(Node*, TypedArrayType);
     void compilePutByValForFloatTypedArray(GPRReg base, GPRReg property, Node*, TypedArrayType);
+<<<<<<< HEAD
     void compileNewFunctionNoCheck(Node*);
     void compileNewFunctionExpression(Node*);
+=======
+    void compileNewFunction(Node*);
+    void compileForwardVarargs(Node*);
+    void compileCreateActivation(Node*);
+    void compileCreateDirectArguments(Node*);
+    void compileGetFromArguments(Node*);
+    void compilePutToArguments(Node*);
+    void compileCreateScopedArguments(Node*);
+    void compileCreateClonedArguments(Node*);
+    void compileNotifyWrite(Node*);
+>>>>>>> 3a2fa4c... JSC should detect singleton functions
     bool compileRegExpExec(Node*);
     
     JITCompiler::Jump branchIsCell(JSValueRegs);
