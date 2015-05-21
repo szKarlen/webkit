@@ -216,24 +216,36 @@ static ::ScopeType GetScopeType(ExecState* exec, DebuggerScope* scopeChain)
 
 size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace)
 {
+	if (!initialFrame)
+		return 0;
+
 	auto callFrame = toJS(initialFrame);
+	while (--framesToSkip > 0 && callFrame)
+		callFrame = callFrame->callerFrame().get();
+
+	ExecState* exec = callFrame->exec();
 	auto result = *backTrace;
-	unsigned int currentFrame = framesToSkip;
+	unsigned int currentFrame = 0;
+	unsigned int desiredStackSize = framesToCapture - framesToSkip;
 	do
 	{
-		*&result[currentFrame].functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
-		*&result[currentFrame].scope = toRef(callFrame->exec(), (JSC::JSObject*)callFrame->scope());
-		*&result[currentFrame].thisObject = toRef(callFrame->exec(), callFrame->thisValue());
-		*&result[currentFrame].type = (::CallFrameFunctionType) callFrame->type();
-		*&result[currentFrame].column = callFrame->column();
-		*&result[currentFrame].line = callFrame->line();
-		*&result[currentFrame].scopeType = ::GetScopeType(callFrame->exec(), callFrame->scope());
-		*&result[currentFrame].url = OpaqueJSString::create(callFrame->exec()->codeBlock()->ownerExecutable()->sourceURL()).leakRef();
-		*&result[currentFrame].pointer = toRef(callFrame);
+		JSStackFrameDesc* desc = &result[currentFrame];
+		desc->functionName = OpaqueJSString::create(callFrame->functionName()).leakRef();
+		desc->scope = toRef(exec, (JSC::JSObject*)callFrame->scope());
+		desc->thisObject = toRef(exec, callFrame->thisValue());
+		desc->type = (::CallFrameFunctionType) callFrame->type();
+		desc->column = callFrame->column();
+		desc->line = callFrame->line();
+		desc->scopeType = ::GetScopeType(exec, callFrame->scope());
+		desc->url = OpaqueJSString::create(exec->codeBlock()->ownerExecutable()->sourceURL()).leakRef();
+		desc->pointer = toRef(callFrame);
 
-		callFrame = callFrame->callerFrame() && callFrame->callerFrame()->isValid() ? callFrame->callerFrame().get() : nullptr;
+		callFrame = callFrame->callerFrame() && callFrame->callerFrame()->isValid() 
+			? callFrame->callerFrame().get() 
+			: nullptr;
+
 		currentFrame++;
-	} while (currentFrame != framesToCapture && callFrame);
+	} while (callFrame && currentFrame != desiredStackSize);
 	return currentFrame;
 }
 
