@@ -27,7 +27,7 @@
 #define CopyWorkList_h
 
 #include "CopyToken.h"
-#include "HeapBlock.h"
+#include <wtf/DoublyLinkedList.h>
 #include <wtf/Vector.h>
 
 namespace JSC {

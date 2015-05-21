@@ -49,9 +49,16 @@ const ClassInfo UnlinkedProgramCodeBlock::s_info = { "UnlinkedProgramCodeBlock",
 const ClassInfo UnlinkedEvalCodeBlock::s_info = { "UnlinkedEvalCodeBlock", &Base::s_info, 0, CREATE_METHOD_TABLE(UnlinkedEvalCodeBlock) };
 const ClassInfo UnlinkedFunctionCodeBlock::s_info = { "UnlinkedFunctionCodeBlock", &Base::s_info, 0, CREATE_METHOD_TABLE(UnlinkedFunctionCodeBlock) };
 
-static UnlinkedFunctionCodeBlock* generateFunctionCodeBlock(VM& vm, UnlinkedFunctionExecutable* executable, const SourceCode& source, CodeSpecializationKind kind, DebuggerMode debuggerMode, ProfilerMode profilerMode, UnlinkedFunctionKind functionKind, bool bodyIncludesBraces, ParserError& error)
+static UnlinkedFunctionCodeBlock* generateFunctionCodeBlock(
+    VM& vm, UnlinkedFunctionExecutable* executable, const SourceCode& source,
+    CodeSpecializationKind kind, DebuggerMode debuggerMode, ProfilerMode profilerMode,
+    UnlinkedFunctionKind functionKind, ParserError& error)
 {
-    std::unique_ptr<FunctionNode> function = parse<FunctionNode>(&vm, source, executable->parameters(), executable->name(), executable->toStrictness(), JSParseFunctionCode, error, 0, bodyIncludesBraces);
+    JSParserBuiltinMode builtinMode = executable->isBuiltinFunction() ? JSParserBuiltinMode::Builtin : JSParserBuiltinMode::NotBuiltin;
+    JSParserStrictMode strictMode = executable->isInStrictContext() ? JSParserStrictMode::Strict : JSParserStrictMode::NotStrict;
+    std::unique_ptr<FunctionNode> function = parse<FunctionNode>(
+        &vm, source, executable->parameters(), executable->name(), builtinMode,
+        strictMode, JSParserCodeType::Function, error, 0);
 
     if (!function) {
         ASSERT(error.m_type != ParserError::ErrorNone);
@@ -79,7 +86,7 @@ unsigned UnlinkedCodeBlock::addOrFindConstant(JSValue v)
     return addConstant(v);
 }
 
-UnlinkedFunctionExecutable::UnlinkedFunctionExecutable(VM* vm, Structure* structure, const SourceCode& source, FunctionBodyNode* node, UnlinkedFunctionKind kind)
+UnlinkedFunctionExecutable::UnlinkedFunctionExecutable(VM* vm, Structure* structure, const SourceCode& source, RefPtr<SourceProvider>&& sourceOverride, FunctionBodyNode* node, UnlinkedFunctionKind kind)
     : Base(*vm, structure)
     , m_isInStrictContext(node->isInStrictContext())
     , m_hasCapturedVariables(false)
@@ -96,6 +103,7 @@ UnlinkedFunctionExecutable::UnlinkedFunctionExecutable(VM* vm, Structure* struct
     , m_sourceLength(node->source().length())
     , m_typeProfilingStartOffset(node->functionKeywordStart())
     , m_typeProfilingEndOffset(node->startStartOffset() + node->source().length() - 1)
+    , m_sourceOverride(sourceOverride)
     , m_features(0)
     , m_functionMode(node->functionMode())
 {
@@ -118,36 +126,44 @@ void UnlinkedFunctionExecutable::visitChildren(JSCell* cell, SlotVisitor& visito
     visitor.append(&thisObject->m_symbolTableForConstruct);
 }
 
-FunctionExecutable* UnlinkedFunctionExecutable::link(VM& vm, const SourceCode& source, size_t lineOffset)
+FunctionExecutable* UnlinkedFunctionExecutable::link(VM& vm, const SourceCode& ownerSource)
 {
-    unsigned firstLine = lineOffset + m_firstLineOffset;
+    SourceCode source = m_sourceOverride ? SourceCode(m_sourceOverride) : ownerSource;
+    unsigned firstLine = source.firstLine() + m_firstLineOffset;
+    unsigned startOffset = source.startOffset() + m_startOffset;
+
+    // Adjust to one-based indexing.
     bool startColumnIsOnFirstSourceLine = !m_firstLineOffset;
     unsigned startColumn = m_unlinkedBodyStartColumn + (startColumnIsOnFirstSourceLine ? source.startColumn() : 1);
     bool endColumnIsOnStartLine = !m_lineCount;
     unsigned endColumn = m_unlinkedBodyEndColumn + (endColumnIsOnStartLine ? startColumn : 1);
-    SourceCode code(source.provider(), m_startOffset, m_startOffset + m_sourceLength, firstLine, startColumn);
+
+    SourceCode code(source.provider(), startOffset, startOffset + m_sourceLength, firstLine, startColumn);
     return FunctionExecutable::create(vm, code, this, firstLine, firstLine + m_lineCount, startColumn, endColumn);
 }
 
-UnlinkedFunctionExecutable* UnlinkedFunctionExecutable::fromGlobalCode(const Identifier& name, ExecState* exec, Debugger*, const SourceCode& source, JSObject** exception)
+UnlinkedFunctionExecutable* UnlinkedFunctionExecutable::fromGlobalCode(const Identifier& name, ExecState& exec, const SourceCode& source, JSObject*& exception)
 {
     ParserError error;
-    VM& vm = exec->vm();
+    VM& vm = exec.vm();
     CodeCache* codeCache = vm.codeCache();
     UnlinkedFunctionExecutable* executable = codeCache->getFunctionExecutableFromGlobalCode(vm, name, source, error);
 
-    if (exec->lexicalGlobalObject()->hasDebugger())
-        exec->lexicalGlobalObject()->debugger()->sourceParsed(exec, source.provider(), error.m_line, error.m_message);
+    auto& globalObject = *exec.lexicalGlobalObject();
+    if (globalObject.hasDebugger())
+        globalObject.debugger()->sourceParsed(&exec, source.provider(), error.line(), error.message());
 
-    if (error.m_type != ParserError::ErrorNone) {
-        *exception = error.toErrorObject(exec->lexicalGlobalObject(), source);
-        return 0;
+    if (error.isValid()) {
+        exception = error.toErrorObject(&globalObject, source);
+        return nullptr;
     }
 
     return executable;
 }
 
-UnlinkedFunctionCodeBlock* UnlinkedFunctionExecutable::codeBlockFor(VM& vm, const SourceCode& source, CodeSpecializationKind specializationKind, DebuggerMode debuggerMode, ProfilerMode profilerMode, bool bodyIncludesBraces, ParserError& error)
+UnlinkedFunctionCodeBlock* UnlinkedFunctionExecutable::codeBlockFor(
+    VM& vm, const SourceCode& source, CodeSpecializationKind specializationKind, 
+    DebuggerMode debuggerMode, ProfilerMode profilerMode, ParserError& error)
 {
     switch (specializationKind) {
     case CodeForCall:
@@ -160,7 +176,10 @@ UnlinkedFunctionCodeBlock* UnlinkedFunctionExecutable::codeBlockFor(VM& vm, cons
         break;
     }
 
-    UnlinkedFunctionCodeBlock* result = generateFunctionCodeBlock(vm, this, source, specializationKind, debuggerMode, profilerMode, isBuiltinFunction() ? UnlinkedBuiltinFunction : UnlinkedNormalFunction, bodyIncludesBraces, error);
+    UnlinkedFunctionCodeBlock* result = generateFunctionCodeBlock(
+        vm, this, source, specializationKind, debuggerMode, profilerMode, 
+        isBuiltinFunction() ? UnlinkedBuiltinFunction : UnlinkedNormalFunction, 
+        error);
     
     if (error.m_type != ParserError::ErrorNone)
         return 0;
@@ -176,18 +195,6 @@ UnlinkedFunctionCodeBlock* UnlinkedFunctionExecutable::codeBlockFor(VM& vm, cons
         break;
     }
     return result;
-}
-
-String UnlinkedFunctionExecutable::paramString() const
-{
-    FunctionParameters& parameters = *m_parameters;
-    StringBuilder builder;
-    for (size_t pos = 0; pos < parameters.size(); ++pos) {
-        if (!builder.isEmpty())
-            builder.appendLiteral(", ");
-        parameters.at(pos)->toString(builder);
-    }
-    return builder.toString();
 }
 
 UnlinkedCodeBlock::UnlinkedCodeBlock(VM* vm, Structure* structure, CodeType codeType, const ExecutableInfo& info)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,48 +23,18 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PageAllocationAligned_h
-#define PageAllocationAligned_h
+#ifndef CompareAndSwapTest_h
+#define CompareAndSwapTest_h
 
-#include <wtf/OSAllocator.h>
-#include <wtf/PageReservation.h>
-
-namespace WTF {
-
-class PageAllocationAligned : private PageBlock {
-public:
-    PageAllocationAligned()
-    {
-    }
-
-    using PageBlock::operator bool;
-    using PageBlock::size;
-    using PageBlock::base;
-
-    WTF_EXPORT_PRIVATE static PageAllocationAligned allocate(size_t size, size_t alignment, OSAllocator::Usage usage = OSAllocator::UnknownUsage, bool writable = true);
-
-    WTF_EXPORT_PRIVATE void deallocate();
-
-private:
-#if OS(DARWIN)
-    PageAllocationAligned(void* base, size_t size)
-        : PageBlock(base, size, false)
-    {
-    }
-#else
-    PageAllocationAligned(void* base, size_t size, void* reservationBase, size_t reservationSize)
-        : PageBlock(base, size, false)
-        , m_reservation(reservationBase, reservationSize, false)
-    {
-    }
-
-    PageBlock m_reservation;
+#ifdef __cplusplus
+extern "C" {
 #endif
-};
 
+/* Regression test for webkit.org/b/142513 */
+void testCompareAndSwap();
 
-} // namespace WTF
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
-using WTF::PageAllocationAligned;
-
-#endif // PageAllocationAligned_h
+#endif /* CompareAndSwapTest_h */

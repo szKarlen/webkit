@@ -35,6 +35,7 @@ class Heap;
 class MarkedBlock;
 
 class IncrementalSweeper : public HeapTimer {
+    WTF_MAKE_FAST_ALLOCATED;
 public:
 #if USE(CF)
     JS_EXPORT_PRIVATE IncrementalSweeper(Heap*, CFRunLoopRef);
@@ -42,9 +43,11 @@ public:
     explicit IncrementalSweeper(VM*);
 #endif
 
-    void startSweeping(Vector<MarkedBlock*>&);
+    void startSweeping(Vector<MarkedBlock*>&&);
+    void addBlocksAndContinueSweeping(Vector<MarkedBlock*>&&);
+
     JS_EXPORT_PRIVATE virtual void doWork() override;
-    void sweepNextBlock();
+    bool sweepNextBlock();
     void willFinishSweeping();
 
 #if USE(CF)
@@ -53,7 +56,6 @@ private:
     void scheduleTimer();
     void cancelTimer();
     
-    unsigned m_currentBlockToSweepIndex;
     Vector<MarkedBlock*>& m_blocksToSweep;
 #endif
 };

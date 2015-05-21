@@ -141,7 +141,8 @@ public:
     ExpressionType createLogicalNot(const JSTokenLocation&, ExpressionType) { return UnaryExpr; }
     ExpressionType createUnaryPlus(const JSTokenLocation&, ExpressionType) { return UnaryExpr; }
     ExpressionType createVoid(const JSTokenLocation&, ExpressionType) { return UnaryExpr; }
-    ExpressionType thisExpr(const JSTokenLocation&) { return ThisExpr; }
+    ExpressionType thisExpr(const JSTokenLocation&, ThisTDZMode) { return ThisExpr; }
+    ExpressionType superExpr(const JSTokenLocation&) { return SuperExpr; }
     ExpressionType createResolve(const JSTokenLocation&, const Identifier*, int) { return ResolveExpr; }
     ExpressionType createObjectLiteral(const JSTokenLocation&) { return ObjectLiteralExpr; }
     ExpressionType createObjectLiteral(const JSTokenLocation&, int) { return ObjectLiteralExpr; }
@@ -261,7 +262,7 @@ public:
     
     void assignmentStackAppend(int, int, int, int, int, Operator) { }
     int createAssignment(const JSTokenLocation&, int, int, int, int, int) { RELEASE_ASSERT_NOT_REACHED(); return AssignmentExpr; }
-    const Identifier* getName(const Property& property) const { ASSERT(property.name); return property.name; }
+    const Identifier* getName(const Property& property) const { return property.name; }
     PropertyNode::Type getType(const Property& property) const { return property.type; }
     bool isResolve(ExpressionType expr) const { return expr == ResolveExpr || expr == ResolveEvalExpr; }
     ExpressionType createDeconstructingAssignment(const JSTokenLocation&, int, ExpressionType)

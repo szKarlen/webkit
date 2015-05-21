@@ -39,7 +39,6 @@
 #include "SymbolTable.h"
 #include "VirtualRegister.h"
 
-#include <wtf/Compression.h>
 #include <wtf/RefCountedArray.h>
 #include <wtf/Vector.h>
 
@@ -92,9 +91,10 @@ public:
     friend class CodeCache;
     friend class VM;
     typedef JSCell Base;
-    static UnlinkedFunctionExecutable* create(VM* vm, const SourceCode& source, FunctionBodyNode* node, UnlinkedFunctionKind unlinkedFunctionKind)
+    static UnlinkedFunctionExecutable* create(VM* vm, const SourceCode& source, FunctionBodyNode* node, UnlinkedFunctionKind unlinkedFunctionKind, RefPtr<SourceProvider>&& sourceOverride = nullptr)
     {
-        UnlinkedFunctionExecutable* instance = new (NotNull, allocateCell<UnlinkedFunctionExecutable>(vm->heap)) UnlinkedFunctionExecutable(vm, vm->unlinkedFunctionExecutableStructure.get(), source, node, unlinkedFunctionKind);
+        UnlinkedFunctionExecutable* instance = new (NotNull, allocateCell<UnlinkedFunctionExecutable>(vm->heap))
+            UnlinkedFunctionExecutable(vm, vm->unlinkedFunctionExecutableStructure.get(), source, WTF::move(sourceOverride), node, unlinkedFunctionKind);
         instance->finishCreation(*vm);
         return instance;
     }
@@ -118,8 +118,6 @@ public:
         return JSParseNormal;
     }
 
-    unsigned firstLineOffset() const { return m_firstLineOffset; }
-    unsigned lineCount() const { return m_lineCount; }
     unsigned unlinkedFunctionNameStart() const { return m_unlinkedFunctionNameStart; }
     unsigned unlinkedBodyStartColumn() const { return m_unlinkedBodyStartColumn; }
     unsigned unlinkedBodyEndColumn() const { return m_unlinkedBodyEndColumn; }
@@ -128,13 +126,13 @@ public:
     unsigned typeProfilingStartOffset() const { return m_typeProfilingStartOffset; }
     unsigned typeProfilingEndOffset() const { return m_typeProfilingEndOffset; }
 
-    String paramString() const;
+    UnlinkedFunctionCodeBlock* codeBlockFor(
+        VM&, const SourceCode&, CodeSpecializationKind, DebuggerMode, ProfilerMode, 
+        ParserError&);
 
-    UnlinkedFunctionCodeBlock* codeBlockFor(VM&, const SourceCode&, CodeSpecializationKind, DebuggerMode, ProfilerMode, bool bodyIncludesBraces, ParserError&);
+    static UnlinkedFunctionExecutable* fromGlobalCode(const Identifier&, ExecState&, const SourceCode&, JSObject*& exception);
 
-    static UnlinkedFunctionExecutable* fromGlobalCode(const Identifier&, ExecState*, Debugger*, const SourceCode&, JSObject** exception);
-
-    FunctionExecutable* link(VM&, const SourceCode&, size_t lineOffset);
+    FunctionExecutable* link(VM&, const SourceCode&);
 
     void clearCodeForRecompilation()
     {
@@ -162,7 +160,7 @@ public:
     bool isBuiltinFunction() const { return m_isBuiltinFunction; }
 
 private:
-    UnlinkedFunctionExecutable(VM*, Structure*, const SourceCode&, FunctionBodyNode*, UnlinkedFunctionKind);
+    UnlinkedFunctionExecutable(VM*, Structure*, const SourceCode&, RefPtr<SourceProvider>&& sourceOverride, FunctionBodyNode*, UnlinkedFunctionKind);
     WriteBarrier<UnlinkedFunctionCodeBlock> m_codeBlockForCall;
     WriteBarrier<UnlinkedFunctionCodeBlock> m_codeBlockForConstruct;
 
@@ -185,6 +183,7 @@ private:
     unsigned m_sourceLength;
     unsigned m_typeProfilingStartOffset;
     unsigned m_typeProfilingEndOffset;
+    RefPtr<SourceProvider> m_sourceOverride;
 
     CodeFeatures m_features;
 

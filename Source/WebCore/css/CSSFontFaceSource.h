@@ -46,6 +46,7 @@ class FontDescription;
 class SimpleFontData;
 
 class CSSFontFaceSource final : public CachedFontClient {
+    WTF_MAKE_FAST_ALLOCATED;
 public:
     CSSFontFaceSource(const String&, CachedFont* = nullptr);
     virtual ~CSSFontFaceSource();

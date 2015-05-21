@@ -807,6 +807,9 @@
     <ClCompile Include="..\runtime\RegExpPrototype.cpp">
       <Filter>runtime</Filter>
     </ClCompile>
+    <ClCompile Include="..\runtime\RuntimeType.cpp">
+      <Filter>runtime</Filter>
+    </ClCompile>
     <ClCompile Include="..\runtime\SamplingCounter.cpp">
       <Filter>runtime</Filter>
     </ClCompile>
@@ -1747,11 +1750,8 @@
     <ClCompile Include="..\debugger\JSDebugger.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\API\JSDebuggerRef.cpp">
-      <Filter>API</Filter>
-    </ClCompile>
-    <ClCompile Include="..\API\JSObjectRefUnsafe.cpp">
-      <Filter>API</Filter>
+    <ClCompile Include="..\jit\PolymorphicCallStubRoutine.cpp">
+      <Filter>jit</Filter>
     </ClCompile>
     <ClCompile Include="..\API\JSValueRefUnsafe.cpp">
       <Filter>API</Filter>
@@ -1776,6 +1776,14 @@
     </ClCompile>
     <ClCompile Include="..\API\JSProfilerPrivate.cpp">
       <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dfg\DFGPutStackSinkingPhase.cpp" />
+    <ClCompile Include="..\ftl\FTLJSCallBase.cpp" />
+    <ClCompile Include="..\ftl\FTLJSCallVarargs.cpp" />
+    <ClCompile Include="..\runtime\JSCatchScope.cpp" />
+    <ClCompile Include="..\runtime\JSFunctionNameScope.cpp" />
+    <ClCompile Include="..\jit\ExecutableAllocatorFixedVMPool.cpp">
+      <Filter>jit</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2878,6 +2886,12 @@
       <Filter>runtime</Filter>
     </ClInclude>
     <ClInclude Include="..\runtime\Reject.h">
+      <Filter>runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\runtime\RuntimeFlags.h">
+      <Filter>runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\runtime\RuntimeType.h">
       <Filter>runtime</Filter>
     </ClInclude>
     <ClInclude Include="..\runtime\SamplingCounter.h">
@@ -4217,36 +4231,16 @@
     <ClInclude Include="..\debugger\JSDebuggerBase.h">
       <Filter>debugger</Filter>
     </ClInclude>
-    <ClInclude Include="..\API\JSDebuggerRef.h">
-      <Filter>API</Filter>
+    <ClInclude Include="..\jit\PolymorphicCallStubRoutine.h">
+      <Filter>jit</Filter>
     </ClInclude>
-    <ClInclude Include="..\API\JSObjectRefUnsafe.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSValueRefUnsafe.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSHeapPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSTypedArrayAPI.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSErrorRef.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSLRProcessor.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSSamplerPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSBytecodePrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\API\JSProfilerPrivate.h">
-      <Filter>API</Filter>
-    </ClInclude>
+    <ClInclude Include="..\jit\SetupVarargsFrame.h" />
+    <ClInclude Include="..\dfg\DFGPutStackSinkingPhase.h" />
+    <ClInclude Include="..\ftl\FTLJSCallBase.h" />
+    <ClInclude Include="..\ftl\FTLJSCallVarargs.h" />
+    <ClInclude Include="..\runtime\JSCatchScope.h" />
+    <ClInclude Include="..\runtime\JSFunctionNameScope.h" />
+    <ClInclude Include="..\runtime\MathCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="JavaScriptCorePreLink.cmd" />

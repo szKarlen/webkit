@@ -29,7 +29,6 @@
 #include <wtf/DataLog.h>
 #include <wtf/DoublyLinkedList.h>
 #include <wtf/HashFunctions.h>
-#include <wtf/PageAllocationAligned.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
 
@@ -112,7 +111,7 @@ namespace JSC {
         };
 
         enum DestructorType { None, ImmortalStructure, Normal };
-
+        
         static MarkedBlock* create(MarkedAllocator*, size_t capacity, size_t cellSize, DestructorType);
         static void destroy(MarkedBlock*);
 

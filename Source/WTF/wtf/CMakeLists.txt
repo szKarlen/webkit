@@ -12,7 +12,6 @@ set(WTF_HEADERS
     ByteOrder.h
     CompilationThread.h
     Compiler.h
-    Compression.h
     CryptographicUtilities.h
     CryptographicallyRandomNumber.h
     CurrentTime.h
@@ -60,7 +59,6 @@ set(WTF_HEADERS
     OwnPtr.h
     OwnPtrCommon.h
     PageAllocation.h
-    PageAllocationAligned.h
     PageBlock.h
     PageReservation.h
     ParallelJobs.h
@@ -150,7 +148,6 @@ set(WTF_SOURCES
     Atomics.cpp
     BitVector.cpp
     CompilationThread.cpp
-    Compression.cpp
     CryptographicUtilities.cpp
     CryptographicallyRandomNumber.cpp
     CurrentTime.cpp
@@ -169,7 +166,6 @@ set(WTF_SOURCES
     MetaAllocator.cpp
     NumberOfCores.cpp
     OSRandomSource.cpp
-    PageAllocationAligned.cpp
     PageBlock.cpp
     ParallelJobsGeneric.cpp
     PrintStream.cpp

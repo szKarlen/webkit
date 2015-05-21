@@ -100,8 +100,6 @@
 		A748745217A0BDAE00FA04CB /* SixCharacterHash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A748744F17A0BDAE00FA04CB /* SixCharacterHash.cpp */; };
 		A748745317A0BDAE00FA04CB /* SixCharacterHash.h in Headers */ = {isa = PBXBuildFile; fileRef = A748745017A0BDAE00FA04CB /* SixCharacterHash.h */; };
 		A748745417A0BDAE00FA04CB /* StringHashDumpContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A748745117A0BDAE00FA04CB /* StringHashDumpContext.h */; };
-		A7E643C617C5423B003BB16B /* Compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E643C417C5423B003BB16B /* Compression.cpp */; };
-		A7E643C717C5423B003BB16B /* Compression.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E643C517C5423B003BB16B /* Compression.h */; };
 		A876DBD8151816E500DADB95 /* Platform.h in Headers */ = {isa = PBXBuildFile; fileRef = A876DBD7151816E500DADB95 /* Platform.h */; };
 		A8A47385151A825B004123FF /* ASCIICType.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A4725A151A825A004123FF /* ASCIICType.h */; };
 		A8A47386151A825B004123FF /* Assertions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8A4725B151A825A004123FF /* Assertions.cpp */; };
@@ -190,8 +188,6 @@
 		A8A473FD151A825B004123FF /* OwnPtrCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472DE151A825B004123FF /* OwnPtrCommon.h */; };
 		A8A473FE151A825B004123FF /* PackedIntVector.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472DF151A825B004123FF /* PackedIntVector.h */; };
 		A8A473FF151A825B004123FF /* PageAllocation.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472E0151A825B004123FF /* PageAllocation.h */; };
-		A8A47400151A825B004123FF /* PageAllocationAligned.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8A472E1151A825B004123FF /* PageAllocationAligned.cpp */; };
-		A8A47401151A825B004123FF /* PageAllocationAligned.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472E2151A825B004123FF /* PageAllocationAligned.h */; };
 		A8A47402151A825B004123FF /* PageBlock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8A472E3151A825B004123FF /* PageBlock.cpp */; };
 		A8A47403151A825B004123FF /* PageBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472E4151A825B004123FF /* PageBlock.h */; };
 		A8A47404151A825B004123FF /* PageReservation.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A472E5151A825B004123FF /* PageReservation.h */; };
@@ -393,8 +389,6 @@
 		A748744F17A0BDAE00FA04CB /* SixCharacterHash.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SixCharacterHash.cpp; sourceTree = "<group>"; };
 		A748745017A0BDAE00FA04CB /* SixCharacterHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SixCharacterHash.h; sourceTree = "<group>"; };
 		A748745117A0BDAE00FA04CB /* StringHashDumpContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringHashDumpContext.h; sourceTree = "<group>"; };
-		A7E643C417C5423B003BB16B /* Compression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Compression.cpp; sourceTree = "<group>"; };
-		A7E643C517C5423B003BB16B /* Compression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compression.h; sourceTree = "<group>"; };
 		A876DBD7151816E500DADB95 /* Platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Platform.h; sourceTree = "<group>"; };
 		A8A4725A151A825A004123FF /* ASCIICType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASCIICType.h; sourceTree = "<group>"; };
 		A8A4725B151A825A004123FF /* Assertions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Assertions.cpp; sourceTree = "<group>"; };
@@ -486,8 +480,6 @@
 		A8A472DE151A825B004123FF /* OwnPtrCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwnPtrCommon.h; sourceTree = "<group>"; };
 		A8A472DF151A825B004123FF /* PackedIntVector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackedIntVector.h; sourceTree = "<group>"; };
 		A8A472E0151A825B004123FF /* PageAllocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PageAllocation.h; sourceTree = "<group>"; };
-		A8A472E1151A825B004123FF /* PageAllocationAligned.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PageAllocationAligned.cpp; sourceTree = "<group>"; };
-		A8A472E2151A825B004123FF /* PageAllocationAligned.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PageAllocationAligned.h; sourceTree = "<group>"; };
 		A8A472E3151A825B004123FF /* PageBlock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PageBlock.cpp; sourceTree = "<group>"; };
 		A8A472E4151A825B004123FF /* PageBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PageBlock.h; sourceTree = "<group>"; };
 		A8A472E5151A825B004123FF /* PageReservation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PageReservation.h; sourceTree = "<group>"; };
@@ -729,8 +721,6 @@
 				0F8F2B8F172E00F0007DBDA5 /* CompilationThread.cpp */,
 				0F8F2B90172E00F0007DBDA5 /* CompilationThread.h */,
 				A8A47270151A825A004123FF /* Compiler.h */,
-				A7E643C417C5423B003BB16B /* Compression.cpp */,
-				A7E643C517C5423B003BB16B /* Compression.h */,
 				E15556F318A0CC18006F48FB /* CryptographicUtilities.cpp */,
 				E15556F418A0CC18006F48FB /* CryptographicUtilities.h */,
 				A8A47273151A825A004123FF /* CryptographicallyRandomNumber.cpp */,
@@ -811,8 +801,6 @@
 				A8A472DE151A825B004123FF /* OwnPtrCommon.h */,
 				A8A472DF151A825B004123FF /* PackedIntVector.h */,
 				A8A472E0151A825B004123FF /* PageAllocation.h */,
-				A8A472E1151A825B004123FF /* PageAllocationAligned.cpp */,
-				A8A472E2151A825B004123FF /* PageAllocationAligned.h */,
 				A8A472E3151A825B004123FF /* PageBlock.cpp */,
 				A8A472E4151A825B004123FF /* PageBlock.h */,
 				A8A472E5151A825B004123FF /* PageReservation.h */,
@@ -1076,7 +1064,6 @@
 				0FC4EDE61696149600F65041 /* CommaPrinter.h in Headers */,
 				0F8F2B91172E00FC007DBDA5 /* CompilationThread.h in Headers */,
 				A8A47398151A825B004123FF /* Compiler.h in Headers */,
-				A7E643C717C5423B003BB16B /* Compression.h in Headers */,
 				A8A4748C151A8264004123FF /* config.h in Headers */,
 				0F8F2B9C172F2596007DBDA5 /* ConversionMode.h in Headers */,
 				A8A4739B151A825B004123FF /* CryptographicallyRandomNumber.h in Headers */,
@@ -1145,7 +1132,6 @@
 				0FB14E1B1810E1DC009B6B4D /* BagToHashMap.h in Headers */,
 				A8A473FE151A825B004123FF /* PackedIntVector.h in Headers */,
 				A8A473FF151A825B004123FF /* PageAllocation.h in Headers */,
-				A8A47401151A825B004123FF /* PageAllocationAligned.h in Headers */,
 				A8A47403151A825B004123FF /* PageBlock.h in Headers */,
 				A8A47404151A825B004123FF /* PageReservation.h in Headers */,
 				A8A47405151A825B004123FF /* ParallelJobs.h in Headers */,
@@ -1338,7 +1324,6 @@
 				A8A47460151A825B004123FF /* CollatorDefault.cpp in Sources */,
 				A8A47463151A825B004123FF /* CollatorICU.cpp in Sources */,
 				0F8F2B92172E0103007DBDA5 /* CompilationThread.cpp in Sources */,
-				A7E643C617C5423B003BB16B /* Compression.cpp in Sources */,
 				A8A4739A151A825B004123FF /* CryptographicallyRandomNumber.cpp in Sources */,
 				A8A47439151A825B004123FF /* CString.cpp in Sources */,
 				A8A4739C151A825B004123FF /* CurrentTime.cpp in Sources */,
@@ -1368,7 +1353,6 @@
 				A8A473F7151A825B004123FF /* OSAllocatorPosix.cpp in Sources */,
 				93F1993E19D7958D00C2390B /* StringView.cpp in Sources */,
 				A8A473F9151A825B004123FF /* OSRandomSource.cpp in Sources */,
-				A8A47400151A825B004123FF /* PageAllocationAligned.cpp in Sources */,
 				A8A47402151A825B004123FF /* PageBlock.cpp in Sources */,
 				0F9D3362165DBA73005AD387 /* PrintStream.cpp in Sources */,
 				143F611F1565F0F900DB514A /* RAMSize.cpp in Sources */,

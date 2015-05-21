@@ -137,6 +137,7 @@ namespace JSC { namespace DFG {
     macro(ArithSqrt, NodeResultNumber) \
     macro(ArithSin, NodeResultNumber) \
     macro(ArithCos, NodeResultNumber) \
+    macro(ArithLog, NodeResultNumber) \
     \
     /* Add of values may either be arithmetic, or result in string concatenation. */\
     macro(ValueAdd, NodeResultJS | NodeMustGenerate | NodeClobbersWorld) \
@@ -185,9 +186,7 @@ namespace JSC { namespace DFG {
     macro(GetGlobalVar, NodeResultJS) \
     macro(PutGlobalVar, NodeMustGenerate) \
     macro(NotifyWrite, NodeMustGenerate) \
-    macro(VariableWatchpoint, NodeMustGenerate) \
     macro(VarInjectionWatchpoint, NodeMustGenerate) \
-    macro(FunctionReentryWatchpoint, NodeMustGenerate) \
     macro(CheckCell, NodeMustGenerate) \
     macro(CheckBadCell, NodeMustGenerate) \
     macro(AllocationProfileWatchpoint, NodeMustGenerate) \

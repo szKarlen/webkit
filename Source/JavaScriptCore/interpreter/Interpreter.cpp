@@ -125,7 +125,8 @@ JSValue eval(CallFrame* callFrame)
         // If the literal parser bailed, it should not have thrown exceptions.
         ASSERT(!callFrame->vm().exception());
 
-        eval = callerCodeBlock->evalCodeCache().getSlow(callFrame, callerCodeBlock->ownerExecutable(), callerCodeBlock->isStrictMode(), programSource, callerScopeChain);
+        ThisTDZMode thisTDZMode = callerCodeBlock->unlinkedCodeBlock()->constructorKind() == ConstructorKind::Derived ? ThisTDZMode::AlwaysCheck : ThisTDZMode::CheckIfNeeded;
+        eval = callerCodeBlock->evalCodeCache().getSlow(callFrame, callerCodeBlock->ownerExecutable(), callerCodeBlock->isStrictMode(), thisTDZMode, programSource, callerScopeChain);
         if (!eval)
             return jsUndefined();
     }
@@ -137,34 +138,13 @@ JSValue eval(CallFrame* callFrame)
 
 unsigned sizeOfVarargs(CallFrame* callFrame, JSValue arguments, uint32_t firstVarArgOffset)
 {
-    if (!arguments) { // f.apply(x, arguments), with arguments unmodified.
-        unsigned argumentCountIncludingThis = callFrame->argumentCountIncludingThis();
-        if (argumentCountIncludingThis > firstVarArgOffset)
-            argumentCountIncludingThis -= firstVarArgOffset;
-        else
-            argumentCountIncludingThis = 1;
-        unsigned paddedCalleeFrameOffset = WTF::roundUpToMultipleOf(stackAlignmentRegisters(), -firstFreeRegister + argumentCountIncludingThis + JSStack::CallFrameHeaderSize + 1);
-        CallFrame* newCallFrame = CallFrame::create(callFrame->registers() - paddedCalleeFrameOffset);
-        if (argumentCountIncludingThis > Arguments::MaxArguments + 1 || !stack->ensureCapacityFor(newCallFrame->registers())) {
-            throwStackOverflowError(callFrame);
-            return 0;
-        }
-        return newCallFrame;
-    }
-
-    if (arguments.isUndefinedOrNull()) {
-        unsigned argumentCountIncludingThis = 1;
-        unsigned paddedCalleeFrameOffset = WTF::roundUpToMultipleOf(stackAlignmentRegisters(),  -firstFreeRegister + argumentCountIncludingThis + JSStack::CallFrameHeaderSize + 1);
-        CallFrame* newCallFrame = CallFrame::create(callFrame->registers() - paddedCalleeFrameOffset);
-        if (!stack->ensureCapacityFor(newCallFrame->registers())) {
-            throwStackOverflowError(callFrame);
-            return 0;
-        }
-        return newCallFrame;
-    }
-
-    if (!arguments.isObject()) {
-        callFrame->vm().throwException(callFrame, createInvalidParameterError(callFrame, "Function.prototype.apply", arguments));
+    unsigned length;
+    if (!arguments)
+        length = callFrame->argumentCount();
+    else if (arguments.isUndefinedOrNull())
+        length = 0;
+    else if (!arguments.isObject()) {
+        callFrame->vm().throwException(callFrame, createInvalidFunctionApplyParameterError(callFrame,  arguments));
         return 0;
     }
 

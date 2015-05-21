@@ -161,10 +161,10 @@ public:
         incConstants();
         return new (m_parserArena) VoidNode(location, expr);
     }
-    ExpressionNode* thisExpr(const JSTokenLocation& location)
+    ExpressionNode* thisExpr(const JSTokenLocation& location, ThisTDZMode thisTDZMode)
     {
         usesThis();
-        return new (m_parserArena) ThisNode(location);
+        return new (m_parserArena) ThisNode(location, thisTDZMode);
     }
     ExpressionNode* createResolve(const JSTokenLocation& location, const Identifier* ident, const JSTextPosition& start)
     {

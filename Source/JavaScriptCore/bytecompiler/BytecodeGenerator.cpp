@@ -31,6 +31,7 @@
 #include "config.h"
 #include "BytecodeGenerator.h"
 
+#include "BuiltinExecutables.h"
 #include "Interpreter.h"
 #include "JSFunction.h"
 #include "JSLexicalEnvironment.h"
@@ -423,7 +424,7 @@ BytecodeGenerator::BytecodeGenerator(VM& vm, FunctionNode* functionNode, Unlinke
             continue;
         }
         auto simpleParameter = static_cast<const BindingNode*>(pattern);
-        if (capturedArguments.size() && capturedArguments[i]) {
+        if (capturedArguments.size() && capturedArguments[i] && !m_functions.contains(simpleParameter->boundProperty().impl())) {
             ASSERT((functionNode->hasCapturedVariables() && functionNode->captures(simpleParameter->boundProperty())) || shouldCaptureAllTheThings);
             index = capturedArguments[i]->index();
             RegisterID original(nextParameterIndex);
@@ -1743,6 +1744,19 @@ RegisterID* BytecodeGenerator::emitNewFunctionExpression(RegisterID* r0, FuncExp
     instructions().append(scopeRegister()->index());
     instructions().append(index);
     return r0;
+}
+
+RegisterID* BytecodeGenerator::emitNewDefaultConstructor(RegisterID* dst, ConstructorKind constructorKind, const Identifier& name)
+{
+    UnlinkedFunctionExecutable* executable = m_vm->builtinExecutables()->createDefaultConstructor(constructorKind, name);
+
+    unsigned index = m_codeBlock->addFunctionExpr(executable);
+
+    emitOpcode(op_new_func_exp);
+    instructions().append(dst->index());
+    instructions().append(scopeRegister()->index());
+    instructions().append(index);
+    return dst;
 }
 
 RegisterID* BytecodeGenerator::emitCall(RegisterID* dst, RegisterID* func, ExpectedFunction expectedFunction, CallArguments& callArguments, const JSTextPosition& divot, const JSTextPosition& divotStart, const JSTextPosition& divotEnd)

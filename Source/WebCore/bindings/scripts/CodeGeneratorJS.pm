@@ -288,14 +288,7 @@ sub AddToImplIncludes
         $implIncludes{$header} = $conditional;
     } else {
         my $oldValue = $implIncludes{$header};
-        if ($oldValue ne 1) {
-            my %newValue = ();
-            $newValue{$conditional} = 1;
-            foreach my $condition (split(/\|/, $oldValue)) {
-                $newValue{$condition} = 1;
-            }
-            $implIncludes{$header} = join("|", sort keys %newValue);
-        }
+        $implIncludes{$header} = "$oldValue|$conditional" if $oldValue ne 1;
     }
 }
 
@@ -2635,7 +2628,7 @@ sub GenerateImplementation
                         }
                     }
 
-                    push(@implContent, "    " . GetNativeTypeFromSignature($attribute->signature) . " nativeValue(" . JSValueToNative($attribute->signature, "value") . ");\n");
+                    push(@implContent, "    " . GetNativeTypeFromSignature($attribute->signature) . " nativeValue(" . JSValueToNative($attribute->signature, "value", $attribute->signature->extendedAttributes->{"Conditional"}) . ");\n");
                     push(@implContent, "    if (UNLIKELY(exec->hadException()))\n");
                     push(@implContent, "        return;\n");
 
@@ -2690,7 +2683,7 @@ sub GenerateImplementation
                         }
                         if ($attribute->signature->extendedAttributes->{"ImplementedBy"}) {
                             my $implementedBy = $attribute->signature->extendedAttributes->{"ImplementedBy"};
-                            $implIncludes{"${implementedBy}.h"} = 1;
+                            AddToImplIncludes("${implementedBy}.h", $attribute->signature->extendedAttributes->{"Conditional"});
                             unshift(@arguments, "&impl") if !$attribute->isStatic;
                             $functionName = "${implementedBy}::${functionName}";
                         } elsif ($attribute->isStatic) {
@@ -2882,7 +2875,7 @@ sub GenerateImplementation
         }
         push(@implContent, "    thisObject->visitAdditionalChildren(visitor);\n") if $interface->extendedAttributes->{"JSCustomMarkFunction"};
         if ($interface->extendedAttributes->{"ReportExtraMemoryCost"}) {
-            push(@implContent, "    visitor.reportExtraMemoryUsage(cell, thisObject->impl().memoryCost());\n");
+            push(@implContent, "    visitor.reportExtraMemoryVisited(cell, thisObject->impl().memoryCost());\n");
         }
         if ($numCachedAttributes > 0) {
             foreach (@{$interface->attributes}) {
@@ -3097,7 +3090,7 @@ END
 #endif
 END
         push(@implContent, <<END) if $interface->extendedAttributes->{"ReportExtraMemoryCost"};
-    globalObject->vm().heap.reportExtraMemoryCost(impl->memoryCost());
+    globalObject->vm().heap.reportExtraMemoryAllocated(impl->memoryCost());
 END
 
         if ($svgPropertyType) {
@@ -3193,7 +3186,7 @@ sub GenerateParametersCheck
     my $functionName;
     my $implementedBy = $function->signature->extendedAttributes->{"ImplementedBy"};
     if ($implementedBy) {
-        AddToImplIncludes("${implementedBy}.h");
+        AddToImplIncludes("${implementedBy}.h", $function->signature->extendedAttributes->{"Conditional"});
         unshift(@arguments, "&impl") if !$function->isStatic;
         $functionName = "${implementedBy}::${functionImplementationName}";
     } elsif ($function->isStatic) {
@@ -3346,7 +3339,7 @@ sub GenerateParametersCheck
                 push(@$outputArray, "        return JSValue::encode(jsNull());\n");
                 push(@$outputArray, "    const AtomicString& $name(existing_$name);\n");
             } else {
-                push(@$outputArray, "    " . GetNativeTypeFromSignature($parameter) . " $name(" . JSValueToNative($parameter, $optional && $defaultAttribute && $defaultAttribute eq "NullString" ? "argumentOrNull(exec, $argsIndex)" : "exec->argument($argsIndex)") . ");\n");
+                push(@$outputArray, "    " . GetNativeTypeFromSignature($parameter) . " $name(" . JSValueToNative($parameter, $optional && $defaultAttribute && $defaultAttribute eq "NullString" ? "argumentOrNull(exec, $argsIndex)" : "exec->argument($argsIndex)", $function->signature->extendedAttributes->{"Conditional"}) . ");\n");
             }
 
             # If a parameter is "an index" and it's negative it should throw an INDEX_SIZE_ERR exception.
@@ -3804,8 +3797,8 @@ sub JSValueToNative
 {
     my $signature = shift;
     my $value = shift;
+    my $conditional = shift;
 
-    my $conditional = $signature->extendedAttributes->{"Conditional"};
     my $type = $signature->type;
 
     return "$value.toBoolean(exec)" if $type eq "boolean";
@@ -4212,14 +4205,14 @@ sub WriteData
         if ($condition eq 1) {
             push @includes, $include;
         } else {
-            push @{$implIncludeConditions{$condition}}, $include;
+            push @{$implIncludeConditions{$codeGenerator->GenerateConditionalStringFromAttributeValue($condition)}}, $include;
         }
     }
     foreach my $include (sort @includes) {
         $contents .= "#include $include\n";
     }
     foreach my $condition (sort keys %implIncludeConditions) {
-        $contents .= "\n#if " . $codeGenerator->GenerateConditionalStringFromAttributeValue($condition) . "\n";
+        $contents .= "\n#if " . $condition . "\n";
         foreach my $include (sort @{$implIncludeConditions{$condition}}) {
             $contents .= "#include $include\n";
         }

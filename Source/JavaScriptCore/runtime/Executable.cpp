@@ -237,7 +237,7 @@ PassRefPtr<CodeBlock> ScriptExecutable::newCodeBlockFor(
     ProfilerMode profilerMode = globalObject->hasProfiler() ? ProfilerOn : ProfilerOff;
     UnlinkedFunctionCodeBlock* unlinkedCodeBlock =
         executable->m_unlinkedExecutable->codeBlockFor(
-            *vm, executable->m_source, kind, debuggerMode, profilerMode, executable->bodyIncludesBraces(), error);
+            *vm, executable->m_source, kind, debuggerMode, profilerMode, error);
     recordParse(executable->m_unlinkedExecutable->features(), executable->m_unlinkedExecutable->hasCapturedVariables(), lineNo(), lastLine(), startColumn(), endColumn()); 
     if (!unlinkedCodeBlock) {
         exception = vm->throwException(
@@ -341,7 +341,7 @@ JSObject* ScriptExecutable::prepareForExecutionImpl(
 
 const ClassInfo EvalExecutable::s_info = { "EvalExecutable", &ScriptExecutable::s_info, 0, CREATE_METHOD_TABLE(EvalExecutable) };
 
-EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source, bool isInStrictContext) 
+EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source, bool isInStrictContext, ThisTDZMode thisTDZMode)
 {
     JSGlobalObject* globalObject = exec->lexicalGlobalObject();
     if (!globalObject->evalEnabled()) {
@@ -352,7 +352,7 @@ EvalExecutable* EvalExecutable::create(ExecState* exec, const SourceCode& source
     EvalExecutable* executable = new (NotNull, allocateCell<EvalExecutable>(*exec->heap())) EvalExecutable(exec, source, isInStrictContext);
     executable->finishCreation(exec->vm());
 
-    UnlinkedEvalCodeBlock* unlinkedEvalCode = globalObject->createEvalCodeBlock(exec, executable);
+    UnlinkedEvalCodeBlock* unlinkedEvalCode = globalObject->createEvalCodeBlock(exec, executable, thisTDZMode);
     if (!unlinkedEvalCode)
         return 0;
 
@@ -389,11 +389,11 @@ void ProgramExecutable::destroy(JSCell* cell)
 
 const ClassInfo FunctionExecutable::s_info = { "FunctionExecutable", &ScriptExecutable::s_info, 0, CREATE_METHOD_TABLE(FunctionExecutable) };
 
-FunctionExecutable::FunctionExecutable(VM& vm, const SourceCode& source, UnlinkedFunctionExecutable* unlinkedExecutable, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces)
+FunctionExecutable::FunctionExecutable(VM& vm, const SourceCode& source, 
+    UnlinkedFunctionExecutable* unlinkedExecutable, unsigned firstLine, 
+    unsigned lastLine, unsigned startColumn, unsigned endColumn)
     : ScriptExecutable(vm.functionExecutableStructure.get(), vm, source, unlinkedExecutable->isInStrictContext())
     , m_unlinkedExecutable(vm, this, unlinkedExecutable)
-    , m_bodyIncludesBraces(bodyIncludesBraces)
-    , m_didParseForTheFirstTime(false)
 {
     RELEASE_ASSERT(!source.isNull());
     ASSERT(source.length());
@@ -499,7 +499,7 @@ JSObject* ProgramExecutable::initializeGlobalProperties(VM& vm, CallFrame* callF
 
     for (size_t i = 0; i < functionDeclarations.size(); ++i) {
         UnlinkedFunctionExecutable* unlinkedFunctionExecutable = functionDeclarations[i].second.get();
-        JSValue value = JSFunction::create(vm, unlinkedFunctionExecutable->link(vm, m_source, lineNo()), scope);
+        JSValue value = JSFunction::create(vm, unlinkedFunctionExecutable->link(vm, m_source), scope);
         globalObject->addFunction(callFrame, functionDeclarations[i].first, value);
         if (vm.typeProfiler() || vm.controlFlowProfiler()) {
             vm.functionHasExecutedCache()->insertUnexecutedRange(sourceID(), 
@@ -600,34 +600,12 @@ void FunctionExecutable::unlinkCalls()
 #endif
 }
 
-FunctionExecutable* FunctionExecutable::fromGlobalCode(const Identifier& name, ExecState* exec, Debugger* debugger, const SourceCode& source, JSObject** exception)
+FunctionExecutable* FunctionExecutable::fromGlobalCode(const Identifier& name, ExecState& exec, const SourceCode& source, JSObject*& exception)
 {
-    UnlinkedFunctionExecutable* unlinkedExecutable = UnlinkedFunctionExecutable::fromGlobalCode(name, exec, debugger, source, exception);
+    UnlinkedFunctionExecutable* unlinkedExecutable = UnlinkedFunctionExecutable::fromGlobalCode(name, exec, source, exception);
     if (!unlinkedExecutable)
-        return 0;
-    unsigned lineCount = unlinkedExecutable->lineCount();
-    unsigned firstLine = source.firstLine() + unlinkedExecutable->firstLineOffset();
-    unsigned startOffset = source.startOffset() + unlinkedExecutable->startOffset();
-
-    // We don't have any owner executable. The source string is effectively like a global
-    // string (like in the handling of eval). Hence, the startColumn is always 1.
-    unsigned startColumn = 1;
-    unsigned sourceLength = unlinkedExecutable->sourceLength();
-    bool endColumnIsOnStartLine = !lineCount;
-    // The unlinkedBodyEndColumn is based-0. Hence, we need to add 1 to it. But if the
-    // endColumn is on the startLine, then we need to subtract back the adjustment for
-    // the open brace resulting in an adjustment of 0.
-    unsigned endColumnExcludingBraces = unlinkedExecutable->unlinkedBodyEndColumn() + (endColumnIsOnStartLine ? 0 : 1);
-    unsigned startOffsetExcludingOpenBrace = startOffset + 1;
-    unsigned endOffsetExcludingCloseBrace = startOffset + sourceLength - 1;
-    SourceCode bodySource(source.provider(), startOffsetExcludingOpenBrace, endOffsetExcludingCloseBrace, firstLine, startColumn);
-
-    return FunctionExecutable::create(exec->vm(), bodySource, unlinkedExecutable, firstLine, firstLine + lineCount, startColumn, endColumnExcludingBraces, false);
-}
-
-String FunctionExecutable::paramString() const
-{
-    return m_unlinkedExecutable->paramString();
+        return nullptr;
+    return unlinkedExecutable->link(exec.vm(), source);
 }
 
 void ExecutableBase::dump(PrintStream& out) const

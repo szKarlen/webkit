@@ -84,7 +84,9 @@ void HTMLImageLoader::notifyFinished(CachedResource*)
         if (!element().inDocument()) {
             JSC::VM& vm = JSDOMWindowBase::commonVM();
             JSC::JSLockHolder lock(vm);
-            vm.heap.reportExtraMemoryCost(cachedImage->encodedSize());
+            // FIXME: Adopt reportExtraMemoryVisited, and switch to reportExtraMemoryAllocated.
+            // https://bugs.webkit.org/show_bug.cgi?id=142595
+            vm.heap.deprecatedReportExtraMemory(cachedImage->encodedSize());
         }
     }
 

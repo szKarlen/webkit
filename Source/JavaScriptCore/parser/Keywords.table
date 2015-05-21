@@ -28,6 +28,7 @@ do		DO
 while		WHILE
 else		ELSE
 in		INTOKEN
+super		SUPER
 switch		SWITCH
 throw		THROW
 try		TRY

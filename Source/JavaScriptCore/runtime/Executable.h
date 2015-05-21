@@ -453,7 +453,7 @@ public:
         return m_evalCodeBlock.get();
     }
 
-    static EvalExecutable* create(ExecState*, const SourceCode&, bool isInStrictContext);
+    static EvalExecutable* create(ExecState*, const SourceCode&, bool isInStrictContext, ThisTDZMode);
 
     PassRefPtr<JITCode> generatedJITCode()
     {
@@ -545,13 +545,15 @@ class FunctionExecutable : public ScriptExecutable {
 public:
     typedef ScriptExecutable Base;
 
-    static FunctionExecutable* create(VM& vm, const SourceCode& source, UnlinkedFunctionExecutable* unlinkedExecutable, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces = true)
+    static FunctionExecutable* create(
+        VM& vm, const SourceCode& source, UnlinkedFunctionExecutable* unlinkedExecutable, 
+        unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn)
     {
-        FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(vm.heap)) FunctionExecutable(vm, source, unlinkedExecutable, firstLine, lastLine, startColumn, endColumn, bodyIncludesBraces);
+        FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(vm.heap)) FunctionExecutable(vm, source, unlinkedExecutable, firstLine, lastLine, startColumn, endColumn);
         executable->finishCreation(vm);
         return executable;
     }
-    static FunctionExecutable* fromGlobalCode(const Identifier& name, ExecState*, Debugger*, const SourceCode&, JSObject** exception);
+    static FunctionExecutable* fromGlobalCode(const Identifier& name, ExecState&, const SourceCode&, JSObject*& exception);
 
     static void destroy(JSCell*);
         
@@ -627,7 +629,6 @@ public:
     const Identifier& inferredName() { return m_unlinkedExecutable->inferredName(); }
     JSString* nameValue() const { return m_unlinkedExecutable->nameValue(); }
     size_t parameterCount() const { return m_unlinkedExecutable->parameterCount(); } // Excluding 'this'!
-    String paramString() const;
     SymbolTable* symbolTable(CodeSpecializationKind);
 
     void clearCodeIfNotCompiling();
@@ -644,10 +645,14 @@ public:
 
     void clearCode();
 
-    bool bodyIncludesBraces() const { return m_bodyIncludesBraces; }
-
 private:
+<<<<<<< HEAD
     FunctionExecutable(VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, unsigned lastLine, unsigned startColumn, unsigned endColumn, bool bodyIncludesBraces);
+=======
+    FunctionExecutable(
+        VM&, const SourceCode&, UnlinkedFunctionExecutable*, unsigned firstLine, 
+        unsigned lastLine, unsigned startColumn, unsigned endColumn);
+>>>>>>> 32bac81... Function bodies should always include braces
 
     bool isCompiling()
     {
@@ -665,8 +670,11 @@ private:
     WriteBarrier<UnlinkedFunctionExecutable> m_unlinkedExecutable;
     RefPtr<FunctionCodeBlock> m_codeBlockForCall;
     RefPtr<FunctionCodeBlock> m_codeBlockForConstruct;
+<<<<<<< HEAD
     bool m_bodyIncludesBraces;
     bool m_didParseForTheFirstTime;
+=======
+>>>>>>> 32bac81... Function bodies should always include braces
     RefPtr<TypeSet> m_returnStatementTypeSet;
 };
 

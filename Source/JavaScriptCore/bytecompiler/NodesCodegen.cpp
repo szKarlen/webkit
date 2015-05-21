@@ -135,6 +135,9 @@ RegisterID* RegExpNode::emitBytecode(BytecodeGenerator& generator, RegisterID* d
 
 RegisterID* ThisNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)
 {
+    if (m_shouldAlwaysEmitTDZCheck || generator.constructorKind() == ConstructorKind::Derived)
+        generator.emitTDZCheck(generator.thisRegister());
+    
     if (dst == generator.ignoredResult())
         return 0;
 
@@ -1769,7 +1772,7 @@ inline StatementNode* BlockNode::lastStatement() const
     return m_statements ? m_statements->lastStatement() : 0;
 }
 
-inline StatementNode* BlockNode::singleStatement() const
+StatementNode* BlockNode::singleStatement() const
 {
     return m_statements ? m_statements->singleStatement() : 0;
 }
@@ -2744,6 +2747,74 @@ RegisterID* FuncExprNode::emitBytecode(BytecodeGenerator& generator, RegisterID*
 {
     return generator.emitNewFunctionExpression(generator.finalDestination(dst), this);
 }
+
+#if ENABLE(ES6_CLASS_SYNTAX)
+// ------------------------------ ClassDeclNode ---------------------------------
+
+void ClassDeclNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)
+{
+    generator.emitNode(dst, m_classDeclaration);
+}
+
+// ------------------------------ ClassExprNode ---------------------------------
+
+RegisterID* ClassExprNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> superclass;
+    if (m_classHeritage) {
+        superclass = generator.newTemporary();
+        generator.emitNode(superclass.get(), m_classHeritage);
+    }
+
+    RefPtr<RegisterID> constructor;
+    RefPtr<RegisterID> prototype;
+
+    // FIXME: Make the prototype non-configurable & non-writable.
+    if (m_constructorExpression)
+        constructor = generator.emitNode(dst, m_constructorExpression);
+    else {
+        constructor = generator.emitNewDefaultConstructor(generator.finalDestination(dst),
+            m_classHeritage ? ConstructorKind::Derived : ConstructorKind::Base, m_name);
+    }
+
+    prototype = generator.emitGetById(generator.newTemporary(), constructor.get(), generator.propertyNames().prototype);
+
+    if (superclass) {
+        RefPtr<RegisterID> protoParent = generator.newTemporary();
+        generator.emitLoad(protoParent.get(), jsNull());
+
+        RefPtr<RegisterID> tempRegister = generator.newTemporary();
+        RefPtr<Label> superclassIsNullLabel = generator.newLabel();
+        generator.emitJumpIfTrue(generator.emitUnaryOp(op_eq_null, tempRegister.get(), superclass.get()), superclassIsNullLabel.get());
+
+        // FIXME: Throw TypeError if it's a generator function.
+        RefPtr<Label> superclassIsObjectLabel = generator.newLabel();
+        generator.emitJumpIfTrue(generator.emitIsObject(tempRegister.get(), superclass.get()), superclassIsObjectLabel.get());
+        generator.emitThrowTypeError(ASCIILiteral("The superclass is not an object."));
+        generator.emitLabel(superclassIsObjectLabel.get());
+        generator.emitGetById(protoParent.get(), superclass.get(), generator.propertyNames().prototype);
+
+        RefPtr<Label> protoParentIsObjectOrNullLabel = generator.newLabel();
+        generator.emitJumpIfTrue(generator.emitUnaryOp(op_is_object_or_null, tempRegister.get(), protoParent.get()), protoParentIsObjectOrNullLabel.get());
+        generator.emitThrowTypeError(ASCIILiteral("The superclass's prototype is not an object."));
+        generator.emitLabel(protoParentIsObjectOrNullLabel.get());
+
+        generator.emitDirectPutById(constructor.get(), generator.propertyNames().underscoreProto, superclass.get(), PropertyNode::Unknown);
+        generator.emitLabel(superclassIsNullLabel.get());
+        generator.emitDirectPutById(prototype.get(), generator.propertyNames().underscoreProto, protoParent.get(), PropertyNode::Unknown);
+
+        emitPutHomeObject(generator, constructor.get(), prototype.get());
+    }
+
+    if (m_staticMethods)
+        generator.emitNode(constructor.get(), m_staticMethods);
+
+    if (m_instanceMethods)
+        generator.emitNode(prototype.get(), m_instanceMethods);
+
+    return generator.moveToDestinationIfNeeded(dst, constructor.get());
+}
+#endif
     
 // ------------------------------ DeconstructingAssignmentNode -----------------
 RegisterID* DeconstructingAssignmentNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)

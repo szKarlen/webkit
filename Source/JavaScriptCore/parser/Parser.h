@@ -397,11 +397,14 @@ class Parser {
     WTF_MAKE_FAST_ALLOCATED;
 
 public:
-    Parser(VM*, const SourceCode&, FunctionParameters*, const Identifier&, JSParserStrictness, JSParserMode);
+    Parser(
+        VM*, const SourceCode&, FunctionParameters*, const Identifier&, 
+        JSParserBuiltinMode, JSParserStrictMode, JSParserCodeType,
+        ConstructorKind defaultConstructorKind = ConstructorKind::None, ThisTDZMode = ThisTDZMode::CheckIfNeeded);
     ~Parser();
 
     template <class ParsedNode>
-    std::unique_ptr<ParsedNode> parse(ParserError&, bool needReparsingAdjustment);
+    std::unique_ptr<ParsedNode> parse(ParserError&);
 
     JSTextPosition positionBeforeLastNewline() const { return m_lexer->positionBeforeLastNewline(); }
     Vector<RefPtr<StringImpl>>&& closedVariables() { return WTF::move(m_closedVariables); }
@@ -832,6 +835,8 @@ private:
     RefPtr<SourceProviderCache> m_functionCache;
     SourceElements* m_sourceElements;
     bool m_parsingBuiltin;
+    ConstructorKind m_defaultConstructorKind;
+    ThisTDZMode m_thisTDZMode;
     DeclarationStacks::VarStack m_varDeclarations;
     DeclarationStacks::FunctionStack m_funcDeclarations;
     IdentifierSet m_capturedVariables;
@@ -860,12 +865,12 @@ private:
 
 template <typename LexerType>
 template <class ParsedNode>
-std::unique_ptr<ParsedNode> Parser<LexerType>::parse(ParserError& error, bool needReparsingAdjustment)
+std::unique_ptr<ParsedNode> Parser<LexerType>::parse(ParserError& error)
 {
     int errLine;
     String errMsg;
 
-    if (ParsedNode::scopeIsFunction && needReparsingAdjustment)
+    if (ParsedNode::scopeIsFunction)
         m_lexer->setIsReparsing();
 
     m_sourceElements = 0;
@@ -939,14 +944,19 @@ std::unique_ptr<ParsedNode> Parser<LexerType>::parse(ParserError& error, bool ne
 }
 
 template <class ParsedNode>
-std::unique_ptr<ParsedNode> parse(VM* vm, const SourceCode& source, FunctionParameters* parameters, const Identifier& name, JSParserStrictness strictness, JSParserMode parserMode, ParserError& error, JSTextPosition* positionBeforeLastNewline = 0, bool needReparsingAdjustment = false)
+std::unique_ptr<ParsedNode> parse(
+    VM* vm, const SourceCode& source, FunctionParameters* parameters,
+    const Identifier& name, JSParserBuiltinMode builtinMode,
+    JSParserStrictMode strictMode, JSParserCodeType codeType,
+    ParserError& error, JSTextPosition* positionBeforeLastNewline = 0,
+    ConstructorKind defaultConstructorKind = ConstructorKind::None, ThisTDZMode thisTDZMode = ThisTDZMode::CheckIfNeeded)
 {
     SamplingRegion samplingRegion("Parsing");
 
     ASSERT(!source.provider()->source().isNull());
     if (source.provider()->source().is8Bit()) {
-        Parser<Lexer<LChar>> parser(vm, source, parameters, name, strictness, parserMode);
-        std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error, needReparsingAdjustment);
+        Parser<Lexer<LChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType, defaultConstructorKind, thisTDZMode);
+        std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error);
         if (positionBeforeLastNewline)
             *positionBeforeLastNewline = parser.positionBeforeLastNewline();
         if (strictness == JSParseBuiltin) {
@@ -957,8 +967,9 @@ std::unique_ptr<ParsedNode> parse(VM* vm, const SourceCode& source, FunctionPara
         }
         return result;
     }
-    Parser<Lexer<UChar>> parser(vm, source, parameters, name, strictness, parserMode);
-    std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error, needReparsingAdjustment);
+    ASSERT_WITH_MESSAGE(defaultConstructorKind == ConstructorKind::None, "BuiltinExecutables::createDefaultConstructor should always use a 8-bit string");
+    Parser<Lexer<UChar>> parser(vm, source, parameters, name, builtinMode, strictMode, codeType, defaultConstructorKind, thisTDZMode);
+    std::unique_ptr<ParsedNode> result = parser.parse<ParsedNode>(error);
     if (positionBeforeLastNewline)
         *positionBeforeLastNewline = parser.positionBeforeLastNewline();
     return result;

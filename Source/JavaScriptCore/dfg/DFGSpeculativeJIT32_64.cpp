@@ -111,7 +111,7 @@ bool SpeculativeJIT::fillJSValue(Edge edge, GPRReg& tagGPR, GPRReg& payloadGPR, 
             m_gprs.lock(gpr);
         }
         tagGPR = allocate();
-        uint32_t tag = JSValue::EmptyValueTag;
+        int32_t tag = JSValue::EmptyValueTag;
         DataFormat fillFormat = DataFormatJS;
         switch (info.registerFormat()) {
         case DataFormatInt32:
@@ -2284,6 +2284,10 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
 
+    case ArithLog:
+        compileArithLog(node);
+        break;
+
     case LogicalNot:
         compileLogicalNot(node);
         break;
@@ -3684,7 +3688,9 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
     case GetClosureVar: {
-        StorageOperand registers(this, node->child1());
+        speculate(node, node->child1());
+
+        StorageOperand registers(this, node->child2());
         GPRTemporary resultTag(this);
         GPRTemporary resultPayload(this);
         GPRReg registersGPR = registers.gpr();
@@ -3696,6 +3702,8 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
     case PutClosureVar: {
+        speculate(node, node->child1());
+
         StorageOperand registers(this, node->child2());
         JSValueOperand value(this, node->child3());
         GPRTemporary scratchRegister(this);
@@ -3703,8 +3711,6 @@ void SpeculativeJIT::compile(Node* node)
         GPRReg registersGPR = registers.gpr();
         GPRReg valueTagGPR = value.tagGPR();
         GPRReg valuePayloadGPR = value.payloadGPR();
-
-        speculate(node, node->child1());
 
         m_jit.store32(valueTagGPR, JITCompiler::Address(registersGPR, node->varNumber() * sizeof(Register) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.tag)));
         m_jit.store32(valuePayloadGPR, JITCompiler::Address(registersGPR, node->varNumber() * sizeof(Register) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload)));
@@ -4109,8 +4115,7 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
 
-    case VarInjectionWatchpoint:
-    case VariableWatchpoint: {
+    case VarInjectionWatchpoint: {
         noResult(node);
         break;
     }
@@ -4367,11 +4372,6 @@ void SpeculativeJIT::compile(Node* node)
         callOperation(operationCreateActivation, resultGPR, scopeGPR, framePointerOffsetToGetActivationRegisters());
         
         cellResult(resultGPR, node);
-        break;
-    }
-        
-    case FunctionReentryWatchpoint: {
-        noResult(node);
         break;
     }
         

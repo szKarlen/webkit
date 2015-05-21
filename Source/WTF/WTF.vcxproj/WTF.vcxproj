@@ -54,7 +54,6 @@
     <ClCompile Include="..\wtf\Assertions.cpp" />
     <ClCompile Include="..\wtf\BitVector.cpp" />
     <ClCompile Include="..\wtf\CompilationThread.cpp" />
-    <ClCompile Include="..\wtf\Compression.cpp" />
     <ClCompile Include="..\wtf\CryptographicUtilities.cpp" />
     <ClCompile Include="..\wtf\CryptographicallyRandomNumber.cpp" />
     <ClCompile Include="..\wtf\CurrentTime.cpp" />
@@ -114,7 +113,6 @@
     <ClCompile Include="..\wtf\NumberOfCores.cpp" />
     <ClCompile Include="..\wtf\OSAllocatorWin.cpp" />
     <ClCompile Include="..\wtf\OSRandomSource.cpp" />
-    <ClCompile Include="..\wtf\PageAllocationAligned.cpp" />
     <ClCompile Include="..\wtf\PageBlock.cpp" />
     <ClCompile Include="..\wtf\ParallelJobsGeneric.cpp" />
     <ClCompile Include="..\wtf\PrintStream.cpp" />
@@ -173,7 +171,6 @@
     <ClInclude Include="..\wtf\CheckedArithmetic.h" />
     <ClInclude Include="..\wtf\CheckedBoolean.h" />
     <ClInclude Include="..\wtf\Compiler.h" />
-    <ClInclude Include="..\wtf\Compression.h" />
     <ClInclude Include="..\wtf\CryptographicUtilities.h" />
     <ClInclude Include="..\wtf\CryptographicallyRandomNumber.h" />
     <ClInclude Include="..\wtf\CurrentTime.h" />
@@ -241,7 +238,6 @@
     <ClInclude Include="..\wtf\OwnPtrCommon.h" />
     <ClInclude Include="..\wtf\PackedIntVector.h" />
     <ClInclude Include="..\wtf\PageAllocation.h" />
-    <ClInclude Include="..\wtf\PageAllocationAligned.h" />
     <ClInclude Include="..\wtf\PageBlock.h" />
     <ClInclude Include="..\wtf\PageReservation.h" />
     <ClInclude Include="..\wtf\ParallelJobs.h" />
