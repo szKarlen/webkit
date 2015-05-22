@@ -46,6 +46,7 @@
 #include <wtf/StringExtras.h>
 #include <wtf/text/StringBuilder.h>
 #include <wtf/unicode/UTF8.h>
+#include <wtf/HexNumber.h>
 
 using namespace WTF;
 using namespace Unicode;
