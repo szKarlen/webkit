@@ -1290,7 +1290,9 @@ WindowCloseTimer* WindowCloseTimer::create(WebView* webView)
     if (!document)
         return nullptr;
 
-    return new WindowCloseTimer(*document, webView);
+    auto closeTimer = new WindowCloseTimer(*document, webView);
+    closeTimer->suspendIfNeeded();
+    return closeTimer;
 }
 
 WindowCloseTimer::WindowCloseTimer(ScriptExecutionContext& context, WebView* webView)
@@ -2495,14 +2497,31 @@ LRESULT CALLBACK WebView::WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
             break;
     }
 
-    if (webView->needsDisplay() && message != WM_PAINT)
-        ::UpdateWindow(hWnd);
+    webView->updateWindowIfNeeded(hWnd, message);
 
     if (!handled)
         lResult = DefWindowProc(hWnd, message, wParam, lParam);
     
     // Let the client know whether we consider this message handled.
     return (message == WM_KEYDOWN || message == WM_SYSKEYDOWN || message == WM_KEYUP || message == WM_SYSKEYUP) ? !handled : lResult;
+}
+
+void WebView::updateWindowIfNeeded(HWND hWnd, UINT message)
+{
+    if (!needsDisplay())
+        return;
+
+    // Care should be taken when updating the window from the window procedure.
+    // Updating the window in response to e.g. WM_PARENTNOTIFY may cause reentrancy problems,
+    // because WM_PARENTNOTIFY is sent synchronously to the parent window when e.g. DestroyWindow() is called.
+
+    switch (message) {
+    case WM_PAINT:
+    case WM_PARENTNOTIFY:
+        return;
+    }
+
+    ::UpdateWindow(hWnd);
 }
 
 bool WebView::developerExtrasEnabled() const
@@ -4183,8 +4202,7 @@ HRESULT STDMETHODCALLTYPE WebView::setSelectedDOMRange(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::selectedDOMRange( 
-        /* [retval][out] */ IDOMRange** /*range*/)
+HRESULT WebView::selectedDOMRange(IDOMRange** range)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -4197,18 +4215,34 @@ HRESULT STDMETHODCALLTYPE WebView::selectionAffinity(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::setEditable( 
-        /* [in] */ BOOL /*flag*/)
+HRESULT WebView::setEditable(BOOL flag)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_page)
+        return S_OK;
+
+    if (m_page->isEditable() == flag)
+        return S_OK;
+
+    m_page->setEditable(flag);
+    if (!m_page->tabKeyCyclesThroughElements())
+        m_page->setTabKeyCyclesThroughElements(!flag);
+
+    return S_OK;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::isEditable( 
-        /* [retval][out] */ BOOL* /*isEditable*/)
+HRESULT WebView::isEditable(BOOL* isEditable)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!isEditable)
+        return E_POINTER;
+
+    if (!m_page) {
+        *isEditable = FALSE;
+        return S_OK;
+    }
+
+    *isEditable = m_page->isEditable();
+
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setTypingStyle( 
@@ -4346,10 +4380,39 @@ HRESULT STDMETHODCALLTYPE WebView::undoManager(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE WebView::setEditingDelegate( 
-        /* [in] */ IWebEditingDelegate* d)
+HRESULT WebView::setEditingDelegate(IWebEditingDelegate* d)
 {
+    if (m_editingDelegate == d)
+        return S_OK;
+
+    static BSTR webViewDidBeginEditingNotificationName = SysAllocString(WebViewDidBeginEditingNotification);
+    static BSTR webViewDidChangeSelectionNotificationName = SysAllocString(WebViewDidChangeSelectionNotification);
+    static BSTR webViewDidEndEditingNotificationName = SysAllocString(WebViewDidEndEditingNotification);
+    static BSTR webViewDidChangeTypingStyleNotificationName = SysAllocString(WebViewDidChangeTypingStyleNotification);
+    static BSTR webViewDidChangeNotificationName = SysAllocString(WebViewDidChangeNotification);
+
+    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
+
+    COMPtr<IWebNotificationObserver> wasObserver(Query, m_editingDelegate);
+    if (wasObserver) {
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidBeginEditingNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeSelectionNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidEndEditingNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeTypingStyleNotificationName, nullptr);
+        notifyCenter->removeObserver(wasObserver.get(), webViewDidChangeNotificationName, nullptr);
+    }
+
     m_editingDelegate = d;
+
+    COMPtr<IWebNotificationObserver> isObserver(Query, m_editingDelegate);
+    if (isObserver) {
+        notifyCenter->addObserver(isObserver.get(), webViewDidBeginEditingNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeSelectionNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidEndEditingNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeTypingStyleNotificationName, nullptr);
+        notifyCenter->addObserver(isObserver.get(), webViewDidChangeNotificationName, nullptr);
+    }
+
     return S_OK;
 }
     
@@ -5019,6 +5082,10 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
     hr = prefsPrivate->acceleratedCompositingEnabled(&enabled);
     if (FAILED(hr))
         return hr;
+#if USE(TEXTURE_MAPPER_GL)
+    static bool acceleratedCompositingAvailable = AcceleratedCompositingContext::acceleratedCompositingAvailable();
+    enabled = enabled && acceleratedCompositingAvailable;
+#endif
     settings.setAcceleratedCompositingEnabled(enabled);
 
     hr = prefsPrivate->showDebugBorders(&enabled);
@@ -6259,7 +6326,7 @@ bool WebView::onGetObject(WPARAM wParam, LPARAM lParam, LRESULT& lResult) const
 {
     lResult = 0;
 
-    if (lParam != OBJID_CLIENT)
+    if (static_cast<LONG>(lParam) != OBJID_CLIENT)
         return false;
 
     AXObjectCache::enableAccessibility();
