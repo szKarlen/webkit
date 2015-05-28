@@ -69,7 +69,7 @@ static void invalidateAfterGenericFamilyChange(Page* page)
         page->setNeedsRecalcStyleInAllFrames();
 }
 
-double Settings::gDefaultMinDOMTimerInterval = 0.010; // 10 milliseconds
+double Settings::gDefaultMinDOMTimerInterval = 0.004; // 10 milliseconds
 double Settings::gDefaultDOMTimerAlignmentInterval = 0;
 double Settings::gHiddenPageDOMTimerAlignmentInterval = 1.0;
 
