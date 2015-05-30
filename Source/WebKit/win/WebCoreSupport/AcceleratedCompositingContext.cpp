@@ -331,7 +331,12 @@ bool AcceleratedCompositingContext::flushPendingLayerChanges()
 {
     m_rootLayer->flushCompositingStateForThisLayerOnly();
     m_nonCompositedContentLayer->flushCompositingStateForThisLayerOnly();
-    return core(&m_webView)->mainFrame().view()->flushCompositingStateIncludingSubframes();
+
+	if (!core(&m_webView)->mainFrame().view()->flushCompositingStateIncludingSubframes())
+		return false;
+
+	downcast<GraphicsLayerTextureMapper>(*m_rootLayer).updateBackingStoreIncludingSubLayers();
+	return true;
 }
 
 bool AcceleratedCompositingContext::flushPendingLayerChangesSoon()
@@ -356,7 +361,8 @@ void AcceleratedCompositingContext::flushAndRenderLayers()
     if (m_context && !m_context->makeContextCurrent())
         return;
 
-    flushPendingLayerChanges();
+	if (!flushPendingLayerChanges())
+		return;
 
     compositeLayersToContext();
 }
