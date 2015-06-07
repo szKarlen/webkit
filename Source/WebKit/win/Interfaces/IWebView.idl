@@ -667,6 +667,14 @@ interface IWebView : IUnknown
     */
     HRESULT selectedText([out, retval] BSTR* text);
 
+	/*!
+	@method selectedHTML
+	@abstract Returns the selection as a HTML
+	*/
+	HRESULT selectedHTML([out, retval] BSTR* html);
+
+	HRESULT totalBytesRecieved([out, retval] long long* bytes);
+
     /*!
         @method centerSelectionInVisibleArea
         @abstract Centers the selected text in the WebView

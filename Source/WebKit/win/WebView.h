@@ -42,6 +42,7 @@
 #include <WebCore/WindowMessageListener.h>
 #include <wtf/HashSet.h>
 #include <wtf/RefPtr.h>
+#include <WebCore/ProgressTracker.h>
 
 #if ENABLE(FULLSCREEN_API)
 #include <WebCore/FullScreenControllerClient.h>
@@ -60,6 +61,7 @@ namespace WebCore {
 
 namespace WebCore {
     class HistoryItem;
+	class ProgressTracker;
 }
 
 class FullscreenVideoController;
@@ -301,6 +303,10 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE selectedText(
         /* [out, retval] */ BSTR* str);
+
+	virtual HRESULT STDMETHODCALLTYPE selectedHTML(BSTR* str);
+
+	virtual HRESULT STDMETHODCALLTYPE totalBytesRecieved(long long* bytes);
 
     virtual HRESULT STDMETHODCALLTYPE centerSelectionInVisibleArea(
         /* [in] */ IUnknown* sender);
