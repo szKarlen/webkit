@@ -119,4 +119,6 @@ interface IWebFramePrivate : IUnknown
 
     HRESULT setTextDirection([in] BSTR direction);
 
+	HRESULT querySelectorAll([in] BSTR selector, [out, retval] IDOMNodeList**);
+
 }

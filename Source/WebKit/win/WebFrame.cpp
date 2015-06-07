@@ -29,7 +29,6 @@
 
 #include "CFDictionaryPropertyBag.h"
 #include "COMPropertyBag.h"
-#include "DOMCoreClasses.h"
 #include "HTMLFrameOwnerElement.h"
 #include "MarshallingHelpers.h"
 #include "WebActionPropertyBag.h"
@@ -50,6 +49,7 @@
 #include "WebScriptWorld.h"
 #include "WebURLResponse.h"
 #include "WebView.h"
+#include "DOMCoreClasses.h"
 #include <WebCore/AnimationController.h>
 #include <WebCore/BString.h>
 #include <WebCore/COMPtr.h>
@@ -2105,4 +2105,37 @@ HRESULT WebFrame::isMainFrame(BOOL* value)
     *value = coreFrame->isMainFrame();
 
     return S_OK;
+}
+
+HRESULT WebFrame::scrollToAnchor(BSTR anchor)
+{
+	FrameView* coreFrame = core(this)->view();
+	WTF::String jAnchor(anchor, SysStringLen(anchor));
+	coreFrame->scrollToAnchor(jAnchor);
+
+	return S_OK;
+}
+
+HRESULT WebFrame::querySelector(BSTR selectors, IDOMNode** element)
+{
+	Frame* coreFrame = core(this);
+	WTF::String jSelector(selectors, SysStringLen(selectors));
+	ExceptionCode exceptionCode;
+
+	auto result = coreFrame->document()->querySelector(jSelector, exceptionCode);
+
+	*element = ::DOMNode::createInstance((Node*)result);
+	return *element ? S_OK : E_FAIL;
+}
+
+HRESULT WebFrame::querySelectorAll(BSTR selectors, IDOMNodeList** elements)
+{
+	Frame* coreFrame = core(this);
+	WTF::String jSelector(selectors, SysStringLen(selectors));
+	ExceptionCode exceptionCode;
+
+	auto result = coreFrame->document()->querySelectorAll(jSelector, exceptionCode);
+
+	*elements = ::DOMNodeList::createInstance(result.get());
+	return *elements ? S_OK : E_FAIL;
 }

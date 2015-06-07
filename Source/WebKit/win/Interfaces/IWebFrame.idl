@@ -274,4 +274,22 @@ interface IWebFrame : IUnknown
     @description Returns TRUE if the frame is the main frame.
     */
     HRESULT isMainFrame([out, retval] BOOL* flag);
+
+	HRESULT scrollToAnchor([in] BSTR anchor);
+
+	/*!
+	@method querySelector:
+	@abstract Queries DOM
+	@param selector The selector to use.
+	@result OK if the query succeeded.
+	*/
+	HRESULT querySelector([in] BSTR selectors, [out, retval] IDOMNode**);
+
+	/*!
+	@method querySelectorAll:
+	@abstract Queries DOM
+	@param selector The selector to use.
+	@result OK if the query succeeded.
+	*/
+	HRESULT querySelectorAll([in] BSTR selectors, [out, retval] IDOMNodeList**);
 }

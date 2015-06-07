@@ -28,6 +28,7 @@
 
 #include "WebKit.h"
 #include "WebDataSource.h"
+#include "DOMCoreClasses.h"
 
 #include "AccessibleDocument.h"
 
@@ -36,6 +37,8 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/URL.h>
 #include <WebCore/ResourceHandleClient.h>
+#include <WebCore/NodeList.h>
+#include <WebCore/Element.h>
 
 #include <WTF/RefPtr.h>
 #include <WTF/HashMap.h>
@@ -54,6 +57,8 @@ namespace WebCore {
     class Page;
     class ResourceError;
     class SharedBuffer;
+	class DOMNodeList;
+	class WebProgressTracker;
 }
 
 typedef const struct OpaqueJSContext* JSContextRef;
@@ -290,6 +295,12 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE isMainFrame(BOOL*);
     
+	virtual HRESULT STDMETHODCALLTYPE scrollToAnchor(BSTR);
+
+	virtual HRESULT STDMETHODCALLTYPE querySelector(BSTR, IDOMNode**);
+
+	virtual HRESULT STDMETHODCALLTYPE querySelectorAll(BSTR, IDOMNodeList**);
+
     // FrameLoaderClient
     virtual void frameLoaderDestroyed();
 
