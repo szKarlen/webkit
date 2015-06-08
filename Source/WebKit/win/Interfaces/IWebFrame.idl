@@ -292,4 +292,22 @@ interface IWebFrame : IUnknown
 	@result OK if the query succeeded.
 	*/
 	HRESULT querySelectorAll([in] BSTR selectors, [out, retval] IDOMNodeList**);
+
+	/*!
+	@method setScrollbarPolicy:
+	@abstract Sets modes for scrollbars
+	@param orientation Vertical or horizontal scrollbar
+	@param policy The policy to apply
+	@result OK if the query succeeded.
+	*/
+	HRESULT setScrollbarPolicy([in] WebScrollBarOrientation orientation, [in] WebScrollBarPolicy policy);
+
+	/*!
+	@method setScrollBarValue:
+	@abstract Sets value of scrollbars
+	@param orientation Vertical or horizontal scrollbar
+	@param policy The value to apply
+	@result OK if the query succeeded.
+	*/
+	HRESULT setScrollBarValue([in] WebScrollBarOrientation orientation, [in] UINT value);
 }

@@ -301,6 +301,10 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE querySelectorAll(BSTR, IDOMNodeList**);
 
+	virtual HRESULT STDMETHODCALLTYPE setScrollbarPolicy(WebScrollBarOrientation orientation, WebScrollBarPolicy policy);
+
+	virtual HRESULT STDMETHODCALLTYPE setScrollBarValue(WebScrollBarOrientation orientation, UINT value);
+
     // FrameLoaderClient
     virtual void frameLoaderDestroyed();
 

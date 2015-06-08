@@ -2139,3 +2139,25 @@ HRESULT WebFrame::querySelectorAll(BSTR selectors, IDOMNodeList** elements)
 	*elements = ::DOMNodeList::createInstance(result.get());
 	return *elements ? S_OK : E_FAIL;
 }
+
+HRESULT WebFrame::setScrollbarPolicy(WebScrollBarOrientation orientation, WebScrollBarPolicy policy)
+{
+	FrameView* coreFrameView = core(this)->view();
+	if (orientation == ::WebHorizontalScrollbar) {
+		coreFrameView->setHorizontalScrollbarMode((ScrollbarMode)policy, policy != ::ScrollBarAsNeeded);
+		coreFrameView->updateCanHaveScrollbars();
+	}
+	else {
+		coreFrameView->setVerticalScrollbarMode((ScrollbarMode)policy, policy != ::ScrollBarAsNeeded);
+		coreFrameView->updateCanHaveScrollbars();
+	}
+	return S_OK;
+}
+
+HRESULT WebFrame::setScrollBarValue(WebScrollBarOrientation orientation, UINT value)
+{
+	FrameView* coreFrameView = core(this)->view();
+	coreFrameView->scrollToOffsetWithoutAnimation((ScrollbarOrientation)orientation, value);
+	
+	return S_OK;
+}

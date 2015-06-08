@@ -74,3 +74,9 @@ typedef enum WebScrollbarControlPart {
     WebAllParts = 0xffffffff,
 } WebScrollbarControlPart;
 
+typedef enum WebScrollBarPolicy
+{
+	ScrollBarAsNeeded,
+	ScrollBarAlwaysOff,
+	ScrollBarAlwaysOn
+} WebScrollBarPolicy;
