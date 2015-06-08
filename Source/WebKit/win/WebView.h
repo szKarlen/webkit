@@ -1028,6 +1028,7 @@ private:
     void setShouldInvertColors(bool);
 
     HRESULT STDMETHODCALLTYPE setLoadResourcesSerially(BOOL);
+	HRESULT STDMETHODCALLTYPE scaleWebView(double scale, POINT origin);
 
 protected:
     static bool registerWebViewWindowClass();
