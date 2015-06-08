@@ -801,6 +801,38 @@ HRESULT STDMETHODCALLTYPE WebView::close()
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::selectedHTML(
+	/* [out, retval] */ BSTR* html)
+{
+	if (!html) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*html = 0;
+
+	Frame* focusedFrame = m_page ? &m_page->focusController().focusedOrMainFrame() : 0;
+	if (!focusedFrame)
+		return E_FAIL;
+
+	String frameSelectedText = focusedFrame->editor().selectedRange()->toHTML();
+	*html = BString(frameSelectedText).release();
+	if (!*html && frameSelectedText.length())
+		return E_OUTOFMEMORY;
+	return S_OK;
+}
+
+HRESULT WebView::totalBytesRecieved(long long* bytes)
+{
+	if (!bytes) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*bytes = m_page->progress().totalBytesReceived();
+	return S_OK;
+}
+
 void WebView::repaint(const WebCore::IntRect& windowRect, bool contentChanged, bool immediate, bool repaintContentOnly)
 {
     if (isAcceleratedCompositing()) {
@@ -3827,38 +3859,6 @@ HRESULT STDMETHODCALLTYPE WebView::selectedText(
     if (!*text && frameSelectedText.length())
         return E_OUTOFMEMORY;
     return S_OK;
-}
-/*page->focusController()->focusedOrMainFrame()->editor().selectedRange()->toHTML()*/
-HRESULT STDMETHODCALLTYPE WebView::selectedHTML(
-	/* [out, retval] */ BSTR* html)
-{
-	if (!html) {
-		ASSERT_NOT_REACHED();
-		return E_POINTER;
-	}
-
-	*html = 0;
-
-	Frame* focusedFrame = m_page ? &m_page->focusController().focusedOrMainFrame() : 0;
-	if (!focusedFrame)
-		return E_FAIL;
-
-	String frameSelectedText = focusedFrame->editor().selectedRange()->toHTML();
-	*html = BString(frameSelectedText).release();
-	if (!*html && frameSelectedText.length())
-		return E_OUTOFMEMORY;
-	return S_OK;
-}
-
-HRESULT WebView::totalBytesRecieved(long long* bytes)
-{
-	if (!bytes) {
-		ASSERT_NOT_REACHED();
-		return E_POINTER;
-	}
-
-	*bytes = m_page->progress().totalBytesReceived();
-	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::centerSelectionInVisibleArea(

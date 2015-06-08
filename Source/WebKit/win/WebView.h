@@ -304,10 +304,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE selectedText(
         /* [out, retval] */ BSTR* str);
 
-	virtual HRESULT STDMETHODCALLTYPE selectedHTML(BSTR* str);
-
-	virtual HRESULT STDMETHODCALLTYPE totalBytesRecieved(long long* bytes);
-
     virtual HRESULT STDMETHODCALLTYPE centerSelectionInVisibleArea(
         /* [in] */ IUnknown* sender);
 
@@ -340,6 +336,12 @@ public:
         /* [in] */ BSTR scheme);
 
     virtual HRESULT STDMETHODCALLTYPE close();
+
+	virtual HRESULT STDMETHODCALLTYPE selectedHTML(
+		/* [out, retval] */ BSTR* str);
+
+	virtual HRESULT STDMETHODCALLTYPE totalBytesRecieved(
+		/* [out, retval] */ long long* bytes);
 
     // IWebIBActions
 
