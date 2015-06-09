@@ -288,10 +288,15 @@ HRESULT STDMETHODCALLTYPE DOMNode::appendChild(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::hasChildNodes( 
-    /* [retval][out] */ BOOL* /*result*/)
+    /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = m_node->hasChildNodes() ? TRUE : FALSE;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::cloneNode( 
@@ -304,31 +309,46 @@ HRESULT STDMETHODCALLTYPE DOMNode::cloneNode(
 
 HRESULT STDMETHODCALLTYPE DOMNode::normalize( void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	m_node->normalize();
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::isSupported( 
-    /* [in] */ BSTR /*feature*/,
-    /* [in] */ BSTR /*version*/,
-    /* [retval][out] */ BOOL* /*result*/)
+    /* [in] */ BSTR feature,
+    /* [in] */ BSTR version,
+    /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = m_node->isSupported(feature, version) ? TRUE : FALSE;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::namespaceURI( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = BString(m_node->namespaceURI()).release();
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::prefix( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = BString(m_node->prefix()).release();
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::setPrefix( 
@@ -339,17 +359,27 @@ HRESULT STDMETHODCALLTYPE DOMNode::setPrefix(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::localName( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = BString(m_node->localName()).release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::hasAttributes( 
-    /* [retval][out] */ BOOL* /*result*/)
+    /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = m_node->hasAttributes() ? TRUE : FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::isSameNode( 
@@ -376,11 +406,26 @@ HRESULT STDMETHODCALLTYPE DOMNode::isSameNode(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::isEqualNode( 
-    /* [in] */ IDOMNode* /*other*/,
-    /* [retval][out] */ BOOL* /*result*/)
+    /* [in] */ IDOMNode* other,
+    /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	if (!result) {
+		ASSERT_NOT_REACHED();
+		return E_POINTER;
+	}
+
+	*result = FALSE;
+
+	if (!other)
+		return E_POINTER;
+
+	COMPtr<DOMNode> domOther;
+	HRESULT hr = other->QueryInterface(__uuidof(DOMNode), (void**)&domOther);
+	if (FAILED(hr))
+		return hr;
+
+	*result = m_node->isEqualNode(domOther->node()) ? TRUE : FALSE;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::textContent( 
