@@ -305,6 +305,8 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE setScrollBarValue(WebScrollBarOrientation orientation, UINT value);
 
+	virtual HRESULT STDMETHODCALLTYPE scrollBarMaximum(WebScrollBarOrientation orientation, int* value);
+
     // FrameLoaderClient
     virtual void frameLoaderDestroyed();
 

@@ -310,4 +310,6 @@ interface IWebFrame : IUnknown
 	@result OK if the query succeeded.
 	*/
 	HRESULT setScrollBarValue([in] WebScrollBarOrientation orientation, [in] UINT value);
+
+	HRESULT scrollBarMaximum([in] WebScrollBarOrientation orientation, [out, retval] int* value);
 }

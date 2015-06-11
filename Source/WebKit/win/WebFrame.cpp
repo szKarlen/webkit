@@ -2161,3 +2161,15 @@ HRESULT WebFrame::setScrollBarValue(WebScrollBarOrientation orientation, UINT va
 	
 	return S_OK;
 }
+
+HRESULT WebFrame::scrollBarMaximum(WebScrollBarOrientation orientation, int* value)
+{
+	FrameView* coreFrameView = core(this)->view();
+	if (orientation == ::WebHorizontalScrollbar) {
+		*value = coreFrameView->horizontalScrollbar()->maximum();
+	}
+	else {
+		*value = coreFrameView->verticalScrollbar()->maximum();
+	}
+	return S_OK;
+}
