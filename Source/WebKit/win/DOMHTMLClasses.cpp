@@ -476,17 +476,21 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::setClassName(
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerHTML( 
-        /* [retval][out] */ BSTR* /*result*/)
+        /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	ASSERT(is<HTMLElement>(m_element));
+	WTF::String innerHTMLString = downcast<HTMLElement>(m_element)->innerHTML();
+	*result = BString(innerHTMLString).release();
+	return S_OK;
 }
         
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerHTML( 
-        /* [in] */ BSTR /*html*/)
+        /* [in] */ BSTR html)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+	WTF::String htmlString(html, SysStringLen(html));
+	WebCore::ExceptionCode ec = 0;
+	m_element->setInnerHTML(htmlString, ec);
+	return S_OK;
 }
         
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerText( 
