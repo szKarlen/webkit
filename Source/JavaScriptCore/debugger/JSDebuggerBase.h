@@ -41,6 +41,7 @@ extern "C" {
 		JSValueRef global;
 		JSValueRef scope;
 	};
+	typedef size_t SourceID;
 
 typedef void (*JSDebuggerCallEventCallback) (JSObjectRef object, int lineNumber, int columnNumber);
 
@@ -56,7 +57,7 @@ typedef void(*JSDebuggerDidExecuteProgramCallback) (JSObjectRef object, int line
 
 typedef void(*JSDebuggerDidReachBreakpointCallback) (JSObjectRef object, int lineNumber, int columnNumber, JSDebuggerCallFrameRef callFrame);
 
-typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, bool hasException);
+typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, SourceID sourceID, bool hasException);
 
 typedef struct {
 	JSDebuggerCallEventCallback          callEvent;

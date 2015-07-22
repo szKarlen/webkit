@@ -111,24 +111,13 @@ JSDebuggerRef JSDebuggerCreateAndAttach(const JSDebuggerDefinition* definition, 
 	return toRef(ref);
 }
 
-void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, unsigned int line, unsigned int column)
+void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, ::SourceID sourceID, unsigned int line, unsigned int column)
 {
 	auto jsDebugger = toJS(debugger);
-	//Breakpoint breakpoint;
-
+	
 	ASSERT(jsDebugger);
 
-	/*auto callFrame = jsDebugger->currentDebuggerCallFrame();
-
-	if (!callFrame)
-	{
-		std::printf("null frame");
-		return;
-	}*/
-
-	//auto sourceID = callFrame->sourceID();
-
-	JSC::Breakpoint breakpoint(jsDebugger->currentSourceID(), line, column, String("", 0), false);
+	JSC::Breakpoint breakpoint(sourceID != 0 ? sourceID : jsDebugger->currentSourceID(), line, column, String("", 0), false);
 
 	jsDebugger->setBreakpoint(breakpoint, line, column);
 }
