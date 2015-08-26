@@ -109,13 +109,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -258,7 +258,10 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
+    <Link />
     <Link />
     <Link />
   </ItemDefinitionGroup>
@@ -266,7 +269,13 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
+    <Link />
     <Link />
     <Link />
   </ItemDefinitionGroup>
@@ -307,6 +316,7 @@
     <ClCompile Include="..\API\JSStringRef.cpp" />
     <ClCompile Include="..\API\JSStringRefBSTR.cpp" />
     <ClCompile Include="..\API\JSStringRefCF.cpp" />
+    <ClCompile Include="..\API\JSTasksPrivate.cpp" />
     <ClCompile Include="..\API\JSTypedArrayAPI.cpp" />
     <ClCompile Include="..\API\JSValueRef.cpp" />
     <ClCompile Include="..\API\JSValueRefUnsafe.cpp" />
@@ -918,6 +928,7 @@
     <ClInclude Include="..\API\JSStringRef.h" />
     <ClInclude Include="..\API\JSStringRefBSTR.h" />
     <ClInclude Include="..\API\JSStringRefCF.h" />
+    <ClInclude Include="..\API\JSTasksPrivate.h" />
     <ClInclude Include="..\API\JSTypedArrayAPI.h" />
     <ClInclude Include="..\API\JSValue.h" />
     <ClInclude Include="..\API\JSValueInternal.h" />
