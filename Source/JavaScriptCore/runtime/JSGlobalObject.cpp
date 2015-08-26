@@ -847,8 +847,10 @@ void JSGlobalObject::setName(const String& name)
 
 void JSGlobalObject::queueMicrotask(PassRefPtr<Microtask> task)
 {
-    if (globalObjectMethodTable()->queueTaskToEventLoop)
-        globalObjectMethodTable()->queueTaskToEventLoop(this, task);
+	if (globalObjectMethodTable()->queueTaskToEventLoop)
+		globalObjectMethodTable()->queueTaskToEventLoop(this, task);
+	else if (taskQueueCallback())
+		taskQueueCallback()(this->globalExec(), task.get());
     else
         WTFLogAlways("ERROR: Event loop not supported.");
 }

@@ -138,6 +138,8 @@ struct GlobalObjectMethodTable {
     ShouldInterruptScriptBeforeTimeoutPtr shouldInterruptScriptBeforeTimeout;
 };
 
+JS_EXPORT_PRIVATE typedef void(*TasksQueueCallback)(ExecState*, Microtask*);
+
 class JSGlobalObject : public JSSegmentedVariableObject {
 private:
     typedef HashSet<RefPtr<OpaqueJSWeakObjectMap>> WeakMapSet;
@@ -273,6 +275,8 @@ protected:
 
     static JS_EXPORTDATA const GlobalObjectMethodTable s_globalObjectMethodTable;
     const GlobalObjectMethodTable* m_globalObjectMethodTable;
+
+	TasksQueueCallback m_tasksqueuecallback;
 
     void createRareDataIfNeeded()
     {
@@ -528,6 +532,9 @@ public:
     void setDebugger(Debugger* debugger) { m_debugger = debugger; }
 
     const GlobalObjectMethodTable* globalObjectMethodTable() const { return m_globalObjectMethodTable; }
+
+	JS_EXPORT_PRIVATE void setTaskQueueCallback(TasksQueueCallback callback) { m_tasksqueuecallback = callback; };
+	JS_EXPORT_PRIVATE const TasksQueueCallback taskQueueCallback() const { return m_tasksqueuecallback; };
 
     static bool allowsAccessFrom(const JSGlobalObject*, ExecState*) { return true; }
     static bool supportsProfiling(const JSGlobalObject*) { return false; }
