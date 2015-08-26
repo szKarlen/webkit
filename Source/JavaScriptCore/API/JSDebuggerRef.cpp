@@ -207,7 +207,9 @@ size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsig
 {
 	if (!initialFrame)
 		return 0;
-
+	
+	framesToSkip++;
+	
 	auto callFrame = toJS(initialFrame);
 	while (--framesToSkip > 0 && callFrame)
 		callFrame = callFrame->callerFrame().get();
