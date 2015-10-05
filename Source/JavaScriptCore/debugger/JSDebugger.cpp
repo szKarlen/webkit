@@ -65,7 +65,7 @@ void JSDebugger::sourceParsed(ExecState* exec, SourceProvider* sourceProvider, i
 
 void JSDebugger::notifyDoneProcessingDebuggerEvents()
 {
-	printf("notifyDoneProcessingDebuggerEvents\n");
+	
 }
 
 bool JSDebugger::needPauseHandling(JSGlobalObject* globalObject)
@@ -80,17 +80,15 @@ JSC::SourceID JSDebugger::currentSourceID() const
 
 void JSDebugger::handlePause(JSGlobalObject* vmEntryGlobalObject, Debugger::ReasonForPause reason)
 {
-	printf("reason %i", reason);
 	auto callFrame = currentDebuggerCallFrame();
+	::SourceID sourceID = callFrame->sourceID();
 	switch (reason)
 	{
 	case JSC::Debugger::PausedForException:
 		if (exceptionCallback)
 		{
-			intptr_t sourceID = callFrame->sourceID();
 			TextPosition position = callFrame->position();
-
-			exceptionCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt());
+			exceptionCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID);
 		}
 		break;
 	case JSC::Debugger::PausedAtStatement:
@@ -98,31 +96,29 @@ void JSDebugger::handlePause(JSGlobalObject* vmEntryGlobalObject, Debugger::Reas
 	case JSC::Debugger::PausedBeforeReturn:
 		if (atStatementCallback)
 		{
-			this->atStatementCallback(toRef(vmEntryGlobalObject), callFrame->line(), callFrame->column(), toRef(callFrame));
+			this->atStatementCallback(toRef(vmEntryGlobalObject), callFrame->line(), callFrame->column(), sourceID, toRef(callFrame));
 		}
 		break;
 	case JSC::Debugger::PausedAtStartOfProgram:
 		if (willExecuteProgramCallback)
 		{
-			intptr_t sourceID = callFrame->sourceID();
 			TextPosition position = callFrame->position();
 
-			willExecuteProgramCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt());
+			willExecuteProgramCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID);
 		}
 		break;
 	case JSC::Debugger::PausedAtEndOfProgram:
 		if (didExecuteProgramCallback)
 		{
-			intptr_t sourceID = callFrame->sourceID();
 			TextPosition position = callFrame->position();
 
-			didExecuteProgramCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt());
+			didExecuteProgramCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID);
 		}
 		break;
 	case JSC::Debugger::PausedForBreakpoint:
 		if (didReachBreakpointCallback)
 		{
-			this->didReachBreakpointCallback(toRef(vmEntryGlobalObject), callFrame->line(), callFrame->column(), toRef(callFrame));
+			this->didReachBreakpointCallback(toRef(vmEntryGlobalObject), callFrame->line(), callFrame->column(), sourceID, toRef(callFrame));
 		}
 		break;
 	default:

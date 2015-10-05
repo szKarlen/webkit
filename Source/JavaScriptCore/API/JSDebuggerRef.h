@@ -81,35 +81,35 @@ extern "C" {
 		JSDebuggerCallFrameRef pointer;
 	};
 
-JS_EXPORT JSDebuggerRef JSDebuggerCreate(const JSDebuggerDefinition* definition);
-
-JS_EXPORT JSDebuggerRef JSDebuggerRetain(JSDebuggerRef debugger);
-
-JS_EXPORT void JSDebuggerRelease(JSDebuggerRef debugger);
-
-JS_EXPORT void JSContextAttachDebugger(JSContextRef ctx, JSDebuggerRef debugger);
-
-JS_EXPORT void JSContextDetachDebugger(JSContextRef ctx, JSDebuggerRef debugger);
-
-JS_EXPORT JSValueRef JSContextGetStackTrace(JSContextRef ctx);
-
-JS_EXPORT JSDebuggerRef JSDebuggerCreateAndAttach(const JSDebuggerDefinition* definition, JSContextRef ctx);
-
-JS_EXPORT void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, SourceID sourceID, unsigned int line, unsigned int column);
-
-JS_EXPORT void JSDebuggerContinue(JSDebuggerRef debugger);
-
-JS_EXPORT void JSDebuggerStepIntoStatement(JSDebuggerRef debugger);
-
-JS_EXPORT void JSDebuggerStepOverStatement(JSDebuggerRef debugger);
-
-JS_EXPORT void JSDebuggerStepOutOfFunction(JSDebuggerRef debugger);
-
-JS_EXPORT void JSDebuggerRecompile(JSContextRef ctx, JSDebuggerRef debugger);
-
-JS_EXPORT size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace);
-
-JS_EXPORT JSValueRef JSDebuggerEvaluate(JSContextRef ctx, JSDebuggerCallFrameRef debuggerFrame, JSStringRef source, JSValueRef* ex);
+	JS_EXPORT JSDebuggerRef JSDebuggerCreate(const JSDebuggerDefinition* definition);
+	
+	JS_EXPORT JSDebuggerRef JSDebuggerRetain(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSDebuggerRelease(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSContextAttachDebugger(JSContextRef ctx, JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSContextDetachDebugger(JSContextRef ctx, JSDebuggerRef debugger);
+	
+	JS_EXPORT JSValueRef JSContextGetStackTrace(JSContextRef ctx);
+	
+	JS_EXPORT JSDebuggerRef JSDebuggerCreateAndAttach(const JSDebuggerDefinition* definition, JSContextRef ctx);
+	
+	JS_EXPORT void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, SourceID sourceID, unsigned int line, unsigned int column);
+	
+	JS_EXPORT void JSDebuggerContinue(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSDebuggerStepIntoStatement(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSDebuggerStepOverStatement(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSDebuggerStepOutOfFunction(JSDebuggerRef debugger);
+	
+	JS_EXPORT void JSDebuggerRecompile(JSContextRef ctx, JSDebuggerRef debugger);
+	
+	JS_EXPORT size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsigned int framesToSkip, unsigned int framesToCapture, JSStackFrameDesc** backTrace);
+	
+	JS_EXPORT JSValueRef JSDebuggerEvaluate(JSContextRef ctx, JSDebuggerCallFrameRef debuggerFrame, JSStringRef source, JSValueRef* ex);
 
 #ifdef __cplusplus
 }

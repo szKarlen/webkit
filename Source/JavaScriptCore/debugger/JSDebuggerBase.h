@@ -43,32 +43,32 @@ extern "C" {
 	};
 	typedef size_t SourceID;
 
-typedef void (*JSDebuggerCallEventCallback) (JSObjectRef object, int lineNumber, int columnNumber);
-
-typedef void(*JSDebuggerAtStatementCallback) (JSObjectRef object, int lineNumber, int columnNumber, JSDebuggerCallFrameRef callFrame);
-
-typedef void(*JSDebuggerReturnEventCallback) (JSObjectRef object, int lineNumber, int columnNumber);
-
-typedef void(*JSDebuggerExceptionCallback) (JSObjectRef object, int lineNumber, int columnNumber);
-
-typedef void(*JSDebuggerWillExecuteProgramCallback) (JSObjectRef object, int lineNumber, int columnNumber);
-
-typedef void(*JSDebuggerDidExecuteProgramCallback) (JSObjectRef object, int lineNumber, int columnNumber);
-
-typedef void(*JSDebuggerDidReachBreakpointCallback) (JSObjectRef object, int lineNumber, int columnNumber, JSDebuggerCallFrameRef callFrame);
-
-typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, SourceID sourceID, bool hasException);
-
-typedef struct {
-	JSDebuggerCallEventCallback          callEvent;
-	JSDebuggerAtStatementCallback        atStatement;
-	JSDebuggerReturnEventCallback        returnEvent;
-	JSDebuggerExceptionCallback			 exception;
-	JSDebuggerWillExecuteProgramCallback willExecuteProgram;
-	JSDebuggerDidExecuteProgramCallback  didExecuteProgram;
-	JSDebuggerDidReachBreakpointCallback didReachBreakpoint;
-	JSDebuggerSourceParsedCallback       sourceParsed;
-} JSDebuggerDefinition;
+	typedef void (*JSDebuggerCallEventCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	
+	typedef void(*JSDebuggerAtStatementCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID, JSDebuggerCallFrameRef callFrame);
+	
+	typedef void(*JSDebuggerReturnEventCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	
+	typedef void(*JSDebuggerExceptionCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	
+	typedef void(*JSDebuggerWillExecuteProgramCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	
+	typedef void(*JSDebuggerDidExecuteProgramCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	
+	typedef void(*JSDebuggerDidReachBreakpointCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID, JSDebuggerCallFrameRef callFrame);
+	
+	typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, SourceID sourceID, bool hasException);
+	
+	typedef struct {
+		JSDebuggerCallEventCallback          callEvent;
+		JSDebuggerAtStatementCallback        atStatement;
+		JSDebuggerReturnEventCallback        returnEvent;
+		JSDebuggerExceptionCallback			 exception;
+		JSDebuggerWillExecuteProgramCallback willExecuteProgram;
+		JSDebuggerDidExecuteProgramCallback  didExecuteProgram;
+		JSDebuggerDidReachBreakpointCallback didReachBreakpoint;
+		JSDebuggerSourceParsedCallback       sourceParsed;
+	} JSDebuggerDefinition;
 
 #ifdef __cplusplus
 }
