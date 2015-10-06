@@ -56,10 +56,12 @@ JSDebugger::~JSDebugger()
 void JSDebugger::sourceParsed(ExecState* exec, SourceProvider* sourceProvider, int errorLine, const String& errorMessage)
 {
 	m_source = sourceProvider->asID();
-
+		
     if (sourceParsedCallback)
 	{
-		sourceParsedCallback(toRef(exec), m_source, !errorMessage.isEmpty());
+		String sourceUrl = sourceProvider->url();
+		JSStringRef url = OpaqueJSString::create(sourceUrl).leakRef();
+		sourceParsedCallback(toRef(exec), m_source, url, !errorMessage.isEmpty());
 	}
 }
 
