@@ -57,7 +57,7 @@ extern "C" {
 	
 	typedef void(*JSDebuggerDidReachBreakpointCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID, JSDebuggerCallFrameRef callFrame);
 	
-	typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, SourceID sourceID, bool hasException);
+	typedef void(*JSDebuggerSourceParsedCallback) (JSContextRef ctx, SourceID sourceID, JSStringRef url, bool hasException);
 	
 	typedef struct {
 		JSDebuggerCallEventCallback          callEvent;
