@@ -230,6 +230,7 @@ size_t _cdecl JSCaptureStackBackTrace(JSDebuggerCallFrameRef initialFrame, unsig
 		desc->scopeType = ::GetScopeType(exec, callFrame->scope());
 		desc->url = OpaqueJSString::create(exec->codeBlock()->ownerExecutable()->sourceURL()).leakRef();
 		desc->pointer = toRef(callFrame);
+		desc->sourceID = callFrame->sourceID();
 
 		callFrame = callFrame->callerFrame() && callFrame->callerFrame()->isValid() 
 			? callFrame->callerFrame().get() 

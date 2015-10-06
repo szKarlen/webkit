@@ -79,6 +79,7 @@ extern "C" {
 		::ScopeType scopeType;
 		JSStringRef url;
 		JSDebuggerCallFrameRef pointer;
+		::SourceID sourceID;
 	};
 
 	JS_EXPORT JSDebuggerRef JSDebuggerCreate(const JSDebuggerDefinition* definition);
