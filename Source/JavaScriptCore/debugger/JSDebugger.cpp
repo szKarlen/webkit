@@ -43,7 +43,8 @@ JSDebugger::JSDebugger(const JSDebuggerDefinition* definition)
 	willExecuteProgramCallback(definition->willExecuteProgram),
 	didExecuteProgramCallback(definition->didExecuteProgram),
 	didReachBreakpointCallback(definition->didReachBreakpoint),
-	sourceParsedCallback(definition->sourceParsed)
+	sourceParsedCallback(definition->sourceParsed),
+	breakpointExceptionCallback(definition->breakpointException)
 {
 	initializeThreading();
 }
@@ -75,6 +76,18 @@ bool JSDebugger::needPauseHandling(JSGlobalObject* globalObject)
 	return true;
 }
 
+void JSDebugger::handleExceptionInBreakpointCondition(ExecState* exec, JSValue exception) const
+{
+	if (breakpointExceptionCallback)
+	{
+		auto callFrame = currentDebuggerCallFrame();
+		::SourceID sourceID = callFrame->sourceID();
+		TextPosition position = callFrame->position();
+		JSValueRef ex = exception != nullptr ? toRef(exec, exception) : nullptr;
+		breakpointExceptionCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID, ex);
+	}
+}
+
 JSC::SourceID JSDebugger::currentSourceID() const
 {
 	return m_source;
@@ -90,7 +103,9 @@ void JSDebugger::handlePause(JSGlobalObject* vmEntryGlobalObject, Debugger::Reas
 		if (exceptionCallback)
 		{
 			TextPosition position = callFrame->position();
-			exceptionCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID);
+			auto jsException = currentException();
+			JSValueRef ex = jsException != nullptr ? toRef(vmEntryGlobalObject->globalExec(), jsException) : nullptr;
+			exceptionCallback(toRef(callFrame->vmEntryGlobalObject()), position.m_line.zeroBasedInt(), position.m_column.zeroBasedInt(), sourceID, ex);
 		}
 		break;
 	case JSC::Debugger::PausedAtStatement:

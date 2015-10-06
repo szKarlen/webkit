@@ -111,13 +111,14 @@ JSDebuggerRef JSDebuggerCreateAndAttach(const JSDebuggerDefinition* definition, 
 	return toRef(ref);
 }
 
-void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, ::SourceID sourceID, unsigned int line, unsigned int column)
+void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, ::SourceID sourceID, unsigned int line, unsigned int column, JSStringRef jsCondition)
 {
 	auto jsDebugger = toJS(debugger);
 	
 	ASSERT(jsDebugger);
 
-	JSC::Breakpoint breakpoint(sourceID != 0 ? sourceID : jsDebugger->currentSourceID(), line, column, String("", 0), false);
+	String condition = jsCondition != nullptr ? jsCondition->string() : String("", 0);
+	JSC::Breakpoint breakpoint(sourceID != 0 ? sourceID : jsDebugger->currentSourceID(), line, column, condition, false);
 
 	jsDebugger->setBreakpoint(breakpoint, line, column);
 }

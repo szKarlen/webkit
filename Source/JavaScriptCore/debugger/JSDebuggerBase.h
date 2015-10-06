@@ -49,7 +49,7 @@ extern "C" {
 	
 	typedef void(*JSDebuggerReturnEventCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
 	
-	typedef void(*JSDebuggerExceptionCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
+	typedef void(*JSDebuggerExceptionCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID, JSValueRef exception);
 	
 	typedef void(*JSDebuggerWillExecuteProgramCallback) (JSObjectRef object, int lineNumber, int columnNumber, SourceID sourceID);
 	
@@ -68,6 +68,7 @@ extern "C" {
 		JSDebuggerDidExecuteProgramCallback  didExecuteProgram;
 		JSDebuggerDidReachBreakpointCallback didReachBreakpoint;
 		JSDebuggerSourceParsedCallback       sourceParsed;
+		JSDebuggerExceptionCallback			 breakpointException;
 	} JSDebuggerDefinition;
 
 #ifdef __cplusplus

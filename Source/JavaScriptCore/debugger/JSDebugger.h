@@ -55,6 +55,7 @@ namespace JSC {
 		void sourceParsed(ExecState*, SourceProvider*, int errorLineNumber, const WTF::String& errorMessage);
 
 		virtual bool needPauseHandling(JSC::JSGlobalObject*) override final;
+		virtual void handleExceptionInBreakpointCondition(JSC::ExecState*, JSC::JSValue exception) const override final;
 
 		JSC::SourceID currentSourceID() const;
 
@@ -67,6 +68,7 @@ namespace JSC {
 		JSDebuggerWillExecuteProgramCallback willExecuteProgramCallback;
 		JSDebuggerDidExecuteProgramCallback didExecuteProgramCallback;
 		JSDebuggerDidReachBreakpointCallback didReachBreakpointCallback;
+		JSDebuggerExceptionCallback breakpointExceptionCallback;
 
 		void notifyDoneProcessingDebuggerEvents() override final;
 		

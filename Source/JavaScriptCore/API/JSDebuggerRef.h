@@ -96,7 +96,7 @@ extern "C" {
 	
 	JS_EXPORT JSDebuggerRef JSDebuggerCreateAndAttach(const JSDebuggerDefinition* definition, JSContextRef ctx);
 	
-	JS_EXPORT void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, SourceID sourceID, unsigned int line, unsigned int column);
+	JS_EXPORT void JSDebuggerSetBreakpoint(JSDebuggerRef debugger, SourceID sourceID, unsigned int line, unsigned int column, JSStringRef jsCondition);
 	
 	JS_EXPORT void JSDebuggerContinue(JSDebuggerRef debugger);
 	
