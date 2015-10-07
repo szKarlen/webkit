@@ -49,32 +49,47 @@ JSValue fillCallNode(ExecState* exec, const JSC::ProfileNode::Call& call)
 
 JSValue fillNodes(ExecState* exec, ProfileNode* node)
 {
-	typedef Vector<RefPtr<JSC::ProfileNode> > ProfileNodesList;
-	const ProfileNodesList& nodeChildren = node->children();
-	ProfileNodesList::const_iterator end = nodeChildren.end();
-	
+	JSObject* result = constructEmptyObject(exec);
+
+	if (!node->functionName().isEmpty())
+		result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("functionName"))->identifier(&exec->vm())), jsString(exec, node->functionName()));
+
+	if (!node->url().isEmpty())
+		result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("url"))->identifier(&exec->vm())), jsString(exec, node->url()));
+
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("lineNumber"))->identifier(&exec->vm())), jsNumber(node->lineNumber()));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("columnNumber"))->identifier(&exec->vm())), jsNumber(node->columnNumber()));
+
 	JSObject* nodes = constructEmptyObject(exec);
-	
+
 	unsigned int index = 0;
 	for (RefPtr<JSC::ProfileNode> profileNode : node->children())
 	{
 		nodes->putDirectIndex(exec, index++, fillNodes(exec, profileNode.get()));
 	}
 
-	JSObject* result = constructEmptyObject(exec);
-
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("nodes"))->identifier(&exec->vm())), nodes);
-	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("functionName"))->identifier(&exec->vm())), jsString(exec, node->functionName()));
-	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("url"))->identifier(&exec->vm())), jsString(exec, node->url()));
-
+	
 	JSObject* calls = constructEmptyObject(exec);
 
+	double startTime = node->calls()[0].startTime();
+	double endTime = node->calls().last().startTime() + node->calls().last().elapsedTime();
+
+	double totalTime = 0;
 	index = 0;
 	for (const JSC::ProfileNode::Call& call : node->calls())
+	{
+		totalTime += call.elapsedTime();
 		calls->putDirectIndex(exec, index++, fillCallNode(exec, call));
+	}
 
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("numberOfCalls"))->identifier(&exec->vm())), jsNumber(node->calls().size()));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("startTime"))->identifier(&exec->vm())), jsNumber(startTime));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("endTime"))->identifier(&exec->vm())), jsNumber(endTime));
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("totalTime"))->identifier(&exec->vm())), jsNumber(totalTime));
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("hash"))->identifier(&exec->vm())), jsNumber(node->callIdentifier().hash()));
+
+	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("calls"))->identifier(&exec->vm())), calls);
 
 	return result;
 }
