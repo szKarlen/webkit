@@ -41,8 +41,8 @@ using namespace JSC;
 JSValue fillCallNode(ExecState* exec, const JSC::ProfileNode::Call& call)
 {
 	JSObject* nodes = constructEmptyObject(exec);
-	nodes->putDirectIndex(exec, 0, jsNumber(call.startTime()));
-	nodes->putDirectIndex(exec, 1, jsNumber(call.elapsedTime()));
+	nodes->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("startTime"))->identifier(&exec->vm())), jsNumber(call.startTime()));
+	nodes->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("endTime"))->identifier(&exec->vm())), jsNumber(call.elapsedTime()));
 
 	return nodes;
 }
@@ -60,7 +60,7 @@ JSValue fillNodes(ExecState* exec, ProfileNode* node)
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("lineNumber"))->identifier(&exec->vm())), jsNumber(node->lineNumber()));
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("columnNumber"))->identifier(&exec->vm())), jsNumber(node->columnNumber()));
 
-	JSObject* nodes = constructEmptyObject(exec);
+	JSObject* nodes = constructEmptyArray(exec, 0);
 
 	unsigned int index = 0;
 	for (RefPtr<JSC::ProfileNode> profileNode : node->children())
@@ -70,7 +70,7 @@ JSValue fillNodes(ExecState* exec, ProfileNode* node)
 
 	result->putDirect(exec->vm(), PropertyName(OpaqueJSString::create(String("nodes"))->identifier(&exec->vm())), nodes);
 	
-	JSObject* calls = constructEmptyObject(exec);
+	JSObject* calls = constructEmptyArray(exec, 0);
 
 	double startTime = node->calls()[0].startTime();
 	double endTime = node->calls().last().startTime() + node->calls().last().elapsedTime();
