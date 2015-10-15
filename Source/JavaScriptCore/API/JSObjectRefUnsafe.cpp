@@ -309,3 +309,39 @@ bool JSObjectIsFunctionUnsafe(JSContextRef ctx, JSObjectRef object)
 	JSCell* cell = toJS(object);
 	return cell->methodTable()->getCallData(cell, callData) != CallTypeNone;
 }
+
+JSValueRef JSObjectCallAsFunctionUnsafe(JSContextRef ctx, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+	ExecState* exec = toJS(ctx);
+	
+	if (!object)
+		return 0;
+
+	JSObject* jsObject = toJS(object);
+	JSObject* jsThisObject = toJS(thisObject);
+
+	if (!jsThisObject)
+		jsThisObject = exec->globalThisValue();
+
+	MarkedArgumentBuffer argList;
+	for (size_t i = 0; i < argumentCount; i++)
+		argList.append(toJS(exec, arguments[i]));
+
+	CallData callData;
+	CallType callType = jsObject->methodTable()->getCallData(jsObject, callData);
+	if (callType == CallTypeNone)
+		return 0;
+
+	JSValueRef result = toRef(exec, call(exec, jsObject, callType, callData, jsThisObject, argList));
+	if (exec->hadException()) {
+		JSValue exceptionValue = exec->exception();
+		if (exception)
+			*exception = toRef(exec, exceptionValue);
+		exec->clearException();
+#if ENABLE(REMOTE_INSPECTOR)
+		exec->vmEntryGlobalObject()->inspectorController().reportAPIException(exec, exceptionValue);
+#endif
+		result = 0;
+	}
+	return result;
+}
