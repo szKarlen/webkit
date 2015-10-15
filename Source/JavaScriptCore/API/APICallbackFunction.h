@@ -44,7 +44,7 @@ template <typename T> static EncodedJSValue JSC_HOST_CALL construct(ExecState*);
 template <typename T>
 EncodedJSValue JSC_HOST_CALL APICallbackFunction::call(ExecState* exec)
 {
-    JSContextRef execRef = toRef(exec);
+    JSGlobalContextRef execRef = toGlobalRef(exec->lexicalGlobalObject()->globalExec());
     JSObjectRef functionRef = toRef(exec->callee());
     JSObjectRef thisObjRef = toRef(jsCast<JSObject*>(exec->thisValue().toThis(exec, NotStrictMode)));
 
@@ -73,7 +73,7 @@ template <typename T>
 EncodedJSValue JSC_HOST_CALL APICallbackFunction::construct(ExecState* exec)
 {
     JSObject* constructor = exec->callee();
-    JSContextRef ctx = toRef(exec);
+    JSGlobalContextRef ctx = toGlobalRef(exec->lexicalGlobalObject()->globalExec());
     JSObjectRef constructorRef = toRef(constructor);
 
     JSObjectCallAsConstructorCallback callback = jsCast<T*>(constructor)->constructCallback();
