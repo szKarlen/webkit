@@ -45,6 +45,12 @@
 #include <wtf/text/StringHash.h>
 #include <wtf/text/WTFString.h>
 
+#include "Strong.h"
+#include "StrongInlines.h"
+
+#include "Handle.h"
+#include "HandleSet.h"
+
 #include <algorithm> // for std::min
 
 #if PLATFORM(MAC)
@@ -513,4 +519,32 @@ JSStringRef JSValueCreateJSONStringUnsafe(JSContextRef ctx, JSValueRef apiValue,
 		return 0;
 	}
 	return OpaqueJSString::create(result).leakRef();
+}
+
+JSHandleRef JSFunctionProtect(JSContextRef ctx, JSValueRef value)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return 0;
+	}
+	ExecState* exec = toJS(ctx);
+	JSValue jsFunction = toJS(exec, value);
+
+	Strong<JSC::Unknown>* handle = new Strong<JSC::Unknown>(exec->vm(), jsFunction);
+
+	return reinterpret_cast<JSHandleRef>(handle);
+}
+
+void JSFunctionUnprotect(JSContextRef ctx, JSHandleRef handle)
+{
+	if (!ctx) {
+		ASSERT_NOT_REACHED();
+		return;
+	}
+	ExecState* exec = toJS(ctx);
+	Strong<JSC::Unknown>* jsHandle = reinterpret_cast<Strong<JSC::Unknown>*>(const_cast<OpaqueJSHandle*>(handle));
+
+	jsHandle->clear();
+
+	delete jsHandle;
 }

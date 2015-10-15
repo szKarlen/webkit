@@ -31,6 +31,8 @@
 
 #include <JavaScriptCore/JSValueRef.h>
 
+typedef struct OpaqueJSHandle* JSHandleRef;
+
 #ifndef __cplusplus
 #include <stdbool.h>
 #endif
@@ -278,6 +280,28 @@ JS_EXPORT JSValueRef JSValueMakeFromJSONStringUnsafe(JSContextRef ctx, JSStringR
 @result         A JSString with the result of serialization, or NULL if an exception is thrown.
 */
 JS_EXPORT JSStringRef JSValueCreateJSONStringUnsafe(JSContextRef ctx, JSValueRef value, unsigned indent, JSValueRef* exception);
+
+/* Garbage collection */
+/*!
+@function
+@abstract Protects a JavaScript value from garbage collection.
+@param ctx The execution context to use.
+@param value The JSValue to protect.
+@discussion Use this method when you want to store a JSValue in a global or on the heap, where the garbage collector will not be able to discover your reference to it.
+
+A value may be protected multiple times and must be unprotected an equal number of times before becoming eligible for garbage collection.
+*/
+JS_EXPORT JSHandleRef JSFunctionProtect(JSContextRef ctx, JSValueRef value);
+
+/*!
+@function
+@abstract       Unprotects a JavaScript value from garbage collection.
+@param ctx      The execution context to use.
+@param value    The JSValue to unprotect.
+@discussion     A value may be protected multiple times and must be unprotected an
+equal number of times before becoming eligible for garbage collection.
+*/
+JS_EXPORT void JSFunctionUnprotect(JSContextRef ctx, JSHandleRef handle);
 
 #ifdef __cplusplus
 }
