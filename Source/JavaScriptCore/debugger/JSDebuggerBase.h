@@ -29,6 +29,46 @@
 #ifndef JSDebuggerBase_h
 #define JSDebuggerBase_h
 
+namespace JSC {
+	class JSDebugger;
+	class DebuggerCallFrame;
+	class StackFrame;
+}
+
+typedef struct OpaqueJSDebugger* JSDebuggerRef;
+typedef struct OpaqueJSDebuggerCallFrame* JSDebuggerCallFrameRef;
+typedef struct OpaqueJSDebuggerStackList* JSDebuggerStackListRef;
+
+inline JSC::JSDebugger* toJS(JSDebuggerRef debugger)
+{
+	return reinterpret_cast<JSC::JSDebugger*>(const_cast<OpaqueJSDebugger*>(debugger));
+}
+
+inline JSC::DebuggerCallFrame* toJS(JSDebuggerCallFrameRef debuggerCallFrame)
+{
+	return reinterpret_cast<JSC::DebuggerCallFrame*>(const_cast<OpaqueJSDebuggerCallFrame*>(debuggerCallFrame));
+}
+
+inline Vector<JSC::StackFrame>* toJS(JSDebuggerStackListRef stackListRef)
+{
+	return reinterpret_cast<Vector<JSC::StackFrame>*>(const_cast<OpaqueJSDebuggerStackList*>(stackListRef));
+}
+
+inline JSDebuggerRef toRef(JSC::JSDebugger* debugger)
+{
+	return reinterpret_cast<JSDebuggerRef>(debugger);
+}
+
+inline JSDebuggerCallFrameRef toRef(JSC::DebuggerCallFrame* debuggerCallFrame)
+{
+	return reinterpret_cast<JSDebuggerCallFrameRef>(debuggerCallFrame);
+}
+
+inline JSDebuggerStackListRef toRef(Vector<JSC::StackFrame>* stackList)
+{
+	return reinterpret_cast<JSDebuggerStackListRef>(stackList);
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
