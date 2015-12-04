@@ -39,6 +39,7 @@
 #include <cairo-win32.h>
 #include <mlang.h>
 #include <wtf/MathExtras.h>
+#include <dwrite.h>
 
 namespace WebCore {
 
@@ -68,21 +69,34 @@ void SimpleFontData::platformInit()
     cairo_scaled_font_t* scaledFont = m_platformData.scaledFont();
     const double metricsMultiplier = cairo_win32_scaled_font_get_metrics_factor(scaledFont) * m_platformData.size();
 
-    cairo_win32_scaled_font_select_font(scaledFont, dc);
+   	IDWriteFontFace* dwriteFontFace = (IDWriteFontFace*)cairo_dwrite_font_face_get(scaledFont);
 
-    TEXTMETRIC textMetrics;
-    GetTextMetrics(dc, &textMetrics);
-    float ascent = textMetrics.tmAscent * metricsMultiplier;
-    float descent = textMetrics.tmDescent * metricsMultiplier;
-    float xHeight = ascent * 0.56f; // Best guess for xHeight for non-Truetype fonts.
-    float lineGap = textMetrics.tmExternalLeading * metricsMultiplier;
+	cairo_font_face_t* win32fontface = cairo_logfontw_font_face_create_for_dwrite(scaledFont);
+	cairo_matrix_t sizeMatrix, ctm;
+	cairo_matrix_init_identity(&ctm);
+	cairo_matrix_init_scale(&sizeMatrix, m_platformData.size(), m_platformData.size());
 
-    int faceLength = ::GetTextFace(dc, 0, 0);
-    Vector<WCHAR> faceName(faceLength);
-    ::GetTextFace(dc, faceLength, faceName.data());
-    m_isSystemFont = !wcscmp(faceName.data(), L"Lucida Grande");
- 
-    ascent = ascentConsideringMacAscentHack(faceName.data(), ascent, descent);
+	static cairo_font_options_t* fontOptions = 0;
+	if (!fontOptions) {
+		fontOptions = cairo_font_options_create();
+		cairo_font_options_set_antialias(fontOptions, CAIRO_ANTIALIAS_SUBPIXEL);
+	}
+	
+	cairo_scaled_font_t* win32font = cairo_scaled_font_create(win32fontface, &sizeMatrix, &ctm, fontOptions);
+	cairo_font_face_destroy(win32fontface);
+
+	cairo_win32_scaled_font_select_font(win32font, dc);
+
+	TEXTMETRIC textMetrics;
+	GetTextMetrics(dc, &textMetrics);
+
+	DWRITE_FONT_METRICS dwriteFontMetrics;
+	dwriteFontFace->GetMetrics(&dwriteFontMetrics);
+
+	float ascent = ((FLOAT)dwriteFontMetrics.ascent / dwriteFontMetrics.designUnitsPerEm) * metricsMultiplier;
+	float descent = ((FLOAT)dwriteFontMetrics.descent / dwriteFontMetrics.designUnitsPerEm) * metricsMultiplier;
+	float xHeight = ((FLOAT)dwriteFontMetrics.xHeight / dwriteFontMetrics.designUnitsPerEm) * metricsMultiplier;
+	float lineGap = ((FLOAT)dwriteFontMetrics.lineGap / dwriteFontMetrics.designUnitsPerEm) * metricsMultiplier;
 
     m_fontMetrics.setAscent(ascent);
     m_fontMetrics.setDescent(descent);
@@ -97,7 +111,8 @@ void SimpleFontData::platformInit()
 
     m_fontMetrics.setXHeight(xHeight);
     cairo_win32_scaled_font_done_font(scaledFont);
-
+	cairo_win32_scaled_font_done_font(win32font);
+	
     m_scriptCache = 0;
     m_scriptFontProperties = 0;
 
@@ -120,6 +135,7 @@ float SimpleFontData::platformWidthForGlyph(Glyph glyph) const
     if (!m_platformData.size())
         return 0;
 
+	/*
     HWndDC dc(0);
     SaveDC(dc);
 
@@ -135,6 +151,22 @@ float SimpleFontData::platformWidthForGlyph(Glyph glyph) const
 
     const double metricsMultiplier = cairo_win32_scaled_font_get_metrics_factor(scaledFont) * m_platformData.size();
     return width * metricsMultiplier;
+	*/
+	cairo_scaled_font_t* scaledFont = m_platformData.scaledFont();
+
+	const double metricsMultiplier = cairo_win32_scaled_font_get_metrics_factor(scaledFont) * m_platformData.size();
+
+	IDWriteFontFace* dwriteFontFace = (IDWriteFontFace*)cairo_dwrite_font_face_get(scaledFont);
+
+	DWRITE_FONT_METRICS dwriteFontMetrics;
+	dwriteFontFace->GetMetrics(&dwriteFontMetrics);
+
+	DWRITE_GLYPH_METRICS metrics;
+	dwriteFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics);
+
+	float width = (FLOAT)metrics.advanceWidth / dwriteFontMetrics.designUnitsPerEm;
+
+	return width * metricsMultiplier;
 }
 
 }

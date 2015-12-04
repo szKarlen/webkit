@@ -61,7 +61,7 @@ FontPlatformData FontCustomPlatformData::fontPlatformData(int size, bool bold, b
 
     auto hfont = adoptGDIObject(::CreateFontIndirect(&logFont));
 
-    cairo_font_face_t* fontFace = cairo_win32_font_face_create_for_hfont(hfont.get());
+	cairo_font_face_t* fontFace = cairo_dwrite_font_face_create_for_hfont(hfont.get());
 
     FontPlatformData fontPlatformData(WTF::move(hfont), fontFace, size, bold, italic);
 
